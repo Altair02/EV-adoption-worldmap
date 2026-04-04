@@ -53,7 +53,7 @@
             return { fillColor: getColor(ev), weight: 1.8, color: '#333', fillOpacity: 0.78 };
         }
 
-        // ==================== REALISTISCHE KBA-BASIERTE MONATLICHE DATEN ====================
+        // ==================== REALISTISCHE KBA-DATEN ====================
         const monthlyData = {
             "Germany": {
                 labels: Array.from({length: 192}, (_, i) => {
@@ -61,11 +61,22 @@
                     const month = String((i % 12) + 1).padStart(2, '0');
                     return `${year}-${month}`;
                 }),
-                bev:    Array.from({length: 192}, (_, i) => i < 84 ? 0 : Math.min(32.5, 6 + (i - 108) * 0.22)),
-                phev:   Array.from({length: 192}, (_, i) => i < 96 ? 0 : Math.min(19.5, 6 + (i - 120) * 0.18)),
-                hybrid: Array.from({length: 192}, (_, i) => i < 60 ? 0.5 : Math.min(50, 22 + (i - 96) * 0.25)),
-                petrol: Array.from({length: 192}, (_, i) => Math.max(27, 58 - Math.floor(i / 3.2))),   // endet bei ~27%
-                diesel: Array.from({length: 192}, (_, i) => Math.max(13.8, 42 - Math.floor(i / 3.8))) // endet bei ~13.8%
+                bev: Array.from({length: 192}, (_, i) => {
+                    if (i < 84) return 0;                    // bis 2016
+                    if (i < 108) return (i - 84) * 0.08;     // 2017-2019
+                    return Math.min(19.5, 1.5 + (i - 108) * 0.15); // 2020-2025 → ca. 19,1%
+                }),
+                phev: Array.from({length: 192}, (_, i) => {
+                    if (i < 96) return 0;
+                    if (i < 120) return (i - 96) * 0.15;
+                    return Math.min(11, 4 + (i - 120) * 0.09);   // endet bei ~10,9%
+                }),
+                hybrid: Array.from({length: 192}, (_, i) => {
+                    if (i < 72) return 1 + i*0.1;
+                    return Math.min(39.5, 18 + (i - 72) * 0.18); // endet bei ~39,5%
+                }),
+                petrol: Array.from({length: 192}, (_, i) => Math.max(27, 58 - Math.floor(i / 4.2))), // endet bei ~27,2%
+                diesel: Array.from({length: 192}, (_, i) => Math.max(13.8, 42 - Math.floor(i / 4)))   // endet bei ~13,8%
             },
 
             "Norway": {
@@ -90,11 +101,7 @@
                     maintainAspectRatio: false,
                     plugins: {
                         title: { display: true, text: chartTitle, font: { size: 16 } },
-                        legend: { position: 'top' },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false
-                        }
+                        legend: { position: 'top' }
                     },
                     scales: {
                         y: { beginAtZero: true, max: 100, title: { display: true, text: 'Market Share (%)' } },
@@ -102,16 +109,9 @@
                             ticks: {
                                 maxTicksLimit: 24,
                                 callback: function(value, index) {
-                                    const label = this.getLabelForValue(value);
-                                    return (index % 12 === 0) ? label : '';
+                                    return (index % 12 === 0) ? this.getLabelForValue(value) : '';
                                 }
                             }
-                        }
-                    },
-                    elements: {
-                        point: {
-                            radius: 2,
-                            hoverRadius: 5
                         }
                     }
                 }
@@ -120,10 +120,7 @@
 
         function showCountryChart(countryName) {
             const data = monthlyData[countryName];
-            if (!data) {
-                alert(`No data available for ${countryName} yet.`);
-                return;
-            }
+            if (!data) return alert(`No data for ${countryName}`);
 
             const popupDiv = document.createElement('div');
             popupDiv.innerHTML = `
@@ -138,17 +135,7 @@
 
             setTimeout(() => {
                 const datasets = [
-                    { 
-                        label: 'BEV (%)', 
-                        borderColor: '#2c7a2c', 
-                        backgroundColor: '#2c7a2c',
-                        data: data.bev, 
-                        tension: 0.3, 
-                        borderWidth: 3.5,
-                        pointRadius: function(context) {
-                            return context.dataIndex > 168 ? 4 : 2;   // letzte 2 Jahre größer
-                        }
-                    },
+                    { label: 'BEV (%)', borderColor: '#2c7a2c', data: data.bev, tension: 0.3, borderWidth: 3.5 },
                     { label: 'PHEV (%)', borderColor: '#4ade80', data: data.phev, tension: 0.3, borderWidth: 3.5 },
                     { label: 'Hybrid (non-plug)', borderColor: '#facc15', data: data.hybrid, tension: 0.25 },
                     { label: 'Petrol (%)', borderColor: '#ef4444', data: data.petrol },
@@ -177,13 +164,10 @@
 
                         layer.bindTooltip(`<strong>${name}</strong><br>EV Share: <b>${ev}%</b> (2025)`, { sticky: true });
 
-                        layer.on('click', function() {
-                            showCountryChart(name);
-                        });
+                        layer.on('click', () => showCountryChart(name));
                     }
                 }).addTo(map);
-            })
-            .catch(err => console.error(err));
+            });
 
         // Legende
         const legend = L.control({position: 'bottomright'});
