@@ -29,6 +29,7 @@
 <body>
     <h1>EV Adoption Worldmap – Europe Focus (Unbereinigte monatliche Zulassungen 2010–März 2026)</h1>
     <div id="map"></div>
+
 <script>
     let currentChart = null;
 
