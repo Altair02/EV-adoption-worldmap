@@ -24,7 +24,7 @@
     </style>
 </head>
 <body>
-    <h1>EV Adoption Worldmap – Europe Focus</h1>
+    <h1>EV Adoption Worldmap – Europe Focus (Absolute Neuzulassungen)</h1>
     <div id="map"></div>
 
     <script>
@@ -50,7 +50,6 @@
             return { fillColor: getColor(ev), weight: 1.8, color: '#333', fillOpacity: 0.78 };
         }
 
-        // === CHART ERSTELLEN ===
         function createOrUpdateChart(canvasId, labels, datasets, chartTitle) {
             if (currentChart) currentChart.destroy();
             
@@ -66,14 +65,13 @@
                         legend: { position: 'top' }
                     },
                     scales: {
-                        y: { beginAtZero: true, max: 100, title: { display: true, text: 'Market Share (%)' } },
+                        y: { beginAtZero: true, title: { display: true, text: 'Neuzulassungen (Stück)' } },
                         x: { ticks: { maxTicksLimit: 24 } }
                     }
                 }
             });
         }
 
-        // === LAND ANKLICKEN ===
         function showCountryChart(countryName) {
             fetch(`data/countries/${countryName.toLowerCase()}.json`)
                 .then(res => {
@@ -83,8 +81,8 @@
                 .then(data => {
                     const popupDiv = document.createElement('div');
                     popupDiv.innerHTML = `
-                        <h3>${countryName} – Monthly Market Share (2010–März 2026)</h3>
-                        <p style="text-align:center; color:#555; margin:5px 0 10px;">Echte monatliche Marktanteile • Source: KBA</p>
+                        <h3>${countryName} – Absolute Neuzulassungen (2010–Februar 2026)</h3>
+                        <p style="text-align:center; color:#555; margin:5px 0 10px;">Echte monatliche Zulassungszahlen • Source: KBA</p>
                         <div class="chart-container">
                             <canvas id="countryChart"></canvas>
                         </div>
@@ -94,21 +92,21 @@
 
                     setTimeout(() => {
                         const datasets = [
-                            { label: 'BEV (%)', borderColor: '#2c7a2c', data: data.bev, borderWidth: 3, tension: 0.1 },
-                            { label: 'PHEV (%)', borderColor: '#4ade80', data: data.phev, borderWidth: 3, tension: 0.1 },
+                            { label: 'BEV', borderColor: '#2c7a2c', data: data.bev, borderWidth: 3, tension: 0.1 },
+                            { label: 'PHEV', borderColor: '#4ade80', data: data.phev, borderWidth: 3, tension: 0.1 },
                             { label: 'Hybrid (non-plug)', borderColor: '#facc15', data: data.hybrid, borderWidth: 2.5, tension: 0.1 },
-                            { label: 'Petrol (%)', borderColor: '#ef4444', data: data.petrol, borderWidth: 2, tension: 0.1 },
-                            { label: 'Diesel (%)', borderColor: '#64748b', data: data.diesel, borderWidth: 2, tension: 0.1 }
+                            { label: 'Petrol', borderColor: '#ef4444', data: data.petrol, borderWidth: 2, tension: 0.1 },
+                            { label: 'Diesel', borderColor: '#64748b', data: data.diesel, borderWidth: 2, tension: 0.1 }
                         ];
-                        createOrUpdateChart('countryChart', data.labels, datasets, `${countryName} – Monthly Market Share 2010–März 2026`);
+                        createOrUpdateChart('countryChart', data.labels, datasets, `${countryName} – Absolute Neuzulassungen 2010–Februar 2026`);
                     }, 350);
                 })
                 .catch(() => {
-                    alert(`No data file found for ${countryName}.\n\nPlease make sure the file "data/countries/${countryName.toLowerCase()}.json" exists.`);
+                    alert(`No data file found for ${countryName}.\nBitte prüfe, ob die Datei "data/countries/${countryName.toLowerCase()}.json" existiert.`);
                 });
         }
 
-        // === KARTE LADEN ===
+        // Karte laden
         fetch('https://raw.githubusercontent.com/leakyMirror/map-of-europe/master/GeoJSON/europe.geojson')
             .then(res => res.json())
             .then(data => {
@@ -130,7 +128,7 @@
                 }).addTo(map);
             });
 
-        // === LEGENDE ===
+        // Legende
         const legend = L.control({position: 'bottomright'});
         legend.onAdd = function () {
             const div = L.DomUtil.create('div', 'legend');
