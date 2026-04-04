@@ -7,17 +7,14 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    
+   
     <style>
         body { margin: 0; font-family: Arial, sans-serif; background: #f8f9fa; }
         h1 { text-align: center; padding: 15px; background: #2c3e50; color: white; margin: 0; }
         #map { height: calc(100vh - 60px); width: 100%; }
-
         .legend { background: white; padding: 10px; border-radius: 5px; box-shadow: 0 0 15px rgba(0,0,0,0.2); font-size: 14px; }
-
         .leaflet-popup-content-wrapper { width: 920px !important; max-width: 920px !important; }
         .leaflet-popup-content { width: 900px !important; margin: 0 !important; padding: 15px !important; }
-
         .chart-container {
             position: relative;
             width: 100% !important;
@@ -53,9 +50,36 @@
             return { fillColor: getColor(ev), weight: 1.8, color: '#333', fillOpacity: 0.78 };
         }
 
+        // === CHART ERSTELLEN ===
+        function createOrUpdateChart(canvasId, labels, datasets, chartTitle) {
+            if (currentChart) currentChart.destroy();
+            
+            const ctx = document.getElementById(canvasId);
+            currentChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: labels, datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: chartTitle, font: { size: 16 } },
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, max: 100, title: { display: true, text: 'Market Share (%)' } },
+                        x: { ticks: { maxTicksLimit: 24 } }
+                    }
+                }
+            });
+        }
+
+        // === LAND ANKLICKEN ===
         function showCountryChart(countryName) {
             fetch(`data/countries/${countryName.toLowerCase()}.json`)
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) throw new Error('File not found');
+                    return res.json();
+                })
                 .then(data => {
                     const popupDiv = document.createElement('div');
                     popupDiv.innerHTML = `
@@ -70,39 +94,21 @@
 
                     setTimeout(() => {
                         const datasets = [
-                            { label: 'BEV (%)', borderColor: '#2c7a2c', data: data.bev, borderWidth: 3 },
-                            { label: 'PHEV (%)', borderColor: '#4ade80', data: data.phev, borderWidth: 3 },
-                            { label: 'Hybrid (non-plug)', borderColor: '#facc15', data: data.hybrid, borderWidth: 2.5 },
-                            { label: 'Petrol (%)', borderColor: '#ef4444', data: data.petrol, borderWidth: 2 },
-                            { label: 'Diesel (%)', borderColor: '#64748b', data: data.diesel, borderWidth: 2 }
+                            { label: 'BEV (%)', borderColor: '#2c7a2c', data: data.bev, borderWidth: 3, tension: 0.1 },
+                            { label: 'PHEV (%)', borderColor: '#4ade80', data: data.phev, borderWidth: 3, tension: 0.1 },
+                            { label: 'Hybrid (non-plug)', borderColor: '#facc15', data: data.hybrid, borderWidth: 2.5, tension: 0.1 },
+                            { label: 'Petrol (%)', borderColor: '#ef4444', data: data.petrol, borderWidth: 2, tension: 0.1 },
+                            { label: 'Diesel (%)', borderColor: '#64748b', data: data.diesel, borderWidth: 2, tension: 0.1 }
                         ];
                         createOrUpdateChart('countryChart', data.labels, datasets, `${countryName} – Monthly Market Share 2010–März 2026`);
-                    }, 300);
+                    }, 350);
                 })
-                .catch(() => alert(`No data file found for ${countryName}. Please check the file name.`));
+                .catch(() => {
+                    alert(`No data file found for ${countryName}.\n\nPlease make sure the file "data/countries/${countryName.toLowerCase()}.json" exists.`);
+                });
         }
 
-        function createOrUpdateChart(canvasId, labels, datasets, chartTitle) {
-            if (currentChart) currentChart.destroy();
-            const ctx = document.getElementById(canvasId);
-            currentChart = new Chart(ctx, {
-                type: 'line',
-                data: { labels: labels, datasets: datasets },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: { display: true, text: chartTitle, font: { size: 16 } },
-                        legend: { position: 'top' }
-                    },
-                    scales: {
-                        y: { beginAtZero: true, max: 100 }
-                    }
-                }
-            });
-        }
-
-        // Karte laden
+        // === KARTE LADEN ===
         fetch('https://raw.githubusercontent.com/leakyMirror/map-of-europe/master/GeoJSON/europe.geojson')
             .then(res => res.json())
             .then(data => {
@@ -117,13 +123,14 @@
                     style: style,
                     onEachFeature: function(feature, layer) {
                         const name = feature.properties.name || feature.properties.NAME;
-                        layer.bindTooltip(`<strong>${name}</strong><br>EV Share: <b>${feature.properties.ev_share}%</b> (2025)`, { sticky: true });
+                        const ev = feature.properties.ev_share || 0;
+                        layer.bindTooltip(`<strong>${name}</strong><br>EV Share: <b>${ev}%</b> (2025)`, { sticky: true });
                         layer.on('click', () => showCountryChart(name));
                     }
                 }).addTo(map);
             });
 
-        // Legende
+        // === LEGENDE ===
         const legend = L.control({position: 'bottomright'});
         legend.onAdd = function () {
             const div = L.DomUtil.create('div', 'legend');
