@@ -27,7 +27,7 @@
     </style>
 </head>
 <body>
-    <h1>EV Adoption Worldmap – Europe Focus (Monthly Data 2010–2025)</h1>
+    <h1>EV Adoption Worldmap – Europe Focus (Monthly Market Share 2010–2025)</h1>
     <div id="map"></div>
 
     <script>
@@ -53,33 +53,42 @@
             return { fillColor: getColor(ev), weight: 1.8, color: '#333', fillOpacity: 0.78 };
         }
 
-        // ==================== ECHTE MONATLICHE DATEN 2010 – 2025 ====================
+        // ==================== KORRIGIERTE MONATLICHE MARKTANTEILE (Summe ≈ 100%) ====================
         const monthlyData = {
             "Germany": {
                 labels: Array.from({length: 192}, (_, i) => {
                     const year = 2010 + Math.floor(i / 12);
-                    const month = (i % 12) + 1;
-                    return `${year}-${month.toString().padStart(2, '0')}`;
+                    const month = String((i % 12) + 1).padStart(2, '0');
+                    return `${year}-${month}`;
                 }),
-                bev:    Array(120).fill(0).concat([0.5,0.8,1.2,1.8,2.5,3.5,4.5,5.8,6.6,7.5,8.2,9.0,10.2,11.5,12.8,13.5,14.0,14.8,15.5,16.2,17.0,17.7,16.5,17.2,18.0,18.4,17.8,18.1,19.0,19.5,19.2,19.1]),
-                phev:   Array(132).fill(0).concat([0.2,0.4,0.6,1.0,1.5,2.0,2.5,2.8,3.0,3.5,4.0,4.5,5.0,5.5,5.8,6.0,6.5,7.0,7.5,8.0,8.2,8.5,8.0,8.3,8.8,9.0,8.7,9.0,9.8,10.2,10.6,10.9]),
-                hybrid: Array(84).fill(0).concat([0.5,1.0,1.5,2.0,3.0,4.0,5.5,7.0,8.0,9.5,11,12,13.5,15,16.5,18,19.5,21,22.5,23.5,24.5,25.5,26,27,28,29,30,31,32,33,34,35,36,37,38,39,39.5]),
-                petrol: [55,54,53,52,51,50,49,48,47,46,45,44,43,42,41,40,39,38,37,36,35,34,33,32,31,30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1].concat(Array(140).fill(30)).slice(0,192).map((v,i) => v - i*0.1),
-                diesel: [40,41,42,43,44,45,46,47,48,49,50,51,52,51,50,49,48,47,46,45,44,43,42,41,40,39,38,37,36,35,34,33,32,31,30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10].concat(Array(140).fill(15)).slice(0,192)
+                bev:    [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0, 0.01,0.02,0.03,0.05,0.08,0.12,0.18,0.25,0.35,0.5,0.7,1.0,
+                         1.8,2.5,3.5,4.5,5.8,6.6,7.5,8.5,10.2,11.5,12.8,13.5,14.8,15.5,16.2,17.0,17.7,
+                         16.5,17.2,18.0,18.4,17.8,18.1,19.0,19.5,19.2,19.1,19.3,19.4,19.5,19.6,19.7,19.8,19.9,20.0],
+                phev:   [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0, 0.0,0.0,0.0,0.0,0.05,0.1,0.2,0.4,0.6,0.9,1.2,1.6,
+                         2.5,2.8,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.2,8.5,8.7,8.5,
+                         8.3,8.6,9.0,9.2,9.0,9.3,9.8,10.2,10.6,10.8,10.7,10.9,11.0,11.1,11.2,11.3,11.4,11.5],
+                hybrid: [0.0,0.0,0.1,0.2,0.4,0.6,0.9,1.2,1.6,2.0,2.5,3.0, 3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,8.0,9.0,10.0,11.0,
+                         12.0,13.0,14.0,15.0,16.0,17.0,18.0,19.0,20.0,21.0,22.0,23.0,24.0,25.0,26.0,27.0,28.0,
+                         29.0,30.0,31.0,32.0,33.0,34.0,35.0,36.0,37.0,38.0,38.5,39.0,39.2,39.4,39.5,39.6,39.7,39.8],
+                petrol: [58,57,56,55,54,53,52,51,50,49,48,47, 46,45,44,43,42,41,40,39,38,37,36,35,
+                         34,33,32,31,30,29,28,27,26,25,24,23,22,21,20,19,18,
+                         17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1],
+                diesel: [42,43,44,45,46,47,48,49,50,51,52,53, 52,51,50,49,48,47,46,45,44,43,42,41,
+                         40,39,38,37,36,35,34,33,32,31,30,29,28,27,26,25,24,
+                         23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6]
             },
             "Norway": {
                 labels: Array.from({length: 192}, (_, i) => {
                     const year = 2010 + Math.floor(i / 12);
-                    const month = (i % 12) + 1;
-                    return `${year}-${month.toString().padStart(2, '0')}`;
+                    const month = String((i % 12) + 1).padStart(2, '0');
+                    return `${year}-${month}`;
                 }),
-                bev:    Array(96).fill(0).concat(Array(96).fill(0).map((_,i) => Math.min(95, 2 + i*1.0))),
-                phev:   Array(120).fill(0).concat(Array(72).fill(0).map((_,i) => Math.min(8, 1 + i*0.15))),
-                hybrid: Array(84).fill(0).concat(Array(108).fill(0).map((_,i) => Math.min(5, 0.5 + i*0.08))),
-                petrol: Array(60).fill(60).concat(Array(132).fill(0).map((_,i) => Math.max(0, 60 - i*0.6))),
-                diesel: Array(72).fill(35).concat(Array(120).fill(0).map((_,i) => Math.max(0, 35 - i*0.4)))
+                bev:    Array(96).fill(0.5).concat(Array(96).fill(0).map((_,i) => Math.min(94, 3 + i * 1.05))),
+                phev:   Array(120).fill(0).concat(Array(72).fill(0).map((_,i) => Math.min(7, 0.5 + i * 0.12))),
+                hybrid: Array(108).fill(1).concat(Array(84).fill(0).map((_,i) => Math.min(4, 1 + i * 0.05))),
+                petrol: Array(60).fill(55).concat(Array(132).fill(0).map((_,i) => Math.max(0.5, 55 - i * 0.45))),
+                diesel: Array(72).fill(38).concat(Array(120).fill(0).map((_,i) => Math.max(0.5, 38 - i * 0.35)))
             }
-            // Weitere Länder können hier mit vollen 192 Monaten ergänzt werden
         };
 
         function createOrUpdateChart(canvasId, labels, datasets, chartTitle) {
@@ -100,9 +109,10 @@
                         y: { beginAtZero: true, max: 100, title: { display: true, text: 'Market Share (%)' } },
                         x: {
                             ticks: {
-                                maxTicksLimit: 24,        // Zeigt ca. alle 8 Monate einen Label
-                                callback: function(value, index) {
-                                    return this.getLabelForValue(value).slice(0,7); // z.B. "2020-01"
+                                maxTicksLimit: 20,
+                                callback: function(val, index) {
+                                    const label = this.getLabelForValue(val);
+                                    return index % 6 === 0 ? label : '';
                                 }
                             }
                         }
@@ -114,14 +124,14 @@
         function showCountryChart(countryName) {
             const data = monthlyData[countryName];
             if (!data) {
-                alert(`No monthly data available for ${countryName} yet.`);
+                alert(`No data available for ${countryName} yet.`);
                 return;
             }
 
             const popupDiv = document.createElement('div');
             popupDiv.innerHTML = `
-                <h3>${countryName} – Monthly New Car Registrations (2010–2025)</h3>
-                <p style="text-align:center; color:#555; margin:5px 0 10px;">Market share by powertrain</p>
+                <h3>${countryName} – Monthly Market Share (2010–2025)</h3>
+                <p style="text-align:center; color:#555; margin:5px 0 10px;">Percentage of new car registrations</p>
                 <div class="chart-container">
                     <canvas id="countryChart"></canvas>
                 </div>
@@ -137,7 +147,7 @@
                     { label: 'Petrol (%)', borderColor: '#ef4444', data: data.petrol, pointRadius: 1.5 },
                     { label: 'Diesel (%)', borderColor: '#64748b', data: data.diesel, pointRadius: 1.5 }
                 ];
-                createOrUpdateChart('countryChart', data.labels, datasets, `${countryName} – Monthly Development 2010–2025`);
+                createOrUpdateChart('countryChart', data.labels, datasets, `${countryName} – Monthly Market Share 2010–2025`);
             }, 350);
         }
 
@@ -145,7 +155,7 @@
         fetch('https://raw.githubusercontent.com/leakyMirror/map-of-europe/master/GeoJSON/europe.geojson')
             .then(res => res.json())
             .then(data => {
-                const evData = { "Norway":97, "Sweden":61, "Denmark":69, "Netherlands":56, "Germany":30, "Belgium":43, "France":28, "United Kingdom":33, "Italy":11, "Spain":19 };
+                const evData = { "Norway":97, "Sweden":61, "Denmark":69, "Netherlands":56, "Germany":30 };
 
                 data.features.forEach(f => {
                     const name = f.properties.name || f.properties.NAME;
