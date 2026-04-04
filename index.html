@@ -50,6 +50,7 @@
             return { fillColor: getColor(ev), weight: 1.8, color: '#333', fillOpacity: 0.78 };
         }
 
+        // Chart erstellen mit realistischer Y-Achsen-Skalierung
         function createOrUpdateChart(canvasId, labels, datasets, chartTitle) {
             if (currentChart) currentChart.destroy();
             
@@ -65,13 +66,20 @@
                         legend: { position: 'top' }
                     },
                     scales: {
-                        y: { beginAtZero: true, title: { display: true, text: 'Neuzulassungen (Stück)' } },
-                        x: { ticks: { maxTicksLimit: 24 } }
+                        y: { 
+                            beginAtZero: true, 
+                            max: 350000,           // <--- Hier begrenzt auf realistische monatliche Zulassungen
+                            title: { display: true, text: 'Neuzulassungen (Stück)' }
+                        },
+                        x: { 
+                            ticks: { maxTicksLimit: 24 }
+                        }
                     }
                 }
             });
         }
 
+        // Land anklicken → Daten aus JSON laden
         function showCountryChart(countryName) {
             fetch(`data/countries/${countryName.toLowerCase()}.json`)
                 .then(res => {
@@ -102,7 +110,7 @@
                     }, 350);
                 })
                 .catch(() => {
-                    alert(`No data file found for ${countryName}.\nBitte prüfe, ob die Datei "data/countries/${countryName.toLowerCase()}.json" existiert.`);
+                    alert(`Keine Daten gefunden für ${countryName}.\nBitte stelle sicher, dass die Datei "data/countries/${countryName.toLowerCase()}.json" existiert.`);
                 });
         }
 
