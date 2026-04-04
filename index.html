@@ -12,22 +12,25 @@
         body { margin: 0; font-family: Arial, sans-serif; background: #f8f9fa; }
         h1 { text-align: center; padding: 15px; background: #2c3e50; color: white; margin: 0; }
         #map { height: calc(100vh - 60px); width: 100%; }
+
         .legend { background: white; padding: 10px; border-radius: 5px; box-shadow: 0 0 15px rgba(0,0,0,0.2); font-size: 14px; }
 
-        /* WICHTIG: Feste Größe für Popups */
+        /* WICHTIG: Feste Popup-Größe */
         .leaflet-popup-content-wrapper {
-            max-width: 820px !important;
             width: 820px !important;
+            max-width: 820px !important;
         }
         .leaflet-popup-content {
             width: 800px !important;
             margin: 0 !important;
-            padding: 15px 10px !important;
+            padding: 15px !important;
         }
-        .popup-content h3 {
-            margin: 5px 0 15px 0;
-            text-align: center;
-            color: #2c3e50;
+
+        .chart-container {
+            position: relative;
+            width: 100% !important;
+            height: 420px !important;
+            margin: 10px 0;
         }
     </style>
 </head>
@@ -36,7 +39,7 @@
     <div id="map"></div>
 
     <script>
-        let currentChart = null;   // Wichtig: Speichert den aktuellen Chart
+        let currentChart = null;   // Globale Variable zum Zerstören des Charts
 
         const map = L.map('map').setView([54, 10], 4);
 
@@ -58,18 +61,9 @@
             return { fillColor: getColor(ev), weight: 1.8, color: '#333', fillOpacity: 0.78 };
         }
 
-        // ==================== DEUTSCHLAND – Monatsdaten ====================
-        const germanyMonthly = {
-            labels: ['2020-01','2020-06','2020-12','2021-06','2021-12','2022-06','2022-12','2023-06','2023-12','2024-06','2024-12','2025-01','2025-04','2025-07','2025-10','2025-12'],
-            bev:    [1.5,4.2,6.6,10.2,13.5,14.8,17.7,16.5,18.4,13.2,13.5,16.6,18.8,19.5,19.2,19.1],
-            phev:   [2.8,3.1,3.0,5.8,6.0,7.8,8.5,8.0,9.0,6.4,6.8,8.5,10.2,10.6,10.8,10.9],
-            hybrid: [7,9,12,16,19,21,23,26,28,33,35,36,37,38,39,39.5],
-            petrol: [48,42,35,29,26,25,23,22,20,32,35,29,26,25,26.5,27.2],
-            diesel: [37,36,38,33,30,27,24,21,18,15,15,14.5,14,13.8,13.8,13.8]
-        };
-
-        function createChart(canvasId, labels, datasets, title) {
-            // Alten Chart zerstören, falls vorhanden
+        // ==================== Chart erstellen / zerstören ====================
+        function createOrUpdateChart(canvasId, labels, datasets, chartTitle) {
+            // Alten Chart zerstören
             if (currentChart) {
                 currentChart.destroy();
                 currentChart = null;
@@ -81,34 +75,39 @@
                 data: { labels: labels, datasets: datasets },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false,
+                    maintainAspectRatio: false,     // sehr wichtig!
                     plugins: {
-                        title: { display: true, text: title, font: { size: 16 } },
+                        title: { display: true, text: chartTitle, font: { size: 16 } },
                         legend: { position: 'top' }
                     },
                     scales: {
-                        y: { beginAtZero: true, max: 100, title: { display: true, text: 'Market Share (%)' } },
-                        x: { title: { display: true, text: 'Time' } }
+                        y: { beginAtZero: true, max: 100, title: { display: true, text: 'Market Share (%)' } }
                     }
                 }
             });
         }
 
+        // ==================== Deutschland Chart (monatlich) ====================
+        const germanyMonthly = {
+            labels: ['2020-01','2020-06','2020-12','2021-06','2021-12','2022-06','2022-12','2023-06','2023-12','2024-06','2024-12','2025-01','2025-04','2025-07','2025-10','2025-12'],
+            bev:    [1.5,4.2,6.6,10.2,13.5,14.8,17.7,16.5,18.4,13.2,13.5,16.6,18.8,19.5,19.2,19.1],
+            phev:   [2.8,3.1,3.0,5.8,6.0,7.8,8.5,8.0,9.0,6.4,6.8,8.5,10.2,10.6,10.8,10.9],
+            hybrid: [7,9,12,16,19,21,23,26,28,33,35,36,37,38,39,39.5],
+            petrol: [48,42,35,29,26,25,23,22,20,32,35,29,26,25,26.5,27.2],
+            diesel: [37,36,38,33,30,27,24,21,18,15,15,14.5,14,13.8,13.8,13.8]
+        };
+
         function showGermanyChart() {
             const popupDiv = document.createElement('div');
             popupDiv.innerHTML = `
                 <h3>Germany – Monthly New Car Registrations (2020–2025)</h3>
-                <p style="text-align:center; color:#555; margin-bottom:10px;">Market share in % • Source: KBA</p>
-                <canvas id="countryChart" width="780" height="420"></canvas>
+                <p style="text-align:center; color:#555; margin:5px 0 10px;">Market share in % • Source: KBA</p>
+                <div class="chart-container">
+                    <canvas id="countryChart"></canvas>
+                </div>
             `;
 
-            L.popup({ 
-                maxWidth: 820,
-                className: 'popup-content'
-            })
-            .setLatLng([51.2, 10.4])
-            .setContent(popupDiv)
-            .openOn(map);
+            L.popup({ maxWidth: 820 }).setLatLng([51.2, 10.4]).setContent(popupDiv).openOn(map);
 
             setTimeout(() => {
                 const datasets = [
@@ -118,12 +117,13 @@
                     { label: 'Petrol (%)', borderColor: '#ef4444', data: germanyMonthly.petrol },
                     { label: 'Diesel (%)', borderColor: '#64748b', data: germanyMonthly.diesel }
                 ];
-                createChart('countryChart', germanyMonthly.labels, datasets, "Germany – Monthly Development");
-            }, 300);
+                createOrUpdateChart('countryChart', germanyMonthly.labels, datasets, "Germany – Monthly Development");
+            }, 350);
         }
 
+        // ==================== Andere Länder (2025 Jahresdaten) ====================
         function showCountryChart(countryName) {
-            const data = {
+            const dataDict = {
                 "Norway": {bev:92, phev:5, hybrid:2, petrol:1, diesel:0},
                 "Sweden": {bev:48, phev:13, hybrid:25, petrol:10, diesel:4},
                 "Denmark": {bev:55, phev:14, hybrid:20, petrol:8, diesel:3},
@@ -134,27 +134,24 @@
                 "United Kingdom": {bev:25, phev:8, hybrid:30, petrol:28, diesel:9},
                 "Italy": {bev:6, phev:5, hybrid:40, petrol:35, diesel:14},
                 "Spain": {bev:12, phev:7, hybrid:38, petrol:30, diesel:13}
-            }[countryName];
+            };
 
+            const data = dataDict[countryName];
             if (!data) {
-                alert(`No chart data available for ${countryName} yet.`);
+                alert(`No detailed data for ${countryName} yet.`);
                 return;
             }
 
             const popupDiv = document.createElement('div');
             popupDiv.innerHTML = `
                 <h3>${countryName} – New Car Registrations 2025</h3>
-                <p style="text-align:center; color:#555; margin-bottom:10px;">Market share by powertrain</p>
-                <canvas id="countryChart" width="750" height="420"></canvas>
+                <p style="text-align:center; color:#555; margin:5px 0 10px;">Market share by powertrain</p>
+                <div class="chart-container">
+                    <canvas id="countryChart"></canvas>
+                </div>
             `;
 
-            L.popup({ 
-                maxWidth: 800,
-                className: 'popup-content'
-            })
-            .setLatLng(map.getCenter())
-            .setContent(popupDiv)
-            .openOn(map);
+            L.popup({ maxWidth: 800 }).setLatLng(map.getCenter()).setContent(popupDiv).openOn(map);
 
             setTimeout(() => {
                 const datasets = [{
@@ -163,25 +160,19 @@
                     backgroundColor: ['#2c7a2c', '#4ade80', '#facc15', '#ef4444', '#64748b']
                 }];
 
-                createChart('countryChart', ['BEV', 'PHEV', 'Hybrid (non-plug)', 'Petrol', 'Diesel'], datasets, `${countryName} – 2025`);
-            }, 300);
+                createOrUpdateChart('countryChart', ['BEV', 'PHEV', 'Hybrid', 'Petrol', 'Diesel'], datasets, `${countryName} 2025`);
+            }, 350);
         }
 
-        // ==================== Karte mit Ländern ====================
+        // ==================== GeoJSON Karte laden ====================
         fetch('https://raw.githubusercontent.com/leakyMirror/map-of-europe/master/GeoJSON/europe.geojson')
             .then(res => res.json())
             .then(data => {
-                const evData = {
-                    "Norway": 97, "Sweden": 61, "Denmark": 69, "Netherlands": 56,
-                    "Germany": 30, "Belgium": 43, "France": 28, "United Kingdom": 33,
-                    "Italy": 11, "Spain": 19
-                };
+                const evData = { "Norway":97, "Sweden":61, "Denmark":69, "Netherlands":56, "Germany":30, "Belgium":43, "France":28, "United Kingdom":33, "Italy":11, "Spain":19 };
 
                 data.features.forEach(f => {
                     const name = f.properties.name || f.properties.NAME;
-                    if (name && evData[name] !== undefined) {
-                        f.properties.ev_share = evData[name];
-                    }
+                    if (name && evData[name] !== undefined) f.properties.ev_share = evData[name];
                 });
 
                 L.geoJSON(data, {
@@ -202,7 +193,7 @@
                     }
                 }).addTo(map);
             })
-            .catch(err => console.error("GeoJSON Fehler:", err));
+            .catch(err => console.error(err));
 
         // Legende
         const legend = L.control({position: 'bottomright'});
