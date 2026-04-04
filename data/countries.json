@@ -3,168 +3,53 @@
   "features": [
     {
       "type": "Feature",
-      "properties": {
-        "name": "Norway",
-        "ev_share": 97,
-        "bev": 92,
-        "phev": 5,
-        "year": "2025"
-      },
-      "geometry": {"type": "Polygon", "coordinates": [[[0,0]]]}
+      "properties": { "name": "Norway", "ev_share": 97, "bev": 92, "phev": 5, "year": "2025" },
+      "geometry": { "type": "MultiPolygon", "coordinates": [[[[4.5,58],[5,59.5],[7,60.5],[12,64],[15,68],[20,70],[25,71],[30,70],[35,68],[30,65],[25,62],[20,60],[15,58],[10,57],[4.5,58]]]] }
     },
     {
       "type": "Feature",
-      "properties": {
-        "name": "Denmark",
-        "ev_share": 69,
-        "bev": 55,
-        "phev": 14,
-        "year": "2025"
-      },
-      "geometry": {"type": "Polygon", "coordinates": [[[0,0]]]}
+      "properties": { "name": "Sweden", "ev_share": 61, "bev": 48, "phev": 13, "year": "2025" },
+      "geometry": { "type": "MultiPolygon", "coordinates": [[[[11,55],[12,58],[15,60],[18,63],[20,65],[25,67],[30,66],[28,62],[25,59],[20,57],[15,55],[11,55]]]] }
     },
     {
       "type": "Feature",
-      "properties": {
-        "name": "Sweden",
-        "ev_share": 61,
-        "bev": 48,
-        "phev": 13,
-        "year": "2025"
-      },
-      "geometry": {"type": "Polygon", "coordinates": [[[0,0]]]}
+      "properties": { "name": "Denmark", "ev_share": 69, "bev": 55, "phev": 14, "year": "2025" },
+      "geometry": { "type": "MultiPolygon", "coordinates": [[[[8,54.5],[9,56],[12,57.5],[13,55.5],[12,54],[8,54.5]]]] }
     },
     {
       "type": "Feature",
-      "properties": {
-        "name": "Netherlands",
-        "ev_share": 56,
-        "bev": 42,
-        "phev": 14,
-        "year": "2025"
-      },
-      "geometry": {"type": "Polygon", "coordinates": [[[0,0]]]}
+      "properties": { "name": "Netherlands", "ev_share": 56, "bev": 42, "phev": 14, "year": "2025" },
+      "geometry": { "type": "Polygon", "coordinates": [[[3.5,51],[4.5,53.5],[7,53.5],[7.5,52.5],[6.5,51],[3.5,51]]] }
     },
     {
       "type": "Feature",
-      "properties": {
-        "name": "Iceland",
-        "ev_share": 57,
-        "bev": 50,
-        "phev": 7,
-        "year": "2025"
-      },
-      "geometry": {"type": "Polygon", "coordinates": [[[0,0]]]}
+      "properties": { "name": "Germany", "ev_share": 30, "bev": 19.1, "phev": 10.9, "year": "2025" },
+      "geometry": { "type": "Polygon", "coordinates": [[[6,47.5],[10,47.5],[13,50],[15,53.5],[13,55],[10,54.5],[7,52],[6,47.5]]] }
     },
     {
       "type": "Feature",
-      "properties": {
-        "name": "Finland",
-        "ev_share": 56,
-        "bev": 45,
-        "phev": 11,
-        "year": "2025"
-      },
-      "geometry": {"type": "Polygon", "coordinates": [[[0,0]]]}
+      "properties": { "name": "Belgium", "ev_share": 43, "bev": 30, "phev": 13, "year": "2025" },
+      "geometry": { "type": "Polygon", "coordinates": [[[2.5,49.5],[6,50.5],[6.5,51.5],[4.5,51.5],[2.5,49.5]]] }
     },
     {
       "type": "Feature",
-      "properties": {
-        "name": "Belgium",
-        "ev_share": 43,
-        "bev": 30,
-        "phev": 13,
-        "year": "2025"
-      },
-      "geometry": {"type": "Polygon", "coordinates": [[[0,0]]]}
+      "properties": { "name": "France", "ev_share": 28, "bev": 20, "phev": 8, "year": "2025" },
+      "geometry": { "type": "Polygon", "coordinates": [[[-1,43],[2,43],[5,47],[8,49],[6,51],[2.5,49.5],[0,47],[-1,43]]] }
     },
     {
       "type": "Feature",
-      "properties": {
-        "name": "Germany",
-        "ev_share": 30,
-        "bev": 19.1,
-        "phev": 10.9,
-        "year": "2025"
-      },
-      "geometry": {"type": "Polygon", "coordinates": [[[0,0]]]}
+      "properties": { "name": "United Kingdom", "ev_share": 33, "bev": 25, "phev": 8, "year": "2025" },
+      "geometry": { "type": "MultiPolygon", "coordinates": [[[[-8,50],[-5,51],[-2,53],[0,55],[2,57],[-2,58],[-5,57],[-8,53],[-8,50]]]] }
     },
     {
       "type": "Feature",
-      "properties": {
-        "name": "Austria",
-        "ev_share": 31,
-        "bev": 21,
-        "phev": 10,
-        "year": "2025"
-      },
-      "geometry": {"type": "Polygon", "coordinates": [[[0,0]]]}
+      "properties": { "name": "Italy", "ev_share": 11, "bev": 6, "phev": 5, "year": "2025" },
+      "geometry": { "type": "Polygon", "coordinates": [[[7,38],[12,38],[15,42],[18,45],[15,47],[12,45],[8,41],[7,38]]] }
     },
     {
       "type": "Feature",
-      "properties": {
-        "name": "United Kingdom",
-        "ev_share": 33,
-        "bev": 25,
-        "phev": 8,
-        "year": "2025"
-      },
-      "geometry": {"type": "Polygon", "coordinates": [[[0,0]]]}
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "name": "France",
-        "ev_share": 28,
-        "bev": 20,
-        "phev": 8,
-        "year": "2025"
-      },
-      "geometry": {"type": "Polygon", "coordinates": [[[0,0]]]}
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "name": "Switzerland",
-        "ev_share": 32,
-        "bev": 24,
-        "phev": 8,
-        "year": "2025"
-      },
-      "geometry": {"type": "Polygon", "coordinates": [[[0,0]]]}
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "name": "Portugal",
-        "ev_share": 27,
-        "bev": 20,
-        "phev": 7,
-        "year": "2025"
-      },
-      "geometry": {"type": "Polygon", "coordinates": [[[0,0]]]}
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "name": "Spain",
-        "ev_share": 19,
-        "bev": 12,
-        "phev": 7,
-        "year": "2025"
-      },
-      "geometry": {"type": "Polygon", "coordinates": [[[0,0]]]}
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "name": "Italy",
-        "ev_share": 11,
-        "bev": 6,
-        "phev": 5,
-        "year": "2025"
-      },
-      "geometry": {"type": "Polygon", "coordinates": [[[0,0]]]}
+      "properties": { "name": "Spain", "ev_share": 19, "bev": 12, "phev": 7, "year": "2025" },
+      "geometry": { "type": "Polygon", "coordinates": [[[-9,36],[-5,36],[-2,40],[0,42],[3,43],[1,40],[-5,37],[-9,36]]] }
     }
   ]
 }
