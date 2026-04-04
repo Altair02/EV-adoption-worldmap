@@ -1,106 +1,140 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EV Adoption Worldmap</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
     <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f8f9fa;
-        }
+        body { margin: 0; font-family: Arial, sans-serif; background: #f8f9fa; }
         h1 {
             text-align: center;
-            padding: 20px;
+            padding: 15px;
             background: #2c3e50;
             color: white;
             margin: 0;
         }
-        #map {
-            height: calc(100vh - 60px);
-            width: 100%;
-        }
+        #map { height: calc(100vh - 60px); width: 100%; }
         .legend {
             background: white;
             padding: 10px;
             border-radius: 5px;
             box-shadow: 0 0 15px rgba(0,0,0,0.2);
             font-size: 14px;
+            line-height: 1.5;
+        }
+        .info {
+            padding: 6px 8px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
         }
     </style>
 </head>
 <body>
-    <h1>EV Adoption Worldmap – Antriebsarten weltweit</h1>
+    <h1>EV Adoption Worldmap</h1>
     <div id="map"></div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="data/countries.json"></script>
 
     <script>
-        // Karte initialisieren
         const map = L.map('map').setView([20, 0], 2);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        // Farbskala für EV-Anteil (in %)
-        function getColor(percentage) {
-            if (percentage > 50) return '#006400';      // dunkelgrün
-            if (percentage > 30) return '#228B22';
-            if (percentage > 15) return '#32CD32';
-            if (percentage > 5)  return '#ADFF2F';
-            if (percentage > 1)  return '#FFFF00';
-            return '#FF6347';                           // rot für sehr niedrig
+        // Color scale based on EV share
+        function getColor(evShare) {
+            if (evShare > 50) return '#006400';
+            if (evShare > 30) return '#228B22';
+            if (evShare > 15) return '#32CD32';
+            if (evShare > 5)  return '#ADFF2F';
+            if (evShare > 1)  return '#FFFF00';
+            return '#FF6347';
         }
 
-        // Stil für jedes Land
         function style(feature) {
-            const evShare = feature.properties.ev_share || 0;
+            const ev = feature.properties.ev_share || 0;
             return {
-                fillColor: getColor(evShare),
-                weight: 1,
+                fillColor: getColor(ev),
+                weight: 1.5,
                 opacity: 1,
                 color: 'white',
-                fillOpacity: 0.7
+                fillOpacity: 0.75
             };
         }
 
-        // Tooltip
+        // Hover Tooltip (simple info)
         function onEachFeature(feature, layer) {
-            const props = feature.properties;
-            if (props) {
-                const popupContent = `
-                    <strong>${props.name}</strong><br>
-                    EV-Anteil (BEV + PHEV): <b>${props.ev_share || '—'}%</b><br>
-                    Jahr: ${props.year || '2024/2025'}<br>
-                    BEV: ${props.bev || '—'}%<br>
-                    PHEV: ${props.phev || '—'}%<br>
-                    Quelle: IEA Global EV Outlook
+            const p = feature.properties;
+            const evShare = p.ev_share || 0;
+
+            // Tooltip on hover
+            layer.bindTooltip(`
+                <strong>${p.name}</strong><br>
+                EV Share: <b>${evShare}%</b> (${p.year || '2024'})
+            `, { sticky: true });
+
+            // Popup on click with Chart
+            layer.on('click', function() {
+                const popupContent = document.createElement('div');
+                popupContent.innerHTML = `
+                    <h3>${p.name} (${p.year || '2024'})</h3>
+                    <p><strong>Total EV Share:</strong> ${evShare}%</p>
+                    <canvas id="evChart" width="280" height="180"></canvas>
                 `;
-                layer.bindPopup(popupContent);
-            }
+
+                const popup = L.popup()
+                    .setLatLng(layer.getBounds().getCenter())
+                    .setContent(popupContent)
+                    .openOn(map);
+
+                // Create Chart after popup is open
+                setTimeout(() => {
+                    const ctx = document.getElementById('evChart');
+                    if (ctx) {
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: ['Battery Electric (BEV)', 'Plug-in Hybrid (PHEV)'],
+                                datasets: [{
+                                    label: 'Share (%)',
+                                    data: [p.bev || 0, p.phev || 0],
+                                    backgroundColor: ['#2c7a2c', '#4ade80']
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false } },
+                                scales: { y: { beginAtZero: true, max: 100 } }
+                            }
+                        });
+                    }
+                }, 300);
+            });
         }
 
-        // GeoJSON Layer hinzufügen
+        // Add countries
         L.geoJSON(countriesData, {
             style: style,
             onEachFeature: onEachFeature
         }).addTo(map);
 
-        // Legende
+        // Legend
         const legend = L.control({position: 'bottomright'});
         legend.onAdd = function () {
             const div = L.DomUtil.create('div', 'legend');
             const grades = [0, 1, 5, 15, 30, 50];
-            let labels = '<strong>EV-Anteil an Neuwagen</strong><br>';
-            
+            div.innerHTML = '<strong>EV Share of New Cars</strong><br>';
             for (let i = 0; i < grades.length; i++) {
                 div.innerHTML += 
-                    '<i style="background:' + getColor(grades[i] + 0.1) + '; width:18px; height:18px; display:inline-block; margin-right:5px;"></i> ' +
-                    grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '%<br>' : '%+');
+                    `<i style="background:${getColor(grades[i] + 0.1)}; width:18px; height:18px; display:inline-block; margin-right:5px;"></i> ` +
+                    `${grades[i]}${grades[i + 1] ? '–' + grades[i + 1] : '+'}%<br>`;
             }
             return div;
         };
