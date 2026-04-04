@@ -1,0 +1,72 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Norwegen",
+        "ev_share": 92,
+        "bev": 88,
+        "phev": 4,
+        "year": "2024"
+      },
+      "geometry": { "type": "Polygon", "coordinates": [[[0,0]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "China",
+        "ev_share": 48,
+        "bev": 35,
+        "phev": 13,
+        "year": "2024"
+      },
+      "geometry": { "type": "Polygon", "coordinates": [[[0,0]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Schweden",
+        "ev_share": 58,
+        "bev": 45,
+        "phev": 13,
+        "year": "2024"
+      },
+      "geometry": { "type": "Polygon", "coordinates": [[[0,0]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Dänemark",
+        "ev_share": 56,
+        "bev": 50,
+        "phev": 6,
+        "year": "2024"
+      },
+      "geometry": { "type": "Polygon", "coordinates": [[[0,0]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Deutschland",
+        "ev_share": 18,
+        "bev": 12,
+        "phev": 6,
+        "year": "2024"
+      },
+      "geometry": { "type": "Polygon", "coordinates": [[[0,0]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "USA",
+        "ev_share": 10,
+        "bev": 8,
+        "phev": 2,
+        "year": "2024"
+      },
+      "geometry": { "type": "Polygon", "coordinates": [[[0,0]]] }
+    }
+    // Hier kannst du weitere Länder hinzufügen (Island, Niederlande, Frankreich, UK, etc.)
+  ]
+}
