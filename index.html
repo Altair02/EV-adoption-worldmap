@@ -24,7 +24,7 @@
     </style>
 </head>
 <body>
-    <h1>EV Adoption Worldmap – Europe Focus (Absolute Neuzulassungen)</h1>
+    <h1>EV Adoption Worldmap – Europe Focus (Monatliche Neuzulassungen)</h1>
     <div id="map"></div>
 
     <script>
@@ -50,7 +50,6 @@
             return { fillColor: getColor(ev), weight: 1.8, color: '#333', fillOpacity: 0.78 };
         }
 
-        // Chart mit realistischer Y-Achsen-Skalierung
         function createOrUpdateChart(canvasId, labels, datasets, chartTitle) {
             if (currentChart) currentChart.destroy();
             
@@ -68,8 +67,8 @@
                     scales: {
                         y: { 
                             beginAtZero: true, 
-                            max: 3500000,                    // realistisches Maximum für monatliche Zulassungen
-                            title: { display: true, text: 'Neuzulassungen (Stück)' }
+                            max: 350000,           // realistisch für monatliche Neuzulassungen
+                            title: { display: true, text: 'Monatliche Neuzulassungen (Stück)' }
                         },
                         x: { 
                             ticks: { maxTicksLimit: 24 }
@@ -88,7 +87,7 @@
                 .then(data => {
                     const popupDiv = document.createElement('div');
                     popupDiv.innerHTML = `
-                        <h3>${countryName} – Absolute Neuzulassungen (2010–Februar 2026)</h3>
+                        <h3>${countryName} – Monatliche Neuzulassungen (2010–Februar 2026)</h3>
                         <p style="text-align:center; color:#555; margin:5px 0 10px;">Echte monatliche Zulassungszahlen • Source: KBA</p>
                         <div class="chart-container">
                             <canvas id="countryChart"></canvas>
@@ -105,11 +104,11 @@
                             { label: 'Petrol', borderColor: '#ef4444', data: data.petrol, borderWidth: 2, tension: 0.1 },
                             { label: 'Diesel', borderColor: '#64748b', data: data.diesel, borderWidth: 2, tension: 0.1 }
                         ];
-                        createOrUpdateChart('countryChart', data.labels, datasets, `${countryName} – Absolute Neuzulassungen 2010–Februar 2026`);
+                        createOrUpdateChart('countryChart', data.labels, datasets, `${countryName} – Monatliche Neuzulassungen 2010–Februar 2026`);
                     }, 350);
                 })
                 .catch(() => {
-                    alert(`Keine Daten gefunden für ${countryName}.\nBitte prüfe, ob die Datei "data/countries/${countryName.toLowerCase()}.json" existiert und korrekt ist.`);
+                    alert(`Keine Daten gefunden für ${countryName}. Bitte prüfe die Datei "data/countries/${countryName.toLowerCase()}.json".`);
                 });
         }
 
