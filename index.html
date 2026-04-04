@@ -4,21 +4,107 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EV Adoption Worldmap</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body {
+            margin: 0;
             font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
-            background-color: #f4f4f4;
+            background: #f8f9fa;
         }
         h1 {
-            color: #2c3e50;
+            text-align: center;
+            padding: 20px;
+            background: #2c3e50;
+            color: white;
+            margin: 0;
+        }
+        #map {
+            height: calc(100vh - 60px);
+            width: 100%;
+        }
+        .legend {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
-    <h1>EV Adoption Worldmap</h1>
-    <p>Die Seite wurde erfolgreich über GitHub Pages bereitgestellt.</p>
-    <p><strong>Es funktioniert!</strong></p>
+    <h1>EV Adoption Worldmap – Antriebsarten weltweit</h1>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="data/countries.json"></script>
+
+    <script>
+        // Karte initialisieren
+        const map = L.map('map').setView([20, 0], 2);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Farbskala für EV-Anteil (in %)
+        function getColor(percentage) {
+            if (percentage > 50) return '#006400';      // dunkelgrün
+            if (percentage > 30) return '#228B22';
+            if (percentage > 15) return '#32CD32';
+            if (percentage > 5)  return '#ADFF2F';
+            if (percentage > 1)  return '#FFFF00';
+            return '#FF6347';                           // rot für sehr niedrig
+        }
+
+        // Stil für jedes Land
+        function style(feature) {
+            const evShare = feature.properties.ev_share || 0;
+            return {
+                fillColor: getColor(evShare),
+                weight: 1,
+                opacity: 1,
+                color: 'white',
+                fillOpacity: 0.7
+            };
+        }
+
+        // Tooltip
+        function onEachFeature(feature, layer) {
+            const props = feature.properties;
+            if (props) {
+                const popupContent = `
+                    <strong>${props.name}</strong><br>
+                    EV-Anteil (BEV + PHEV): <b>${props.ev_share || '—'}%</b><br>
+                    Jahr: ${props.year || '2024/2025'}<br>
+                    BEV: ${props.bev || '—'}%<br>
+                    PHEV: ${props.phev || '—'}%<br>
+                    Quelle: IEA Global EV Outlook
+                `;
+                layer.bindPopup(popupContent);
+            }
+        }
+
+        // GeoJSON Layer hinzufügen
+        L.geoJSON(countriesData, {
+            style: style,
+            onEachFeature: onEachFeature
+        }).addTo(map);
+
+        // Legende
+        const legend = L.control({position: 'bottomright'});
+        legend.onAdd = function () {
+            const div = L.DomUtil.create('div', 'legend');
+            const grades = [0, 1, 5, 15, 30, 50];
+            let labels = '<strong>EV-Anteil an Neuwagen</strong><br>';
+            
+            for (let i = 0; i < grades.length; i++) {
+                div.innerHTML += 
+                    '<i style="background:' + getColor(grades[i] + 0.1) + '; width:18px; height:18px; display:inline-block; margin-right:5px;"></i> ' +
+                    grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '%<br>' : '%+');
+            }
+            return div;
+        };
+        legend.addTo(map);
+    </script>
 </body>
 </html>
