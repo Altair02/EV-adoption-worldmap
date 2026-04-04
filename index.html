@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EV Adoption Worldmap</title>
+    <title>EV Adoption Worldmap – Europe Focus</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -26,8 +26,11 @@
     <script>
         const map = L.map('map').setView([55, 10], 4);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
+        // No-Labels Tile Layer (keine Städte- und Ortsnamen)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+            subdomains: 'abcd',
+            maxZoom: 19
         }).addTo(map);
 
         function getColor(evShare) {
@@ -48,7 +51,7 @@
             };
         }
 
-        // Monatliche Daten für Deutschland (2020–2025) – Marktanteile in %
+        // Monatliche Daten für Deutschland
         const germanyMonthly = {
             labels: ['2020-01','2020-06','2020-12','2021-06','2021-12','2022-06','2022-12','2023-06','2023-12','2024-06','2024-12','2025-01','2025-04','2025-07','2025-10','2025-12'],
             bev:   [1.5, 4.2, 6.6, 10.2, 13.5, 14.8, 17.7, 16.5, 18.4, 13.2, 13.5, 16.6, 18.8, 19.5, 19.2, 19.1],
@@ -67,29 +70,22 @@
                 <canvas id="deChart" width="850" height="420"></canvas>
             `;
 
-            const popup = L.popup({
-                maxWidth: 980,
-                className: 'germany-popup'
-            })
-            .setLatLng([51.2, 10.4])
-            .setContent(popupDiv)
-            .openOn(map);
+            L.popup({ maxWidth: 980 })
+                .setLatLng([51.2, 10.4])
+                .setContent(popupDiv)
+                .openOn(map);
 
-            // Warten bis der Canvas wirklich im DOM ist
             setTimeout(() => {
                 const canvas = document.getElementById('deChart');
-                if (!canvas) {
-                    console.error("Canvas not found!");
-                    return;
-                }
+                if (!canvas) return;
 
                 new Chart(canvas, {
                     type: 'line',
                     data: {
                         labels: germanyMonthly.labels,
                         datasets: [
-                            { label: 'BEV (%)',          data: germanyMonthly.bev,    borderColor: '#2c7a2c', backgroundColor: 'rgba(44,122,44,0.1)',   tension: 0.3, borderWidth: 3.5, pointRadius: 3 },
-                            { label: 'PHEV (%)',         data: germanyMonthly.phev,   borderColor: '#4ade80', backgroundColor: 'rgba(74,222,128,0.1)', tension: 0.3, borderWidth: 3.5, pointRadius: 3 },
+                            { label: 'BEV (%)',          data: germanyMonthly.bev,    borderColor: '#2c7a2c', backgroundColor: 'rgba(44,122,44,0.1)', tension: 0.3, borderWidth: 3.5 },
+                            { label: 'PHEV (%)',         data: germanyMonthly.phev,   borderColor: '#4ade80', backgroundColor: 'rgba(74,222,128,0.1)', tension: 0.3, borderWidth: 3.5 },
                             { label: 'Hybrid (non-plug)',data: germanyMonthly.hybrid, borderColor: '#facc15', tension: 0.25, borderWidth: 2.5 },
                             { label: 'Petrol (%)',       data: germanyMonthly.petrol, borderColor: '#ef4444', tension: 0.2 },
                             { label: 'Diesel (%)',       data: germanyMonthly.diesel, borderColor: '#64748b', tension: 0.2 }
@@ -98,17 +94,14 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'top', labels: { padding: 12 } },
-                            tooltip: { mode: 'index', intersect: false }
-                        },
+                        plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false } },
                         scales: {
                             y: { beginAtZero: true, max: 100, title: { display: true, text: 'Market Share (%)' } },
                             x: { title: { display: true, text: 'Month / Year' } }
                         }
                     }
                 });
-            }, 500);   // etwas längere Verzögerung für Sicherheit
+            }, 400);
         }
 
         function onEachFeature(feature, layer) {
@@ -116,7 +109,7 @@
             layer.bindTooltip(`<strong>${p.name}</strong><br>EV Share: <b>${p.ev_share || 0}%</b> (${p.year})`, { sticky: true });
 
             layer.on('click', function () {
-                if (p.name === "Germany" || p.name === "Germany") {
+                if (p.name === "Germany") {
                     showGermanyChart();
                 } else {
                     L.popup()
