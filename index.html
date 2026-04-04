@@ -53,7 +53,7 @@
             return { fillColor: getColor(ev), weight: 1.8, color: '#333', fillOpacity: 0.78 };
         }
 
-        // ==================== VOLLSTÄNDIGE DATEN BIS MÄRZ 2026 (KBA-nah) ====================
+        // ==================== VOLLSTÄNDIGE DATEN BIS MÄRZ 2026 ====================
         const monthlyData = {
             "Germany": {
                 labels: Array.from({length: 195}, (_, i) => {
@@ -62,7 +62,7 @@
                     return `${year}-${month}`;
                 }),
                 bev: [
-                    ...Array(84).fill(0), 
+                    ...Array(84).fill(0),
                     0.1,0.2,0.3,0.4,0.6,0.9,1.1,1.4,1.8,2.2,2.5,2.8,
                     3.1,3.5,4.0,4.5,5.2,5.8,6.5,7.2,8.0,8.8,9.5,10.2,
                     9.8,11.2,12.5,13.8,14.5,15.2,16.8,17.5,18.2,19.0,18.5,19.1,
