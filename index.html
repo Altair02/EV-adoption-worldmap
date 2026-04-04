@@ -13,8 +13,8 @@
         h1 { text-align: center; padding: 15px; background: #2c3e50; color: white; margin: 0; }
         #map { height: calc(100vh - 60px); width: 100%; }
         .legend { background: white; padding: 10px; border-radius: 5px; box-shadow: 0 0 15px rgba(0,0,0,0.2); font-size: 14px; }
-        .germany-popup { min-width: 800px; max-width: 960px; padding: 15px; }
-        .germany-popup h3 { margin: 8px 0 12px 0; text-align: center; color: #2c3e50; }
+        .popup-content { min-width: 720px; max-width: 900px; padding: 10px; }
+        .popup-content h3 { margin: 8px 0 15px 0; text-align: center; color: #2c3e50; }
     </style>
 </head>
 <body>
@@ -24,10 +24,8 @@
     <script>
         const map = L.map('map').setView([54, 10], 4);
 
-        // Saubere Karte ohne Städtenamen
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-            subdomains: 'abcd'
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
         }).addTo(map);
 
         function getColor(evShare) {
@@ -41,129 +39,169 @@
 
         function style(feature) {
             const ev = feature.properties.ev_share || 0;
-            return {
-                fillColor: getColor(ev),
-                weight: 1.8,
-                color: '#333',
-                fillOpacity: 0.78
-            };
+            return { fillColor: getColor(ev), weight: 1.8, color: '#333', fillOpacity: 0.78 };
         }
 
-        // Monatliche Daten für Deutschland (2020–2025)
+        // ==================== DEUTSCHLAND Monatsdaten ====================
         const germanyMonthly = {
             labels: ['2020-01','2020-06','2020-12','2021-06','2021-12','2022-06','2022-12','2023-06','2023-12','2024-06','2024-12','2025-01','2025-04','2025-07','2025-10','2025-12'],
-            bev:    [1.5, 4.2, 6.6, 10.2, 13.5, 14.8, 17.7, 16.5, 18.4, 13.2, 13.5, 16.6, 18.8, 19.5, 19.2, 19.1],
-            phev:   [2.8, 3.1, 3.0, 5.8, 6.0, 7.8, 8.5, 8.0, 9.0, 6.4, 6.8, 8.5, 10.2, 10.6, 10.8, 10.9],
-            hybrid: [7, 9, 12, 16, 19, 21, 23, 26, 28, 33, 35, 36, 37, 38, 39, 39.5],
-            petrol: [48, 42, 35, 29, 26, 25, 23, 22, 20, 32, 35, 29, 26, 25, 26.5, 27.2],
-            diesel: [37, 36, 38, 33, 30, 27, 24, 21, 18, 15, 15, 14.5, 14, 13.8, 13.8, 13.8]
+            bev:    [1.5,4.2,6.6,10.2,13.5,14.8,17.7,16.5,18.4,13.2,13.5,16.6,18.8,19.5,19.2,19.1],
+            phev:   [2.8,3.1,3.0,5.8,6.0,7.8,8.5,8.0,9.0,6.4,6.8,8.5,10.2,10.6,10.8,10.9],
+            hybrid: [7,9,12,16,19,21,23,26,28,33,35,36,37,38,39,39.5],
+            petrol: [48,42,35,29,26,25,23,22,20,32,35,29,26,25,26.5,27.2],
+            diesel: [37,36,38,33,30,27,24,21,18,15,15,14.5,14,13.8,13.8,13.8]
         };
 
-        function showGermanyChart() {
+        function showGermanyChart(countryName) {
             const popupDiv = document.createElement('div');
-            popupDiv.className = 'germany-popup';
+            popupDiv.className = 'popup-content';
             popupDiv.innerHTML = `
-                <h3>Germany – Monthly New Car Registrations by Powertrain (2020–2025)</h3>
-                <p style="text-align:center; color:#555; font-size:14px;">Market share in % • Source: KBA</p>
-                <canvas id="deChart" width="860" height="430"></canvas>
+                <h3>${countryName} – Monthly New Car Registrations (2020–2025)</h3>
+                <p style="text-align:center; color:#555;">Market share in % • Source: KBA</p>
+                <canvas id="countryChart" width="850" height="420"></canvas>
             `;
 
             L.popup({ maxWidth: 1000 }).setLatLng([51.2, 10.4]).setContent(popupDiv).openOn(map);
 
             setTimeout(() => {
-                const ctx = document.getElementById('deChart');
-                if (!ctx) return;
+                const ctx = document.getElementById('countryChart');
                 new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: germanyMonthly.labels,
                         datasets: [
-                            { label: 'BEV (%)', data: germanyMonthly.bev, borderColor: '#2c7a2c', tension: 0.3, borderWidth: 3.5 },
-                            { label: 'PHEV (%)', data: germanyMonthly.phev, borderColor: '#4ade80', tension: 0.3, borderWidth: 3.5 },
-                            { label: 'Hybrid (non-plug)', data: germanyMonthly.hybrid, borderColor: '#facc15', tension: 0.25 },
-                            { label: 'Petrol (%)', data: germanyMonthly.petrol, borderColor: '#ef4444', tension: 0.2 },
-                            { label: 'Diesel (%)', data: germanyMonthly.diesel, borderColor: '#64748b', tension: 0.2 }
+                            { label: 'BEV (%)', borderColor: '#2c7a2c', data: germanyMonthly.bev, tension: 0.3, borderWidth: 3.5 },
+                            { label: 'PHEV (%)', borderColor: '#4ade80', data: germanyMonthly.phev, tension: 0.3, borderWidth: 3.5 },
+                            { label: 'Hybrid (non-plug)', borderColor: '#facc15', data: germanyMonthly.hybrid, tension: 0.25 },
+                            { label: 'Petrol (%)', borderColor: '#ef4444', data: germanyMonthly.petrol },
+                            { label: 'Diesel (%)', borderColor: '#64748b', data: germanyMonthly.diesel }
                         ]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false } },
+                        plugins: { legend: { position: 'top' }, tooltip: { mode: 'index' } },
                         scales: { y: { beginAtZero: true, max: 100 } }
                     }
                 });
             }, 400);
         }
 
-        // GeoJSON direkt von einer guten Quelle laden
+        // ==================== Andere Länder – Jahresdaten 2025 ====================
+        const countryData2025 = {
+            "Norway": { bev: 92, phev: 5, hybrid: 2, petrol: 1, diesel: 0 },
+            "Sweden": { bev: 48, phev: 13, hybrid: 25, petrol: 10, diesel: 4 },
+            "Denmark": { bev: 55, phev: 14, hybrid: 20, petrol: 8, diesel: 3 },
+            "Netherlands": { bev: 42, phev: 14, hybrid: 28, petrol: 12, diesel: 4 },
+            "Germany": { bev: 19.1, phev: 10.9, hybrid: 39.5, petrol: 27.2, diesel: 13.8 },
+            "Belgium": { bev: 30, phev: 13, hybrid: 32, petrol: 18, diesel: 7 },
+            "France": { bev: 20, phev: 8, hybrid: 35, petrol: 25, diesel: 12 },
+            "United Kingdom": { bev: 25, phev: 8, hybrid: 30, petrol: 28, diesel: 9 },
+            "Italy": { bev: 6, phev: 5, hybrid: 40, petrol: 35, diesel: 14 },
+            "Spain": { bev: 12, phev: 7, hybrid: 38, petrol: 30, diesel: 13 }
+            // Hier kannst du später weitere Länder hinzufügen
+        };
+
+        function showCountryChart(countryName) {
+            const data = countryData2025[countryName];
+            if (!data) {
+                alert(`No detailed data available for ${countryName} yet.`);
+                return;
+            }
+
+            const popupDiv = document.createElement('div');
+            popupDiv.className = 'popup-content';
+            popupDiv.innerHTML = `
+                <h3>${countryName} – New Car Registrations 2025</h3>
+                <p style="text-align:center; color:#555;">Market share by powertrain</p>
+                <canvas id="countryChart" width="750" height="420"></canvas>
+            `;
+
+            L.popup({ maxWidth: 850 }).setLatLng(map.getCenter()).setContent(popupDiv).openOn(map);
+
+            setTimeout(() => {
+                const ctx = document.getElementById('countryChart');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['BEV', 'PHEV', 'Hybrid (non-plug)', 'Petrol', 'Diesel'],
+                        datasets: [{
+                            label: 'Market Share (%)',
+                            data: [data.bev, data.phev, data.hybrid, data.petrol, data.diesel],
+                            backgroundColor: ['#2c7a2c', '#4ade80', '#facc15', '#ef4444', '#64748b']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, max: 100 } }
+                    }
+                });
+            }, 400);
+        }
+
+        // ==================== Karte laden ====================
         fetch('https://raw.githubusercontent.com/leakyMirror/map-of-europe/master/GeoJSON/europe.geojson')
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
-                // EV-Daten zu den Ländern hinzufügen (matching per name)
                 const evData = {
-                    "Norway": {ev_share: 97, bev: 92, phev: 5},
-                    "Sweden": {ev_share: 61, bev: 48, phev: 13},
-                    "Denmark": {ev_share: 69, bev: 55, phev: 14},
-                    "Netherlands": {ev_share: 56, bev: 42, phev: 14},
-                    "Germany": {ev_share: 30, bev: 19.1, phev: 10.9},
-                    "Belgium": {ev_share: 43, bev: 30, phev: 13},
-                    "France": {ev_share: 28, bev: 20, phev: 8},
-                    "United Kingdom": {ev_share: 33, bev: 25, phev: 8},
-                    "Italy": {ev_share: 11, bev: 6, phev: 5},
-                    "Spain": {ev_share: 19, bev: 12, phev: 7}
-                    // Du kannst hier weitere Länder hinzufügen
+                    "Norway": 97, "Sweden": 61, "Denmark": 69, "Netherlands": 56,
+                    "Germany": 30, "Belgium": 43, "France": 28, "United Kingdom": 33,
+                    "Italy": 11, "Spain": 19
                 };
 
-                data.features.forEach(feature => {
-                    const name = feature.properties.name || feature.properties.NAME;
-                    if (name && evData[name]) {
-                        feature.properties.ev_share = evData[name].ev_share;
-                        feature.properties.bev = evData[name].bev;
-                        feature.properties.phev = evData[name].phev;
-                        feature.properties.year = "2025";
+                data.features.forEach(f => {
+                    const name = f.properties.name || f.properties.NAME;
+                    if (name && evData[name] !== undefined) {
+                        f.properties.ev_share = evData[name];
                     }
                 });
 
                 const geoLayer = L.geoJSON(data, {
                     style: style,
                     onEachFeature: function(feature, layer) {
-                        const p = feature.properties;
-                        if (p.ev_share) {
-                            layer.bindTooltip(`<strong>${p.name || p.NAME}</strong><br>EV Share: <b>${p.ev_share}%</b>`, { sticky: true });
-                        }
+                        const name = feature.properties.name || feature.properties.NAME;
+                        const ev = feature.properties.ev_share || 0;
+
+                        layer.bindTooltip(`<strong>${name}</strong><br>EV Share: <b>${ev}%</b> (2025)`, {
+                            sticky: true
+                        });
 
                         layer.on('click', function() {
-                            if ((p.name || p.NAME) === "Germany") {
-                                showGermanyChart();
+                            if (name === "Germany") {
+                                showGermanyChart(name);
+                            } else {
+                                showCountryChart(name);
                             }
                         });
                     }
                 }).addTo(map);
 
-                // Ländernamen als Label
+                // Ländernamen als Label auf der Karte
                 geoLayer.eachLayer(layer => {
                     const name = layer.feature.properties.name || layer.feature.properties.NAME;
                     if (name) {
                         const center = layer.getBounds().getCenter();
                         L.marker(center, {
                             icon: L.divIcon({
-                                className: 'country-label',
-                                html: `<b>${name}</b>`,
+                                className: '',
+                                html: `<b style="color:#222; font-size:13px; text-shadow: 0 0 3px white;">${name}</b>`,
                                 iconSize: [100, 30],
-                                iconAnchor: [50, 15]
+                                iconAnchor: [50, 10]
                             })
                         }).addTo(map);
                     }
                 });
             })
-            .catch(err => console.error("Fehler beim Laden der GeoJSON:", err));
+            .catch(err => console.error(err));
 
         // Legende
         const legend = L.control({position: 'bottomright'});
         legend.onAdd = function () {
             const div = L.DomUtil.create('div', 'legend');
             const grades = [0, 1, 5, 15, 30, 50];
-            div.innerHTML = '<strong>EV Share (%)</strong><br>';
+            div.innerHTML = '<strong>EV Share of New Cars (%)</strong><br>';
             for (let i = 0; i < grades.length; i++) {
                 div.innerHTML += `<i style="background:${getColor(grades[i]+0.1)}; width:18px; height:18px; display:inline-block; margin-right:5px;"></i> ${grades[i]}${grades[i+1] ? '–'+grades[i+1] : '+'}%<br>`;
             }
