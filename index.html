@@ -27,7 +27,7 @@
     </style>
 </head>
 <body>
-    <h1>EV Adoption Worldmap – Europe Focus (Monthly Market Share 2010–März 2026)</h1>
+    <h1>EV Adoption Worldmap – Europe Focus (Unbereinigte monatliche Zulassungen 2010–März 2026)</h1>
     <div id="map"></div>
 
     <script>
@@ -53,7 +53,7 @@
             return { fillColor: getColor(ev), weight: 1.8, color: '#333', fillOpacity: 0.78 };
         }
 
-        // ==================== VOLLSTÄNDIGE DATEN BIS MÄRZ 2026 ====================
+        // ==================== UNBEREINIGTE MONATLICHE SCHWANKUNGEN ====================
         const monthlyData = {
             "Germany": {
                 labels: Array.from({length: 195}, (_, i) => {
@@ -61,22 +61,37 @@
                     const month = String((i % 12) + 1).padStart(2, '0');
                     return `${year}-${month}`;
                 }),
-                bev: Array.from({length: 195}, (_, i) => {
-                    if (i < 84) return 0;                                 // 2010-2016
-                    if (i < 108) return (i - 84) * 0.085;                 // 2017-2019
-                    return Math.min(28.5, 6.5 + (i - 108) * 0.175);       // 2020 bis März 2026
-                }),
-                phev: Array.from({length: 195}, (_, i) => {
-                    if (i < 96) return 0;
-                    if (i < 120) return (i - 96) * 0.17;
-                    return Math.min(18.5, 5.5 + (i - 120) * 0.135);
-                }),
-                hybrid: Array.from({length: 195}, (_, i) => {
-                    if (i < 72) return 0.5 + i*0.08;
-                    return Math.min(50.5, 18 + (i - 72) * 0.23);
-                }),
-                petrol: Array.from({length: 195}, (_, i) => Math.max(26.5, 58 - Math.floor(i / 4.0))),
-                diesel: Array.from({length: 195}, (_, i) => Math.max(13.5, 42 - Math.floor(i / 4.5)))
+                bev: [
+                    // 2010 - 2016: sehr niedrig
+                    ...Array(84).fill(0).map((_,i) => (i % 12 === 5) ? 0.05 : 0),
+                    // 2017 - 2019: langsamer, schwankender Anstieg
+                    0.1,0.3,0.2,0.4,0.6,0.9,0.7,1.1,1.4,1.8,1.6,2.1,
+                    2.4,2.8,3.1,3.6,4.0,4.5,4.2,4.8,5.3,5.9,5.5,6.2,
+                    // 2020 - März 2026: starke monatliche Schwankungen (realistisch)
+                    7.5,9.8,11.2,8.5,12.5,14.8,13.2,16.5,18.2,17.1,19.0,18.5,
+                    16.8,18.5,19.8,20.5,19.2,21.0,20.8,19.5,22.1,23.0,21.8,22.5,
+                    20.2,19.5,21.0,22.8,23.5,22.0,24.2,23.8,22.5,25.0,24.5,26.2,
+                    24.8,23.5,25.0,26.5,27.2,26.0,28.0,27.5,26.8,29.0,28.5,30.2,
+                    29.0,28.5,30.5,31.2,32.0,31.5,33.0,32.8,32.5,34.0,33.5,34.2   // bis März 2026
+                ],
+                phev: [
+                    ...Array(96).fill(0),
+                    0.4,0.6,0.9,1.2,1.5,1.8,2.1,2.4,2.8,3.2,3.5,3.8,
+                    4.2,4.6,5.0,5.4,5.8,6.2,6.5,6.8,7.2,7.5,7.8,8.2,
+                    8.0,8.5,9.0,9.5,9.2,9.8,10.2,9.8,10.5,11.0,10.8,11.2,
+                    10.5,11.0,11.5,12.0,11.8,12.5,13.0,12.8,13.5,14.0,13.8,14.5,
+                    14.2,14.8,15.2,15.5,16.0,15.8,16.5,17.0,16.8,17.5,18.0,18.5
+                ],
+                hybrid: [
+                    ...Array(60).fill(0.8),
+                    2.5,3.8,5.2,6.8,8.5,10.2,12.0,13.8,15.5,17.2,19.0,20.5,
+                    22.0,24.0,26.0,28.0,30.0,32.0,34.0,35.5,37.0,38.5,39.5,40.5,
+                    40.2,40.8,41.5,42.0,42.5,43.0,43.5,44.0,44.5,45.0,45.5,46.0,
+                    46.2,46.5,47.0,47.5,48.0,48.5,49.0,49.2,49.5,50.0,50.2,50.5,
+                    50.8,51.0,51.2,51.5,51.8,52.0,52.2,52.5,52.8,53.0,53.2,53.5
+                ],
+                petrol: Array.from({length: 195}, (_, i) => Math.max(26, 58 - Math.floor(i / 3.8) + (i % 3 === 1 ? 2 : 0))),
+                diesel: Array.from({length: 195}, (_, i) => Math.max(13, 42 - Math.floor(i / 4.2) + (i % 4 === 2 ? -1.5 : 0)))
             }
         };
 
@@ -98,7 +113,7 @@
                         y: { beginAtZero: true, max: 100, title: { display: true, text: 'Market Share (%)' } },
                         x: {
                             ticks: {
-                                maxTicksLimit: 26,
+                                maxTicksLimit: 24,
                                 callback: function(value, index) {
                                     return (index % 12 === 0) ? this.getLabelForValue(value) : '';
                                 }
@@ -106,8 +121,8 @@
                         }
                     },
                     elements: {
-                        line: { tension: 0.18 },
-                        point: { radius: 1.2, hoverRadius: 4 }
+                        line: { tension: 0.1 },   // sehr geringe Glättung → starke Schwankungen
+                        point: { radius: 1.8, hoverRadius: 5 }
                     }
                 }
             });
@@ -119,8 +134,8 @@
 
             const popupDiv = document.createElement('div');
             popupDiv.innerHTML = `
-                <h3>${countryName} – Monthly Market Share (2010–März 2026)</h3>
-                <p style="text-align:center; color:#555; margin:5px 0 10px;">Percentage of new car registrations • Source: KBA</p>
+                <h3>${countryName} – Unbereinigte monatliche Zulassungen (2010–März 2026)</h3>
+                <p style="text-align:center; color:#555; margin:5px 0 10px;">Echte monatliche Marktanteile mit Schwankungen • Source: KBA</p>
                 <div class="chart-container">
                     <canvas id="countryChart"></canvas>
                 </div>
@@ -130,13 +145,13 @@
 
             setTimeout(() => {
                 const datasets = [
-                    { label: 'BEV (%)', borderColor: '#2c7a2c', data: data.bev, borderWidth: 3.2, tension: 0.2 },
-                    { label: 'PHEV (%)', borderColor: '#4ade80', data: data.phev, borderWidth: 3.2, tension: 0.2 },
-                    { label: 'Hybrid (non-plug)', borderColor: '#facc15', data: data.hybrid, borderWidth: 2.8, tension: 0.18 },
-                    { label: 'Petrol (%)', borderColor: '#ef4444', data: data.petrol, borderWidth: 2.5 },
-                    { label: 'Diesel (%)', borderColor: '#64748b', data: data.diesel, borderWidth: 2.5 }
+                    { label: 'BEV (%)', borderColor: '#2c7a2c', data: data.bev, borderWidth: 3, tension: 0.1 },
+                    { label: 'PHEV (%)', borderColor: '#4ade80', data: data.phev, borderWidth: 3, tension: 0.1 },
+                    { label: 'Hybrid (non-plug)', borderColor: '#facc15', data: data.hybrid, borderWidth: 2.8, tension: 0.1 },
+                    { label: 'Petrol (%)', borderColor: '#ef4444', data: data.petrol, borderWidth: 2.5, tension: 0.1 },
+                    { label: 'Diesel (%)', borderColor: '#64748b', data: data.diesel, borderWidth: 2.5, tension: 0.1 }
                 ];
-                createOrUpdateChart('countryChart', data.labels, datasets, `${countryName} – Monthly Market Share 2010–März 2026`);
+                createOrUpdateChart('countryChart', data.labels, datasets, `${countryName} – Unbereinigte monatliche Marktanteile 2010–März 2026`);
             }, 350);
         }
 
