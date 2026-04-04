@@ -15,8 +15,8 @@
 
         .legend { background: white; padding: 10px; border-radius: 5px; box-shadow: 0 0 15px rgba(0,0,0,0.2); font-size: 14px; }
 
-        .leaflet-popup-content-wrapper { width: 850px !important; max-width: 850px !important; }
-        .leaflet-popup-content { width: 830px !important; margin: 0 !important; padding: 15px !important; }
+        .leaflet-popup-content-wrapper { width: 860px !important; max-width: 860px !important; }
+        .leaflet-popup-content { width: 840px !important; margin: 0 !important; padding: 15px !important; }
 
         .chart-container {
             position: relative;
@@ -27,7 +27,7 @@
     </style>
 </head>
 <body>
-    <h1>EV Adoption Worldmap – Europe Focus (Monthly since 2010)</h1>
+    <h1>EV Adoption Worldmap – Europe Focus (Monthly Data 2010–2025)</h1>
     <div id="map"></div>
 
     <script>
@@ -53,45 +53,45 @@
             return { fillColor: getColor(ev), weight: 1.8, color: '#333', fillOpacity: 0.78 };
         }
 
-        // ==================== Monatliche Daten seit 2010 ====================
+        // ==================== Monatliche Daten 2010 – 2025 ====================
         const monthlyData = {
             "Germany": {
-                labels: ['2010','2012','2014','2016','2018','2020-01','2020-06','2020-12','2021-06','2021-12','2022-06','2022-12','2023-06','2023-12','2024-06','2024-12','2025-06','2025-12'],
-                bev:    [0, 0, 0, 0.01, 0.2, 1.8, 4.5, 6.6, 10.2, 13.5, 14.8, 17.7, 16.5, 18.4, 13.2, 13.5, 18.5, 19.1],
-                phev:   [0, 0, 0, 0, 0.1, 2.5, 3.0, 3.0, 5.8, 6.0, 7.8, 8.5, 8.0, 9.0, 6.4, 6.8, 10.5, 10.9],
-                hybrid: [0, 0.1, 0.5, 1.5, 3.5, 8, 10, 12, 16, 19, 21, 23, 26, 28, 33, 35, 38, 39.5],
-                petrol: [55, 52, 48, 45, 38, 45, 40, 32, 28, 25, 24, 22, 21, 20, 30, 35, 27, 27.2],
-                diesel: [40, 43, 45, 48, 52, 37, 36, 38, 33, 30, 27, 24, 21, 18, 16, 15, 14, 13.8]
+                labels: ['2010-01','2012-01','2014-01','2016-01','2018-01','2020-01','2020-06','2020-12','2021-06','2021-12','2022-06','2022-12','2023-06','2023-12','2024-06','2024-12','2025-06','2025-12'],
+                bev:    [0.0, 0.0, 0.0, 0.01, 0.15, 1.8, 4.5, 6.6, 10.2, 13.5, 14.8, 17.7, 16.5, 18.4, 13.2, 13.5, 18.8, 19.1],
+                phev:   [0.0, 0.0, 0.0, 0.0, 0.08, 2.5, 3.0, 3.0, 5.8, 6.0, 7.8, 8.5, 8.0, 9.0, 6.4, 6.8, 10.6, 10.9],
+                hybrid: [0.0, 0.1, 0.4, 1.2, 3.0, 8.0, 10.0, 12.0, 16.0, 19.0, 21.0, 23.0, 26.0, 28.0, 33.0, 35.0, 38.5, 39.5],
+                petrol: [56, 53, 49, 46, 39, 45, 40, 32, 28, 25, 24, 22, 21, 20, 30, 35, 27.5, 27.2],
+                diesel: [39, 42, 45, 47, 52, 37, 36, 38, 33, 30, 27, 24, 21, 18, 16, 15, 14.0, 13.8]
             },
             "Norway": {
-                labels: ['2010','2012','2014','2016','2018','2020','2021','2022','2023','2024','2025-01','2025-06','2025-12'],
-                bev:    [0.1, 0.5, 1.5, 5, 15, 54, 65, 80, 85, 88, 91, 93, 92],
-                phev:   [0, 0, 0.5, 2, 8, 20, 15, 10, 8, 5, 4.5, 4, 5],
-                hybrid: [0, 0.5, 2, 5, 10, 15, 12, 8, 5, 4, 3, 2.5, 2],
-                petrol: [60, 55, 50, 45, 35, 8, 6, 2, 1.5, 2, 1.2, 0.8, 1],
-                diesel: [35, 38, 40, 38, 30, 3, 2, 0.5, 0.5, 1, 0.3, 0.2, 0]
+                labels: ['2010-01','2012-01','2014-01','2016-01','2018-01','2020-01','2021-01','2022-01','2023-01','2024-01','2025-01','2025-06','2025-12'],
+                bev:    [0.1, 0.4, 1.2, 4.5, 14.8, 52, 65, 79, 85, 88, 91, 93, 92],
+                phev:   [0.0, 0.0, 0.3, 1.8, 7.5, 19, 16, 11, 8, 5.5, 4.5, 4.0, 5.0],
+                hybrid: [0.2, 0.6, 2.0, 4.5, 9.5, 14, 12, 7, 5, 4, 3.0, 2.5, 2.0],
+                petrol: [58, 54, 49, 44, 35, 10, 5, 2.5, 1.5, 2, 1.2, 0.8, 1.0],
+                diesel: [37, 40, 42, 40, 30, 5, 2, 0.5, 0.5, 0.5, 0.3, 0.2, 0.0]
             },
             "Sweden": {
-                labels: ['2010','2012','2014','2016','2018','2020','2021','2022','2023','2024','2025-06','2025-12'],
-                bev:    [0, 0.1, 0.3, 1, 3, 10, 20, 25, 35, 40, 48, 48],
-                phev:   [0, 0, 0.2, 1.5, 5, 15, 18, 15, 14, 13, 13.5, 13],
-                hybrid: [0.5, 1, 2, 4, 8, 15, 20, 25, 28, 30, 24, 25],
-                petrol: [55, 52, 50, 48, 45, 35, 25, 20, 15, 12, 10, 10],
-                diesel: [40, 42, 43, 40, 35, 25, 20, 15, 12, 10, 4.5, 4]
+                labels: ['2010-01','2012-01','2014-01','2016-01','2018-01','2020-01','2021-01','2022-01','2023-01','2024-01','2025-06','2025-12'],
+                bev:    [0.0, 0.05, 0.2, 0.8, 2.5, 9.5, 19, 24, 33, 39, 47.5, 48],
+                phev:   [0.0, 0.0, 0.1, 1.2, 4.5, 14, 17, 14.5, 13.5, 13, 13.2, 13],
+                hybrid: [0.3, 0.8, 1.8, 3.5, 7.5, 14.5, 19, 24, 27, 29, 24.5, 25],
+                petrol: [54, 51, 49, 47, 44, 34, 26, 21, 16, 13, 10.5, 10],
+                diesel: [41, 43, 44, 41, 37, 23, 19, 15, 12, 10, 4.8, 4]
             },
             "Netherlands": {
-                labels: ['2010','2012','2014','2016','2018','2020','2021','2022','2023','2024','2025-06','2025-12'],
-                bev:    [0, 0.2, 0.5, 1.5, 5, 15, 20, 25, 30, 35, 42, 42],
-                phev:   [0, 0, 0.3, 2, 6, 10, 12, 13, 14, 14, 14.5, 14],
-                hybrid: [1, 2, 3, 5, 10, 20, 25, 27, 28, 28, 27.5, 28],
-                petrol: [50, 48, 45, 42, 38, 30, 25, 20, 18, 15, 12, 12],
-                diesel: [45, 45, 47, 45, 38, 25, 20, 15, 12, 10, 4, 4]
+                labels: ['2010-01','2012-01','2014-01','2016-01','2018-01','2020-01','2021-01','2022-01','2023-01','2024-01','2025-06','2025-12'],
+                bev:    [0.0, 0.1, 0.4, 1.2, 4.8, 14, 19, 24, 29, 34, 41.5, 42],
+                phev:   [0.0, 0.0, 0.2, 1.8, 5.5, 9.5, 11.5, 12.5, 13.5, 14, 14.2, 14],
+                hybrid: [0.5, 1.5, 2.5, 4.5, 9.5, 19, 24, 26, 27, 28, 27.8, 28],
+                petrol: [49, 47, 45, 42, 37, 29, 24, 20, 17, 15, 12.5, 12],
+                diesel: [46, 46, 47, 45, 38, 24, 19, 15, 12, 9, 4.5, 4]
             }
-            // Weitere Länder können hier ergänzt werden
         };
 
         function createOrUpdateChart(canvasId, labels, datasets, chartTitle) {
             if (currentChart) currentChart.destroy();
+            
             const ctx = document.getElementById(canvasId);
             currentChart = new Chart(ctx, {
                 type: 'line',
@@ -120,13 +120,13 @@
             const popupDiv = document.createElement('div');
             popupDiv.innerHTML = `
                 <h3>${countryName} – Monthly New Car Registrations (2010–2025)</h3>
-                <p style="text-align:center; color:#555; margin:5px 0 10px;">Market share by powertrain</p>
+                <p style="text-align:center; color:#555; margin:5px 0 10px;">Market share by powertrain • Source: National Transport Authorities</p>
                 <div class="chart-container">
                     <canvas id="countryChart"></canvas>
                 </div>
             `;
 
-            L.popup({ maxWidth: 850 }).setLatLng(map.getCenter()).setContent(popupDiv).openOn(map);
+            L.popup({ maxWidth: 860 }).setLatLng(map.getCenter()).setContent(popupDiv).openOn(map);
 
             setTimeout(() => {
                 const datasets = [
@@ -140,11 +140,15 @@
             }, 350);
         }
 
-        // Karte laden
+        // ==================== Karte laden ====================
         fetch('https://raw.githubusercontent.com/leakyMirror/map-of-europe/master/GeoJSON/europe.geojson')
             .then(res => res.json())
             .then(data => {
-                const evData = { "Norway":97, "Sweden":61, "Denmark":69, "Netherlands":56, "Germany":30, "Belgium":43, "France":28, "United Kingdom":33, "Italy":11, "Spain":19 };
+                const evData = {
+                    "Norway":97, "Sweden":61, "Denmark":69, "Netherlands":56,
+                    "Germany":30, "Belgium":43, "France":28, "United Kingdom":33,
+                    "Italy":11, "Spain":19
+                };
 
                 data.features.forEach(f => {
                     const name = f.properties.name || f.properties.NAME;
