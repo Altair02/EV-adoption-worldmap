@@ -52,7 +52,12 @@
 
         function createOrUpdateChart(canvasId, labels, datasets, chartTitle) {
             if (currentChart) currentChart.destroy();
-            
+
+            // Dynamisches Y-Max berechnen (passt sich den realen Daten an)
+            const allValues = datasets.flatMap(d => d.data);
+            const maxValue = Math.max(...allValues);
+            const yMax = Math.ceil(maxValue * 1.1 / 10000) * 10000;   // schöner runder Wert
+
             const ctx = document.getElementById(canvasId);
             currentChart = new Chart(ctx, {
                 type: 'line',
@@ -67,7 +72,7 @@
                     scales: {
                         y: { 
                             beginAtZero: true, 
-                            max: 350000,           // realistisch für monatliche Neuzulassungen
+                            max: yMax,
                             title: { display: true, text: 'Monatliche Neuzulassungen (Stück)' }
                         },
                         x: { 
@@ -107,9 +112,7 @@
                         createOrUpdateChart('countryChart', data.labels, datasets, `${countryName} – Monatliche Neuzulassungen 2010–Februar 2026`);
                     }, 350);
                 })
-                .catch(() => {
-                    alert(`Keine Daten gefunden für ${countryName}. Bitte prüfe die Datei "data/countries/${countryName.toLowerCase()}.json".`);
-                });
+                .catch(() => alert(`Keine Daten für ${countryName} gefunden.`));
         }
 
         // Karte laden
@@ -134,7 +137,6 @@
                 }).addTo(map);
             });
 
-        // Legende
         const legend = L.control({position: 'bottomright'});
         legend.onAdd = function () {
             const div = L.DomUtil.create('div', 'legend');
