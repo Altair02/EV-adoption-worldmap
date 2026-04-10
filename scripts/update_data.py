@@ -1,16 +1,3 @@
-"""
-scripts/update_data.py  —  FIXED VERSION
-=========================================
-Fixes vs previous version:
-  1. ECB series key: M.{GEO}.N.NEWCARS.NSA  (added missing "N" dimension)
-  2. Eurostat linear index: uses n_geo * n_time * n_fuel correctly
-  3. Better error logging per country
-
-Sources:
-  ECB  → https://data-api.ecb.europa.eu/service/data/CAR/M.{GEO}.N.NEWCARS.NSA
-  Eurostat → https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/road_eqr_carpda
-"""
-
 import csv, io, json, os, sys, urllib.error, urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
