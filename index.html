@@ -74,16 +74,18 @@
   #modal-loading{text-align:center;padding:60px 0;color:var(--muted);font-size:0.8rem;}
   .modal-spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;}
   @keyframes spin{to{transform:rotate(360deg)}}
-  .chart-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+  .chart-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
   .chart-tab{padding:5px 14px;border-radius:20px;font-size:0.7rem;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Mono',monospace;transition:all .15s;}
   .chart-tab.active{background:rgba(0,229,255,0.12);border-color:var(--accent);color:var(--accent);}
   .chart-tab:hover:not(.active){border-color:var(--muted);color:var(--text);}
-  .chart-wrap{position:relative;height:360px;}
-  .summary-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:18px;}
-  .summary-card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;}
-  .sc-val{font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;margin-bottom:4px;}
-  .sc-label{font-size:0.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;}
-  .sc-pct{font-size:0.6rem;color:var(--muted);margin-top:3px;}
+  .chart-wrap{position:relative;height:300px;}
+  .section-divider{border:none;border-top:1px solid var(--border);margin:22px 0 18px;}
+  .section-heading{font-family:'Syne',sans-serif;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+  .summary-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:16px;}
+  .summary-card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:10px 6px;text-align:center;}
+  .sc-val{font-family:'Syne',sans-serif;font-size:0.88rem;font-weight:700;margin-bottom:3px;}
+  .sc-label{font-size:0.55rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;}
+  .sc-pct{font-size:0.58rem;color:var(--muted);margin-top:2px;}
   .no-data-msg{text-align:center;padding:50px 0;color:var(--muted);font-size:0.8rem;line-height:2;}
 
   #map-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--surface);flex-direction:column;gap:12px;z-index:10;}
@@ -117,17 +119,27 @@
     <div id="modal-body">
       <div id="modal-loading"><div class="modal-spinner"></div>Loading data&#x2026;</div>
       <div id="modal-content" style="display:none">
+
+        <!-- Section 1: Monthly total (ECB) -->
+        <div class="section-heading">&#x1F4C5; Monthly Total Registrations &#x00B7; ECB / ACEA</div>
+        <div class="chart-wrap"><canvas id="chart-monthly"></canvas></div>
+
+        <hr class="section-divider">
+
+        <!-- Section 2: Annual by powertrain (Eurostat) -->
+        <div class="section-heading" style="margin-bottom:10px">&#x26A1; Annual Breakdown by Powertrain &#x00B7; Eurostat</div>
         <div class="chart-tabs">
-          <button class="chart-tab active" onclick="switchTab('absolute',this)">Absolute numbers</button>
+          <button class="chart-tab active" onclick="switchTab('absolute',this)">Absolute</button>
           <button class="chart-tab" onclick="switchTab('share',this)">Market share %</button>
-          <button class="chart-tab" onclick="switchTab('stacked',this)">Stacked area</button>
+          <button class="chart-tab" onclick="switchTab('stacked',this)">Stacked</button>
         </div>
-        <div class="chart-wrap"><canvas id="modal-chart"></canvas></div>
+        <div class="chart-wrap"><canvas id="chart-annual"></canvas></div>
         <div class="summary-grid" id="summary-grid"></div>
+
       </div>
       <div id="modal-nodata" style="display:none" class="no-data-msg">
-        &#x1F4ED; No powertrain detail available for this country yet.<br>
-        <span style="font-size:0.68rem;color:var(--muted)">Currently available: Germany &#x00B7; United Kingdom &#x00B7; Norway &#x00B7; Sweden &#x00B7; Netherlands &#x00B7; France &#x00B7; Spain &#x00B7; United States</span>
+        &#x1F4ED; No data available for this country yet.<br>
+        <span style="font-size:0.68rem;color:var(--muted)">ECB covers ~30 EU/EEA countries &#x00B7; Eurostat covers annual fuel-type breakdowns</span>
       </div>
     </div>
   </div>
@@ -292,16 +304,39 @@ const DATA = {
   }
 };
 
-// Country name → JSON filename (only countries with powertrain data)
+// Country display name → JSON filename
+// All 30 EU/EEA countries covered by ECB + Eurostat
 const FILE_MAP = {
+  "Austria":        "austria",
+  "Belgium":        "belgium",
+  "Bulgaria":       "bulgaria",
+  "Cyprus":         "cyprus",
+  "Czech Republic": "czech_republic",
   "Germany":        "germany",
-  "United Kingdom": "united_kingdom",
-  "Norway":         "norway",
-  "Sweden":         "sweden",
-  "Netherlands":    "netherlands",
-  "France":         "france",
+  "Denmark":        "denmark",
+  "Estonia":        "estonia",
+  "Greece":         "greece",
   "Spain":          "spain",
-  "United States":  "united_states"
+  "Finland":        "finland",
+  "France":         "france",
+  "Croatia":        "croatia",
+  "Hungary":        "hungary",
+  "Ireland":        "ireland",
+  "Italy":          "italy",
+  "Lithuania":      "lithuania",
+  "Luxembourg":     "luxembourg",
+  "Latvia":         "latvia",
+  "Malta":          "malta",
+  "Netherlands":    "netherlands",
+  "Poland":         "poland",
+  "Portugal":       "portugal",
+  "Romania":        "romania",
+  "Sweden":         "sweden",
+  "Slovenia":       "slovenia",
+  "Slovakia":       "slovakia",
+  "Norway":         "norway",
+  "Switzerland":    "switzerland",
+  "United Kingdom": "united_kingdom",
 };
 
 const NAME_MAP = {
@@ -383,8 +418,8 @@ function showDetail(rawName,year){
     <div class="stat-row"><span class="stat-label">World rank</span><span class="stat-value">#${rank} of ${sorted.length}</span></div>
     <div class="stat-row"><span class="stat-label">Source</span><span class="stat-value" style="font-size:.65rem">${d[2]}</span></div>
     ${hasChart
-      ?`<button class="open-chart-btn" onclick="openModal('${name}')">&#x1F4CA; View powertrain breakdown \u2192</button>`
-      :`<div style="margin-top:10px;font-size:.65rem;color:var(--muted)">&#x1F4ED; No powertrain detail available yet</div>`
+      ?`<button class="open-chart-btn" onclick="openModal('${name}')">&#x1F4CA; Monthly &amp; powertrain chart \u2192</button>`
+      :`<div style="margin-top:10px;font-size:.65rem;color:var(--muted)">&#x1F4ED; Chart data available for EU/EEA countries only</div>`
     }`;
 }
 
@@ -412,16 +447,45 @@ function showTip(e,rawName,year){
 }
 
 // ── Chart modal ───────────────────────────────────────────────────────────────
-let modalChart=null,modalData=null;
+let chartMonthly=null, chartAnnual=null, modalData=null;
 
 const COLORS={
-  bev:   {line:"#00e5ff",fill:"rgba(0,229,255,0.12)"},
-  phev:  {line:"#4ade80",fill:"rgba(74,222,128,0.10)"},
-  hybrid:{line:"#facc15",fill:"rgba(250,204,21,0.08)"},
-  petrol:{line:"#f87171",fill:"rgba(248,113,113,0.08)"},
-  diesel:{line:"#94a3b8",fill:"rgba(148,163,184,0.08)"}
+  bev:   {line:"#00e5ff", fill:"rgba(0,229,255,0.12)"},
+  phev:  {line:"#4ade80", fill:"rgba(74,222,128,0.10)"},
+  hybrid:{line:"#facc15", fill:"rgba(250,204,21,0.08)"},
+  petrol:{line:"#f87171", fill:"rgba(248,113,113,0.08)"},
+  diesel:{line:"#94a3b8", fill:"rgba(148,163,184,0.08)"},
+  other: {line:"#c084fc", fill:"rgba(192,132,252,0.08)"},
 };
-const LABELS={bev:"BEV",phev:"PHEV",hybrid:"Hybrid (non-plug)",petrol:"Petrol / Gasoline",diesel:"Diesel"};
+const LABELS={
+  bev:"BEV", phev:"PHEV", hybrid:"Hybrid (non-plug)",
+  petrol:"Petrol / Gasoline", diesel:"Diesel", other:"Other / LPG"
+};
+
+const CHART_DEFAULTS = {
+  responsive:true, maintainAspectRatio:false,
+  interaction:{mode:"index",intersect:false},
+  plugins:{
+    legend:{position:"top",labels:{color:"#94a3b8",font:{family:"DM Mono",size:11},boxWidth:14,padding:14}},
+    tooltip:{
+      backgroundColor:"rgba(10,14,23,0.95)",borderColor:"rgba(0,229,255,0.3)",borderWidth:1,
+      titleColor:"#fff",bodyColor:"#94a3b8",
+    }
+  },
+  scales:{
+    x:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#64748b",font:{family:"DM Mono",size:9},maxTicksLimit:24}},
+    y:{
+      grid:{color:"rgba(255,255,255,0.04)"},
+      ticks:{color:"#64748b",font:{family:"DM Mono",size:9},
+        callback:v=>v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v},
+    }
+  }
+};
+
+function destroyCharts(){
+  if(chartMonthly){chartMonthly.destroy();chartMonthly=null;}
+  if(chartAnnual){chartAnnual.destroy();chartAnnual=null;}
+}
 
 window.openModal=async function(countryName){
   const overlay=document.getElementById("modal-overlay");
@@ -434,7 +498,7 @@ window.openModal=async function(countryName){
   loading.style.display="block";
   content.style.display="none";
   nodata.style.display="none";
-  if(modalChart){modalChart.destroy();modalChart=null;}
+  destroyCharts();
 
   const fileKey=FILE_MAP[countryName];
   if(!fileKey){loading.style.display="none";nodata.style.display="block";return;}
@@ -443,11 +507,27 @@ window.openModal=async function(countryName){
     const resp=await fetch("data/countries/"+fileKey+".json");
     if(!resp.ok)throw new Error("File not found");
     modalData=await resp.json();
-    document.getElementById("modal-source").textContent="Source: "+modalData.source;
-    // reset tabs
+
+    const srcParts=[];
+    if(modalData.source_monthly) srcParts.push("Monthly: "+modalData.source_monthly);
+    if(modalData.source_annual)  srcParts.push("Annual: "+modalData.source_annual);
+    document.getElementById("modal-source").textContent=srcParts.join("  ·  ");
+
+    // Last updated hint
+    if(modalData.last_updated){
+      const d=new Date(modalData.last_updated);
+      document.getElementById("modal-subtitle").textContent=
+        "New car registrations  ·  Last updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
+    }
+
+    // Reset powertrain tabs
     document.querySelectorAll(".chart-tab").forEach((b,i)=>b.classList.toggle("active",i===0));
+
+    // Render both charts
+    renderMonthlyChart(modalData);
+    renderAnnualChart(modalData,"absolute");
     renderSummary(modalData);
-    renderChart(modalData,"absolute");
+
     loading.style.display="none";
     content.style.display="block";
   }catch(e){
@@ -458,7 +538,7 @@ window.openModal=async function(countryName){
 
 window.closeModal=function(){
   document.getElementById("modal-overlay").classList.remove("open");
-  if(modalChart){modalChart.destroy();modalChart=null;}
+  destroyCharts();
 };
 document.getElementById("modal-overlay").addEventListener("click",function(e){if(e.target===this)closeModal();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
@@ -466,47 +546,95 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
 window.switchTab=function(tab,btn){
   document.querySelectorAll(".chart-tab").forEach(b=>b.classList.remove("active"));
   btn.classList.add("active");
-  if(modalChart){modalChart.destroy();modalChart=null;}
-  renderChart(modalData,tab);
+  if(chartAnnual){chartAnnual.destroy();chartAnnual=null;}
+  renderAnnualChart(modalData,tab);
 };
 
-function renderChart(data,mode){
-  const ctx=document.getElementById("modal-chart").getContext("2d");
-  const keys=["bev","phev","hybrid","petrol","diesel"];
+// Chart 1 — Monthly total registrations (ECB)
+function renderMonthlyChart(data){
+  const m=data.monthly;
+  if(!m||!m.labels||!m.labels.length){
+    document.getElementById("chart-monthly").parentElement.innerHTML=
+      `<div style="height:300px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.72rem">No monthly data available</div>`;
+    return;
+  }
+  const ctx=document.getElementById("chart-monthly").getContext("2d");
+  chartMonthly=new Chart(ctx,{
+    type:"line",
+    data:{
+      labels:m.labels,
+      datasets:[{
+        label:"Total registrations",
+        data:m.total,
+        borderColor:"#00e5ff",
+        backgroundColor:"rgba(0,229,255,0.08)",
+        borderWidth:2, tension:0.3, fill:true, pointRadius:0, pointHoverRadius:5,
+      }]
+    },
+    options:{
+      ...CHART_DEFAULTS,
+      plugins:{
+        ...CHART_DEFAULTS.plugins,
+        tooltip:{
+          ...CHART_DEFAULTS.plugins.tooltip,
+          callbacks:{
+            label:ctx=>" "+ctx.parsed.y.toLocaleString("en")+" vehicles",
+          }
+        }
+      },
+      scales:{
+        ...CHART_DEFAULTS.scales,
+        x:{...CHART_DEFAULTS.scales.x, ticks:{...CHART_DEFAULTS.scales.x.ticks, maxTicksLimit:18}},
+        y:{...CHART_DEFAULTS.scales.y,
+          title:{display:true,text:"Monthly registrations",color:"#64748b",font:{family:"DM Mono",size:9}}}
+      }
+    }
+  });
+}
+
+// Chart 2 — Annual by powertrain (Eurostat)
+function renderAnnualChart(data, mode){
+  const a=data.annual;
+  if(!a||!a.labels||!a.labels.length){
+    document.getElementById("chart-annual").parentElement.innerHTML=
+      `<div style="height:300px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.72rem">No annual fuel-type data available</div>`;
+    return;
+  }
+  const ctx=document.getElementById("chart-annual").getContext("2d");
+  const keys=["bev","phev","hybrid","petrol","diesel","other"];
 
   let datasets;
   if(mode==="share"){
-    const totals=data.labels.map((_,i)=>keys.reduce((s,k)=>s+(data[k][i]||0),0));
+    const totals=a.labels.map((_,i)=>keys.reduce((s,k)=>s+(a[k]?a[k][i]:0)||0,0));
     datasets=keys.map(k=>({
-      label:LABELS[k],data:data[k].map((v,i)=>totals[i]?+((v/totals[i])*100).toFixed(1):0),
-      borderColor:COLORS[k].line,backgroundColor:COLORS[k].fill,
-      borderWidth:2,tension:0.35,fill:false,pointRadius:3,pointHoverRadius:6
+      label:LABELS[k],
+      data:(a[k]||[]).map((v,i)=>totals[i]?+((v/totals[i])*100).toFixed(1):0),
+      borderColor:COLORS[k].line, backgroundColor:COLORS[k].fill,
+      borderWidth:2, tension:0.3, fill:false, pointRadius:4, pointHoverRadius:7,
     }));
-  }else if(mode==="stacked"){
+  } else if(mode==="stacked"){
     datasets=keys.map(k=>({
-      label:LABELS[k],data:data[k],
-      borderColor:COLORS[k].line,backgroundColor:COLORS[k].fill,
-      borderWidth:1.5,tension:0.35,fill:true,pointRadius:0
+      label:LABELS[k], data:a[k]||[],
+      borderColor:COLORS[k].line, backgroundColor:COLORS[k].fill,
+      borderWidth:1.5, tension:0.3, fill:true, pointRadius:0,
     }));
-  }else{
+  } else {
     datasets=keys.map(k=>({
-      label:LABELS[k],data:data[k],
-      borderColor:COLORS[k].line,backgroundColor:COLORS[k].fill,
-      borderWidth:2,tension:0.35,fill:false,pointRadius:3,pointHoverRadius:6
+      label:LABELS[k], data:a[k]||[],
+      borderColor:COLORS[k].line, backgroundColor:COLORS[k].fill,
+      borderWidth:2, tension:0.3, fill:false, pointRadius:4, pointHoverRadius:7,
     }));
   }
 
-  modalChart=new Chart(ctx,{
+  chartAnnual=new Chart(ctx,{
     type:"line",
-    data:{labels:data.labels,datasets},
+    data:{labels:a.labels, datasets},
     options:{
-      responsive:true,maintainAspectRatio:false,
-      interaction:{mode:"index",intersect:false},
+      ...CHART_DEFAULTS,
       plugins:{
-        legend:{position:"top",labels:{color:"#94a3b8",font:{family:"DM Mono",size:11},boxWidth:14,padding:16}},
+        ...CHART_DEFAULTS.plugins,
         tooltip:{
-          backgroundColor:"rgba(10,14,23,0.95)",borderColor:"rgba(0,229,255,0.3)",borderWidth:1,
-          titleColor:"#fff",bodyColor:"#94a3b8",
+          ...CHART_DEFAULTS.plugins.tooltip,
           callbacks:{label:ctx=>{
             const v=ctx.parsed.y;
             return " "+ctx.dataset.label+": "+(mode==="share"?v.toFixed(1)+"%":v.toLocaleString("en"));
@@ -514,13 +642,15 @@ function renderChart(data,mode){
         }
       },
       scales:{
-        x:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#64748b",font:{family:"DM Mono",size:10}}},
+        x:{...CHART_DEFAULTS.scales.x},
         y:{
           stacked:mode==="stacked",
-          grid:{color:"rgba(255,255,255,0.04)"},
-          ticks:{color:"#64748b",font:{family:"DM Mono",size:10},
+          ...CHART_DEFAULTS.scales.y,
+          ticks:{...CHART_DEFAULTS.scales.y.ticks,
             callback:v=>mode==="share"?v+"%":v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v},
-          title:{display:true,text:mode==="share"?"Market share (%)":"New registrations",color:"#64748b",font:{family:"DM Mono",size:10}}
+          title:{display:true,
+            text:mode==="share"?"Market share (%)":"Annual registrations",
+            color:"#64748b",font:{family:"DM Mono",size:9}}
         }
       }
     }
@@ -528,16 +658,22 @@ function renderChart(data,mode){
 }
 
 function renderSummary(data){
-  const keys=["bev","phev","hybrid","petrol","diesel"];
-  const last=data.labels.length-1;
-  const total=keys.reduce((s,k)=>s+(data[k][last]||0),0);
+  const a=data.annual;
+  if(!a||!a.labels||!a.labels.length){
+    document.getElementById("summary-grid").innerHTML="";
+    return;
+  }
+  const keys=["bev","phev","hybrid","petrol","diesel","other"];
+  const last=a.labels.length-1;
+  const lastYear=a.labels[last];
+  const total=keys.reduce((s,k)=>s+((a[k]&&a[k][last])||0),0);
   document.getElementById("summary-grid").innerHTML=keys.map(k=>{
-    const v=data[k][last]||0;
+    const v=(a[k]&&a[k][last])||0;
     const pct=total?((v/total)*100).toFixed(1):0;
     return`<div class="summary-card">
       <div class="sc-val" style="color:${COLORS[k].line}">${fmt(v)}</div>
       <div class="sc-label">${LABELS[k]}</div>
-      <div class="sc-pct">${pct}%</div>
+      <div class="sc-pct">${pct}% (${lastYear})</div>
     </div>`;
   }).join("");
 }
