@@ -1,12 +1,10 @@
 """
-scripts/update_data.py  —  v5 FINAL
-=====================================
-Key fixes vs v4:
-  1. ECB: correct indicator CREG.PC0000 (car registration, passenger cars)
-     Key: M.{GEO}.N.CREG.PC0000.3.ABS  — from STS mapping file
-     Fallback: M.{GEO}.N.NEWCARS.N and wildcards
-  2. Eurostat: fallback to aggregate PET/DIE for years where granular
-     codes PET_X_HYB / DIE_X_HYB are missing (pre-2017 for some countries)
+scripts/update_data.py  —  v6
+==============================
+Changes vs v5:
+  1. ECB: tries both CAR and STS datasets, logs EVERY attempt + HTTP status
+  2. ECB: 10 key variants per country, logs which one works
+  3. Eurostat: same as v5 (working correctly)
 """
 
 import csv, io, json, os, sys, time, urllib.error, urllib.request
@@ -53,16 +51,14 @@ COUNTRIES = {
     "GB": ("United Kingdom", "UK", 67.4),
 }
 
-# Granular codes (preferred, available from ~2017)
-# Aggregate codes used as fallback when granular = 0
 FUEL_MAP_GRANULAR = {
     "ELC":         "bev",
     "ELC_PET_PI":  "phev",
     "ELC_DIE_PI":  "phev",
     "ELC_PET_HYB": "hybrid",
     "ELC_DIE_HYB": "hybrid",
-    "PET_X_HYB":   "petrol",   # Petrol EXCLUDING hybrids
-    "DIE_X_HYB":   "diesel",   # Diesel EXCLUDING hybrids
+    "PET_X_HYB":   "petrol",
+    "DIE_X_HYB":   "diesel",
     "LPG":         "other",
     "GAS":         "other",
     "HYD_FCELL":   "other",
@@ -72,83 +68,122 @@ FUEL_MAP_GRANULAR = {
     "OTH":         "other",
 }
 
-# Fallback for early years: use PET and DIE aggregates
-# Only applied when PET_X_HYB and DIE_X_HYB both = 0
 FUEL_MAP_FALLBACK = {
-    "ELC":  "bev",
-    "PET":  "petrol",
-    "DIE":  "diesel",
-    "LPG":  "other",
-    "GAS":  "other",
-    "OTH":  "other",
+    "ELC": "bev",
+    "PET": "petrol",
+    "DIE": "diesel",
+    "LPG": "other",
+    "GAS": "other",
+    "OTH": "other",
 }
 
 def http_get(url, timeout=30):
     req = urllib.request.Request(
         url,
-        headers={"User-Agent": "EV-Map-Bot/5.0 (github.com/Altair02/EV-adoption-worldmap)"}
+        headers={"User-Agent": "EV-Map-Bot/6.0 (github.com/Altair02/EV-adoption-worldmap)"}
     )
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read()
 
 # ── ECB monthly ───────────────────────────────────────────────────────────────
-def fetch_ecb_one(geo):
-    """Try multiple key formats for one country. Returns {period: value} or {}."""
-    base   = "https://data-api.ecb.europa.eu/service/data/CAR"
-    params = f"format=csvdata&startPeriod={START_YEAR}-01&detail=dataonly"
+# First call: test all key variants with Germany to find the working one
+ECB_WORKING_KEY = None  # cached once found
 
-    # Keys in order of confidence based on STS mapping + ECB_CAR1 DSD
-    keys = [
-        f"M.{geo}.N.CREG.PC0000.3.ABS",   # STS-style key (most likely correct)
-        f"M.{geo}.N.NEWCARS.N",            # shorter variant
-        f"M.{geo}.N.NEWCARS.NSA",          # previous attempt
-        f"M.{geo}..CREG.PC0000.3.ABS",    # wildcard adjustment dim
-        f"M.{geo}....",                     # full wildcard (catches anything)
+def find_ecb_key():
+    """Test all possible key patterns against Germany and return the working one."""
+    global ECB_WORKING_KEY
+    if ECB_WORKING_KEY:
+        return ECB_WORKING_KEY
+
+    params = "format=csvdata&lastNObservations=3&detail=dataonly"
+    attempts = [
+        # Dataset, key
+        ("CAR", "M.DE.N.CREG.PC0000.3.ABS"),
+        ("CAR", "M.DE.N.CREG.PC0000..ABS"),
+        ("CAR", "M.DE..CREG.PC0000.3.ABS"),
+        ("CAR", "M.DE.N.NEWCARS.N"),
+        ("CAR", "M.DE.N.NEWCARS.NSA"),
+        ("CAR", "M.DE..NEWCARS.NSA"),
+        ("CAR", "M.DE...."),
+        ("CAR", "M.DE..."),
+        # Old STS dataset (discontinued but data still accessible)
+        ("STS", "M.DE.N.CREG.PC0000.3.ABS"),
+        ("STS", "M.DE.W.CREG.PC0000.3.ABS"),
+        ("STS", "M.DE.N.TOVT.NS0020.3.000"),
     ]
 
-    for key in keys:
-        url = f"{base}/{key}?{params}"
+    print("[ECB] Searching for working key (testing with Germany)…")
+    for dataset, key in attempts:
+        url = f"https://data-api.ecb.europa.eu/service/data/{dataset}/{key}?{params}"
         try:
-            raw = http_get(url).decode("utf-8")
-            # Must contain data columns
-            if "TIME_PERIOD" not in raw.upper():
-                continue
-            result = {}
-            reader = csv.DictReader(io.StringIO(raw))
-            # Normalize column names to upper
-            for row in reader:
-                row_upper = {k.upper(): v for k, v in row.items()}
-                period = row_upper.get("TIME_PERIOD", "").strip()
-                value  = row_upper.get("OBS_VALUE", "").strip()
-                if not period or not value:
-                    continue
+            raw = http_get(url, timeout=15).decode("utf-8")
+            if "TIME_PERIOD" in raw.upper() and "OBS_VALUE" in raw.upper():
+                # Check that it has real data
+                rows = [r for r in raw.split("\n")[1:] if r.strip()]
+                if rows:
+                    print(f"[ECB] ✓ Working key found: {dataset}/{key}")
+                    print(f"[ECB] Sample row: {rows[0][:100]}")
+                    ECB_WORKING_KEY = (dataset, key)
+                    return ECB_WORKING_KEY
+                else:
+                    print(f"[ECB]   {dataset}/{key} → CSV ok but no rows")
+            else:
+                print(f"[ECB]   {dataset}/{key} → no data columns")
+        except urllib.error.HTTPError as e:
+            print(f"[ECB]   {dataset}/{key} → HTTP {e.code}")
+        except Exception as e:
+            print(f"[ECB]   {dataset}/{key} → {type(e).__name__}: {str(e)[:60]}")
+        time.sleep(0.2)
+
+    print("[ECB] ✗ No working key found for any variant")
+    return None
+
+def fetch_ecb_one(geo, dataset, key_template):
+    """Fetch monthly data for one country using known working key."""
+    key = key_template.replace("DE", geo)
+    url = (f"https://data-api.ecb.europa.eu/service/data/{dataset}/{key}"
+           f"?format=csvdata&startPeriod={START_YEAR}-01&detail=dataonly")
+    try:
+        raw = http_get(url, timeout=20).decode("utf-8")
+        result = {}
+        reader = csv.DictReader(io.StringIO(raw))
+        for row in reader:
+            row_u = {k.upper(): v for k, v in row.items()}
+            period = row_u.get("TIME_PERIOD", "").strip()
+            value  = row_u.get("OBS_VALUE",   "").strip()
+            if period and value:
                 try:
                     v = int(float(value))
                     if v > 0:
                         result[period] = v
                 except ValueError:
                     pass
-            if result:
-                print(f"[ECB]   {geo}: key '{key}' → {len(result)} months ✓")
-                return result
-        except urllib.error.HTTPError as e:
-            pass  # try next key
-        except Exception as e:
-            pass
-    return {}
+        return result
+    except Exception:
+        return {}
 
 def fetch_ecb_monthly():
-    print("[ECB] Fetching monthly totals per country…")
+    working = find_ecb_key()
+    if not working:
+        print("[ECB] Skipping monthly fetch — no working key")
+        return {}
+
+    dataset, key_template = working
+    print(f"\n[ECB] Fetching all countries with {dataset}/{key_template}…")
     results = {}
     ok = 0
     for geo in COUNTRIES:
-        data = fetch_ecb_one(geo)
+        data = fetch_ecb_one(geo, dataset, key_template)
         if data:
             months = sorted(data.keys())
             results[geo] = {"labels": months, "total": [data[m] for m in months]}
             ok += 1
-        time.sleep(0.25)
-    print(f"[ECB] Done — {ok}/{len(COUNTRIES)} countries with data")
+        time.sleep(0.2)
+
+    print(f"[ECB] Done — {ok}/{len(COUNTRIES)} countries")
+    if "DE" in results:
+        m = results["DE"]
+        print(f"[ECB] DE: {len(m['labels'])} months, latest {m['labels'][-1]}={m['total'][-1]:,}")
     return results
 
 # ── Eurostat annual ───────────────────────────────────────────────────────────
@@ -199,40 +234,28 @@ def fetch_eurostat_annual():
         ecb_key = estat_to_ecb.get(estat_geo)
         if not ecb_key:
             continue
-
         country_data = {}
         for year in years:
             t_pos = time_idx.get(year)
             if t_pos is None:
                 continue
-
-            # Try granular codes first
             year_vals = {f: 0 for f in ["bev","phev","hybrid","petrol","diesel","other"]}
             for fuel_code, field in FUEL_MAP_GRANULAR.items():
                 year_vals[field] += get_val(g_pos, t_pos, fuel_code)
-
-            # Fallback: if petrol AND diesel are both 0, use aggregate codes
+            # Fallback to aggregates if granular petrol+diesel = 0
             if year_vals["petrol"] == 0 and year_vals["diesel"] == 0:
                 for fuel_code, field in FUEL_MAP_FALLBACK.items():
                     v = get_val(g_pos, t_pos, fuel_code)
                     if v > 0:
                         year_vals[field] += v
-
             country_data[year] = year_vals
-
         if country_data:
             result[ecb_key] = country_data
 
-    # Sanity check Germany
     if "DE" in result:
         de23 = result["DE"].get("2023", {})
-        de15 = result["DE"].get("2015", {})
-        print(f"[Eurostat] DE 2023: BEV={de23.get('bev',0):,} "
-              f"PHEV={de23.get('phev',0):,} Hybrid={de23.get('hybrid',0):,} "
-              f"Petrol={de23.get('petrol',0):,} Diesel={de23.get('diesel',0):,}")
-        print(f"[Eurostat] DE 2015: BEV={de15.get('bev',0):,} "
-              f"Petrol={de15.get('petrol',0):,} Diesel={de15.get('diesel',0):,} "
-              f"{'(fallback)' if de15.get('petrol',0) > 0 else '(still 0?)'}")
+        print(f"[Eurostat] DE 2023: BEV={de23.get('bev',0):,} PHEV={de23.get('phev',0):,} "
+              f"Hybrid={de23.get('hybrid',0):,} Petrol={de23.get('petrol',0):,} Diesel={de23.get('diesel',0):,}")
 
     print(f"[Eurostat] Done — {len(result)} countries")
     return result
@@ -263,7 +286,8 @@ def write_files(monthly, annual):
             "source_monthly": "ECB Data Portal / ACEA",
             "source_annual":  "Eurostat road_eqr_carpda",
             "last_updated":   NOW.isoformat(),
-            "monthly": m, "annual": annual_block,
+            "monthly": m,
+            "annual":  annual_block,
         }
         fname = name.lower().replace(" ", "_") + ".json"
         path  = DATA_DIR / fname
@@ -278,7 +302,7 @@ def write_files(monthly, annual):
         path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), "utf-8")
         if no_ts(payload) != no_ts(old):
             changed.append(name)
-            print(f"[Write] {name} ✓ updated")
+            print(f"[Write] {name} ✓")
         else:
             print(f"[Write] {name} (no change)")
     return changed
@@ -294,7 +318,7 @@ def send_telegram(changed, n_countries):
                 f"🌍 {n_countries} countries\n\n*Changed ({len(changed)}):*\n{lines}")
     else:
         body = (f"🚗 *Car Registrations — No Changes*\n📅 {date_str}\n"
-                f"🌍 {n_countries} countries — all up to date.")
+                f"🌍 {n_countries} — all up to date.")
     body += ("\n\n🗺️ [Open Map](https://altair02.github.io/EV-adoption-worldmap/)\n"
              "📁 [GitHub](https://github.com/Altair02/EV-adoption-worldmap)")
     data = json.dumps({
@@ -315,7 +339,7 @@ def send_telegram(changed, n_countries):
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     print("=" * 60)
-    print(f"  Car Registration Updater v5  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
+    print(f"  Car Registration Updater v6  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
     print("=" * 60)
     monthly = fetch_ecb_monthly()
     annual  = fetch_eurostat_annual()
