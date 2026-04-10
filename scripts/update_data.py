@@ -1,176 +1,146 @@
 """
-scripts/update_data.py
-======================
-Fetches data from two sources and writes one JSON file per country
-into data/countries/<country_code>.json
+scripts/update_data.py  —  FIXED VERSION
+=========================================
+Fixes vs previous version:
+  1. ECB series key: M.{GEO}.N.NEWCARS.NSA  (added missing "N" dimension)
+  2. Eurostat linear index: uses n_geo * n_time * n_fuel correctly
+  3. Better error logging per country
 
-SOURCE 1 — ECB Data Portal API (monthly total registrations per country)
-  URL: https://data-api.ecb.europa.eu/service/data/CAR/M.{GEO}.NEWCARS.NSA
-  Format: CSV, no authentication required
-  Coverage: ~30 EU + EEA countries, monthly since 1990
-  Published: ~3rd week of the following month
-
-SOURCE 2 — Eurostat Statistics API (annual registrations by fuel type)
-  Dataset: road_eqr_carpda
-  URL: https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/road_eqr_carpda
-  Format: JSON-stat, no authentication required
-  Coverage: ~37 European countries, annual
-  Fuel types: BEV, PHEV, hybrid, petrol, diesel, LPG, others
-
-Output JSON format per country:
-{
-  "name": "Germany",
-  "source_monthly": "ECB/ACEA",
-  "source_annual": "Eurostat/road_eqr_carpda",
-  "last_updated": "2026-04-10T09:00:00Z",
-
-  "monthly": {
-    "labels": ["2020-01", "2020-02", ...],   // ISO year-month
-    "total":  [240000, 198000, ...]           // total registrations
-  },
-
-  "annual": {
-    "labels": ["2015", "2016", ..., "2024"],
-    "bev":    [...],
-    "phev":   [...],
-    "hybrid": [...],
-    "petrol": [...],
-    "diesel": [...],
-    "other":  [...]
-  }
-}
-
-GitHub Secrets required:
-  TELEGRAM_BOT_TOKEN  e.g. 123456789:ABC-xyz...
-  TELEGRAM_CHAT_ID    e.g. -1001234567890 (group) or 123456789 (private)
+Sources:
+  ECB  → https://data-api.ecb.europa.eu/service/data/CAR/M.{GEO}.N.NEWCARS.NSA
+  Eurostat → https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/road_eqr_carpda
 """
 
-import csv
-import io
-import json
-import os
-import sys
-import urllib.error
-import urllib.request
+import csv, io, json, os, sys, urllib.error, urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-# ── Configuration ─────────────────────────────────────────────────────────────
-
+# ── Config ────────────────────────────────────────────────────────────────────
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT  = os.environ.get("TELEGRAM_CHAT_ID", "")
 REPO_ROOT      = Path(__file__).resolve().parent.parent
 DATA_DIR       = REPO_ROOT / "data" / "countries"
 NOW            = datetime.now(timezone.utc)
-START_YEAR     = 2015   # how far back to fetch data
+START_YEAR     = 2015
 
-# ── Country definitions ───────────────────────────────────────────────────────
-# ECB code → (display name, Eurostat code, population in millions)
-# Note: ECB uses EL for Greece (not GR), GB for United Kingdom
+# ECB code → (display name, Eurostat code, population Mio)
 COUNTRIES = {
-    "AT": ("Austria",         "AT",  9.1),
-    "BE": ("Belgium",         "BE", 11.6),
-    "BG": ("Bulgaria",        "BG",  6.5),
-    "CY": ("Cyprus",          "CY",  1.2),
-    "CZ": ("Czech Republic",  "CZ", 10.9),
-    "DE": ("Germany",         "DE", 84.4),
-    "DK": ("Denmark",         "DK",  5.9),
-    "EE": ("Estonia",         "EE",  1.4),
-    "EL": ("Greece",          "EL", 10.4),
-    "ES": ("Spain",           "ES", 47.4),
-    "FI": ("Finland",         "FI",  5.6),
-    "FR": ("France",          "FR", 68.1),
-    "HR": ("Croatia",         "HR",  3.9),
-    "HU": ("Hungary",         "HU",  9.7),
-    "IE": ("Ireland",         "IE",  5.1),
-    "IT": ("Italy",           "IT", 59.1),
-    "LT": ("Lithuania",       "LT",  2.8),
-    "LU": ("Luxembourg",      "LU",  0.7),
-    "LV": ("Latvia",          "LV",  1.8),
-    "MT": ("Malta",           "MT",  0.5),
-    "NL": ("Netherlands",     "NL", 17.9),
-    "PL": ("Poland",          "PL", 37.6),
-    "PT": ("Portugal",        "PT", 10.3),
-    "RO": ("Romania",         "RO", 19.0),
-    "SE": ("Sweden",          "SE", 10.5),
-    "SI": ("Slovenia",        "SI",  2.1),
-    "SK": ("Slovakia",        "SK",  5.5),
-    "NO": ("Norway",          "NO",  5.5),
-    "CH": ("Switzerland",     "CH",  8.8),
-    "GB": ("United Kingdom",  "UK", 67.4),
+    "AT": ("Austria",        "AT",  9.1),
+    "BE": ("Belgium",        "BE", 11.6),
+    "BG": ("Bulgaria",       "BG",  6.5),
+    "CY": ("Cyprus",         "CY",  1.2),
+    "CZ": ("Czech Republic", "CZ", 10.9),
+    "DE": ("Germany",        "DE", 84.4),
+    "DK": ("Denmark",        "DK",  5.9),
+    "EE": ("Estonia",        "EE",  1.4),
+    "EL": ("Greece",         "EL", 10.4),
+    "ES": ("Spain",          "ES", 47.4),
+    "FI": ("Finland",        "FI",  5.6),
+    "FR": ("France",         "FR", 68.1),
+    "HR": ("Croatia",        "HR",  3.9),
+    "HU": ("Hungary",        "HU",  9.7),
+    "IE": ("Ireland",        "IE",  5.1),
+    "IT": ("Italy",          "IT", 59.1),
+    "LT": ("Lithuania",      "LT",  2.8),
+    "LU": ("Luxembourg",     "LU",  0.7),
+    "LV": ("Latvia",         "LV",  1.8),
+    "MT": ("Malta",          "MT",  0.5),
+    "NL": ("Netherlands",    "NL", 17.9),
+    "PL": ("Poland",         "PL", 37.6),
+    "PT": ("Portugal",       "PT", 10.3),
+    "RO": ("Romania",        "RO", 19.0),
+    "SE": ("Sweden",         "SE", 10.5),
+    "SI": ("Slovenia",       "SI",  2.1),
+    "SK": ("Slovakia",       "SK",  5.5),
+    "NO": ("Norway",         "NO",  5.5),
+    "CH": ("Switzerland",    "CH",  8.8),
+    "GB": ("United Kingdom", "UK", 67.4),
 }
 
-# Eurostat fuel type codes → our field names
+# Eurostat fuel codes → our field names
 FUEL_MAP = {
-    "ELC":   "bev",     # Battery electric
-    "PHEV":  "phev",    # Plug-in hybrid
-    "HEV":   "hybrid",  # Hybrid non-plug
-    "PET":   "petrol",  # Petrol / gasoline
-    "DIE":   "diesel",  # Diesel
-    "LPG":   "other",   # LPG → grouped into "other"
-    "NAT":   "other",   # Natural gas
-    "H2":    "other",   # Hydrogen
-    "OTH":   "other",   # Other
-    "ALT":   "other",   # Alternative (aggregate, skip if BEV/PHEV present)
+    "ELC":  "bev",
+    "PHEV": "phev",
+    "HEV":  "hybrid",
+    "PET":  "petrol",
+    "DIE":  "diesel",
+    "LPG":  "other",
+    "NAT":  "other",
+    "H2":   "other",
+    "OTH":  "other",
 }
 
-# ── HTTP helper ───────────────────────────────────────────────────────────────
-
-def http_get(url: str, timeout: int = 30) -> bytes:
+# ── HTTP ──────────────────────────────────────────────────────────────────────
+def http_get(url, timeout=45):
     req = urllib.request.Request(
-        url,
-        headers={"User-Agent": "EV-Map-Bot/2.0 (github.com/Altair02/EV-adoption-worldmap)"},
+        url, headers={"User-Agent": "EV-Map-Bot/2.1 (github.com/Altair02/EV-adoption-worldmap)"}
     )
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read()
 
-
-# ── SOURCE 1: ECB monthly total registrations ─────────────────────────────────
-
-def fetch_ecb_monthly() -> dict:
+# ── ECB monthly ───────────────────────────────────────────────────────────────
+def fetch_ecb_monthly():
     """
-    Returns { "DE": {"labels": ["2015-01",...], "total": [240000,...]}, ... }
-    One API call fetches all countries at once using the OR (+) operator.
+    Returns { "DE": {"labels": ["2015-01",...], "total": [12345,...]}, ... }
+
+    Series key format (ECB_CAR1 DSD, updated March 2025):
+      CAR / M . {REF_AREA} . N . NEWCARS . NSA
+      ─────────────────────────────────────────
+      M         = monthly
+      {REF_AREA} = ISO country code (DE, FR, ...)
+      N         = not adjusted (adjustment dimension — was missing before!)
+      NEWCARS   = new passenger car registrations
+      NSA       = not seasonally adjusted
     """
-    ecb_codes = "+".join(COUNTRIES.keys())
+    codes = "+".join(COUNTRIES.keys())
     url = (
-        "https://data-api.ecb.europa.eu/service/data/CAR/"
-        f"M.{ecb_codes}.NEWCARS.NSA"
+        f"https://data-api.ecb.europa.eu/service/data/CAR/"
+        f"M.{codes}.N.NEWCARS.NSA"
         f"?format=csvdata&startPeriod={START_YEAR}-01&detail=dataonly"
     )
-    print(f"[ECB] Fetching monthly data for {len(COUNTRIES)} countries…")
-    print(f"[ECB] URL: {url[:100]}…")
-
+    print(f"[ECB] Fetching: {url[:100]}…")
     try:
         raw = http_get(url).decode("utf-8")
     except urllib.error.HTTPError as e:
-        print(f"[ECB] HTTP error {e.code}: {e.reason}")
-        return {}
+        print(f"[ECB] HTTP {e.code}: {e.reason}")
+        # Try wildcard fallback
+        url2 = (
+            f"https://data-api.ecb.europa.eu/service/data/CAR/"
+            f"M.{codes}..NEWCARS.NSA"
+            f"?format=csvdata&startPeriod={START_YEAR}-01&detail=dataonly"
+        )
+        print(f"[ECB] Trying wildcard fallback: {url2[:100]}…")
+        try:
+            raw = http_get(url2).decode("utf-8")
+        except Exception as e2:
+            print(f"[ECB] Fallback also failed: {e2}")
+            return {}
     except Exception as e:
         print(f"[ECB] Error: {e}")
         return {}
 
-    # Parse CSV: columns include KEY, FREQ, REF_AREA, ..., TIME_PERIOD, OBS_VALUE
     result = {}
     reader = csv.DictReader(io.StringIO(raw))
-
+    rows_read = 0
     for row in reader:
-        geo  = row.get("REF_AREA", "").strip()
-        period = row.get("TIME_PERIOD", "").strip()   # e.g. "2024-03"
-        value  = row.get("OBS_VALUE", "").strip()
-
+        rows_read += 1
+        # CSV columns vary — try common column names
+        geo    = (row.get("REF_AREA") or row.get("AREA") or "").strip()
+        period = (row.get("TIME_PERIOD") or row.get("TIME") or "").strip()
+        value  = (row.get("OBS_VALUE") or row.get("VALUE") or "").strip()
         if not geo or not period or not value:
             continue
         try:
             v = int(float(value))
         except ValueError:
             continue
-
         if geo not in result:
             result[geo] = {}
         result[geo][period] = v
 
-    # Convert dict → sorted lists
+    print(f"[ECB] Read {rows_read} CSV rows")
+
+    # Convert to sorted lists
     final = {}
     for geo, months in result.items():
         sorted_months = sorted(months.keys())
@@ -178,132 +148,138 @@ def fetch_ecb_monthly() -> dict:
             "labels": sorted_months,
             "total":  [months[m] for m in sorted_months],
         }
-        print(f"[ECB]   {geo}: {len(sorted_months)} months "
-              f"({sorted_months[0]} – {sorted_months[-1]})")
 
-    print(f"[ECB] Done — {len(final)} countries with monthly data")
+    print(f"[ECB] {len(final)} countries with monthly data")
+    if final:
+        sample = next(iter(final.items()))
+        print(f"[ECB] Sample — {sample[0]}: {len(sample[1]['labels'])} months, "
+              f"latest={sample[1]['labels'][-1]}, value={sample[1]['total'][-1]:,}")
     return final
 
-
-# ── SOURCE 2: Eurostat annual breakdown by fuel type ─────────────────────────
-
-def fetch_eurostat_annual() -> dict:
+# ── Eurostat annual ───────────────────────────────────────────────────────────
+def fetch_eurostat_annual():
     """
-    Returns {
-      "DE": {"2020": {"bev": 194163, "phev": 200469, ...}, ...},
-      ...
-    }
+    Returns { "DE": {"2020": {"bev": 194163, ...}, ...}, ... }
+
+    JSON-stat index formula:
+      linear_idx = geo_pos * (n_time * n_fuel) + time_pos * n_fuel + fuel_pos
+
+    This was wrong in the previous version — the dimension order must match
+    exactly what Eurostat returns in the 'size' array.
     """
-    # Fetch all fuel types + all countries in one call
-    # mot_nrg codes that map cleanly to our categories
-    fuel_codes = "+".join(FUEL_MAP.keys())
     url = (
         "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/"
-        "road_eqr_carpda"
-        f"?format=JSON&lang=EN&unit=NR"
-        # no mot_nrg filter → get everything, then filter in code
+        "road_eqr_carpda?format=JSON&lang=EN&unit=NR"
     )
-    print(f"\n[Eurostat] Fetching annual fuel-type breakdown…")
-    print(f"[Eurostat] URL: {url[:100]}…")
-
+    print(f"\n[Eurostat] Fetching: {url[:80]}…")
     try:
         raw = json.loads(http_get(url).decode("utf-8"))
     except Exception as e:
         print(f"[Eurostat] Error: {e}")
         return {}
 
-    dims      = raw.get("dimension", {})
-    values    = raw.get("value", {})
+    dims   = raw.get("dimension", {})
+    values = raw.get("value", {})
 
-    geo_cat   = dims.get("geo",     {}).get("category", {})
-    time_cat  = dims.get("time",    {}).get("category", {})
-    fuel_cat  = dims.get("mot_nrg", {}).get("category", {})
+    # Get dimension order from the 'id' array — CRITICAL for correct indexing
+    dim_order = raw.get("id", [])       # e.g. ["freq","unit","mot_nrg","geo","time"]
+    dim_sizes = raw.get("size", [])     # e.g. [1, 1, 12, 45, 25]
+    print(f"[Eurostat] Dimension order: {dim_order}")
+    print(f"[Eurostat] Dimension sizes: {dim_sizes}")
 
-    geo_idx   = geo_cat.get("index",  {})   # {"DE": 5, "FR": 12, ...}
-    time_idx  = time_cat.get("index", {})   # {"2020": 0, ...}
-    fuel_idx  = fuel_cat.get("index", {})   # {"ELC": 0, "PET": 1, ...}
+    # Build index lookups per dimension
+    dim_idx = {}
+    for d in dim_order:
+        dim_idx[d] = dims.get(d, {}).get("category", {}).get("index", {})
 
-    n_geo  = len(geo_idx)
-    n_time = len(time_idx)
-    n_fuel = len(fuel_idx)
+    geo_idx  = dim_idx.get("geo",     {})
+    time_idx = dim_idx.get("time",    {})
+    fuel_idx = dim_idx.get("mot_nrg", {})
 
-    years = [y for y in sorted(time_idx.keys()) if int(y) >= START_YEAR]
-    print(f"[Eurostat] Years available: {years}")
-    print(f"[Eurostat] Fuel codes: {list(fuel_idx.keys())[:8]}…")
+    # Calculate stride for each dimension (row-major order)
+    # stride[i] = product of all sizes after position i
+    strides = {}
+    for i, d in enumerate(dim_order):
+        stride = 1
+        for j in range(i + 1, len(dim_order)):
+            stride *= dim_sizes[j]
+        strides[d] = stride
+
+    print(f"[Eurostat] Strides: { {k: strides[k] for k in ['geo','time','mot_nrg'] if k in strides} }")
+
+    years = sorted([y for y in time_idx.keys() if int(y) >= START_YEAR])
+    print(f"[Eurostat] Years {START_YEAR}+: {years}")
+
+    # Build Eurostat-code → ECB-code mapping
+    estat_to_ecb = {}
+    for ecb_code, (name, estat_code, pop) in COUNTRIES.items():
+        estat_to_ecb[estat_code] = ecb_code
 
     result = {}
-    eurostat_to_ecb = {v_info[1]: k for k, v_info in COUNTRIES.items()}
-    # e.g. "AT" → "AT", "UK" → "GB", "EL" → "EL"
-
     for estat_geo, g_pos in geo_idx.items():
-        # Map Eurostat geo to our ECB key
-        ecb_key = None
-        for ecb_code, (name, estat_code, pop) in COUNTRIES.items():
-            if estat_code == estat_geo:
-                ecb_key = ecb_code
-                break
+        ecb_key = estat_to_ecb.get(estat_geo)
         if not ecb_key:
             continue
 
         country_data = {}
         for year in years:
-            if year not in time_idx:
+            t_pos = time_idx.get(year)
+            if t_pos is None:
                 continue
-            t_pos = time_idx[year]
-            year_data = {f: 0 for f in set(FUEL_MAP.values())}
+            year_vals = {f: 0 for f in set(FUEL_MAP.values())}
 
             for fuel_code, our_field in FUEL_MAP.items():
-                if fuel_code not in fuel_idx:
+                f_pos = fuel_idx.get(fuel_code)
+                if f_pos is None:
                     continue
-                # Skip aggregate "ALT" if we already have BEV/PHEV
-                if fuel_code == "ALT":
-                    continue
-                f_pos = fuel_idx[fuel_code]
-                # Linear index: geo * (n_time * n_fuel) + time * n_fuel + fuel
-                linear = g_pos * (n_time * n_fuel) + t_pos * n_fuel + f_pos
+                # Compute linear index using strides
+                linear = (
+                    g_pos  * strides.get("geo",     1) +
+                    t_pos  * strides.get("time",    1) +
+                    f_pos  * strides.get("mot_nrg", 1)
+                )
                 v = values.get(str(linear)) or values.get(linear)
                 if v is not None:
-                    year_data[our_field] = year_data[our_field] + int(v)
+                    year_vals[our_field] += int(v)
 
-            country_data[year] = year_data
+            country_data[year] = year_vals
 
         if country_data:
+            # Sanity check — Germany BEV 2023 should be ~500k
+            if ecb_key == "DE" and "2023" in country_data:
+                bev_2023 = country_data["2023"].get("bev", 0)
+                pet_2023 = country_data["2023"].get("petrol", 0)
+                print(f"[Eurostat] DE 2023 BEV={bev_2023:,}  Petrol={pet_2023:,}  "
+                      f"({'OK ✓' if bev_2023 > 100000 else 'WRONG — index error'})")
             result[ecb_key] = country_data
 
-    print(f"[Eurostat] Done — {len(result)} countries with annual fuel data")
+    print(f"[Eurostat] {len(result)} countries with annual data")
     return result
 
-
-# ── Merge & write JSON files ──────────────────────────────────────────────────
-
-def write_country_files(monthly: dict, annual: dict) -> list:
-    """
-    Merges both sources and writes one JSON per country.
-    Returns list of changed country names.
-    """
+# ── Write JSON files ──────────────────────────────────────────────────────────
+def write_files(monthly, annual):
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     changed = []
 
     for ecb_code, (name, estat_code, pop) in COUNTRIES.items():
-        m_data = monthly.get(ecb_code, {})
-        a_data = annual.get(ecb_code, {})
+        m = monthly.get(ecb_code, {})
+        a = annual.get(ecb_code, {})
 
-        if not m_data and not a_data:
-            print(f"[Write] {name}: no data from either source — skip")
+        if not m and not a:
+            print(f"[Write] {name}: no data — skip")
             continue
 
-        # Build annual arrays from the dict
-        all_years = sorted(a_data.keys()) if a_data else []
+        years = sorted(a.keys()) if a else []
         annual_block = {}
-        if all_years:
+        if years:
             annual_block = {
-                "labels": all_years,
-                "bev":    [a_data[y].get("bev",    0) for y in all_years],
-                "phev":   [a_data[y].get("phev",   0) for y in all_years],
-                "hybrid": [a_data[y].get("hybrid", 0) for y in all_years],
-                "petrol": [a_data[y].get("petrol", 0) for y in all_years],
-                "diesel": [a_data[y].get("diesel", 0) for y in all_years],
-                "other":  [a_data[y].get("other",  0) for y in all_years],
+                "labels": years,
+                "bev":    [a[y].get("bev",    0) for y in years],
+                "phev":   [a[y].get("phev",   0) for y in years],
+                "hybrid": [a[y].get("hybrid", 0) for y in years],
+                "petrol": [a[y].get("petrol", 0) for y in years],
+                "diesel": [a[y].get("diesel", 0) for y in years],
+                "other":  [a[y].get("other",  0) for y in years],
             }
 
         payload = {
@@ -313,117 +289,78 @@ def write_country_files(monthly: dict, annual: dict) -> list:
             "source_monthly": "ECB Data Portal / ACEA",
             "source_annual":  "Eurostat road_eqr_carpda",
             "last_updated":   NOW.isoformat(),
-            "monthly":        m_data,    # {labels:[...], total:[...]}
+            "monthly":        m,
             "annual":         annual_block,
         }
 
-        # File path uses lowercase country name
-        fname = name.lower().replace(" ", "_").replace("(", "").replace(")", "") + ".json"
+        fname = name.lower().replace(" ", "_") + ".json"
         path  = DATA_DIR / fname
 
-        # Check if anything changed
-        old_payload = {}
+        old = {}
         if path.exists():
             try:
-                old_payload = json.loads(path.read_text("utf-8"))
+                old = json.loads(path.read_text("utf-8"))
             except Exception:
                 pass
 
-        # Compare without last_updated timestamp
-        def strip_ts(d):
-            d2 = dict(d)
-            d2.pop("last_updated", None)
-            return d2
+        def no_ts(d):
+            d2 = dict(d); d2.pop("last_updated", None); return d2
 
-        if strip_ts(payload) != strip_ts(old_payload):
-            path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), "utf-8")
+        path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), "utf-8")
+
+        if no_ts(payload) != no_ts(old):
             changed.append(name)
-            print(f"[Write] {name} → {fname} ✓ (updated)")
+            print(f"[Write] {name} → {fname} ✓ updated")
         else:
-            # Still update timestamp
-            path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), "utf-8")
-            print(f"[Write] {name} → {fname} (no data change)")
+            print(f"[Write] {name} → {fname} (no change)")
 
     return changed
 
-
-# ── Telegram notification ─────────────────────────────────────────────────────
-
-def send_telegram(changed: list, n_countries: int):
+# ── Telegram ──────────────────────────────────────────────────────────────────
+def send_telegram(changed, n_countries):
     if not TELEGRAM_TOKEN or not TELEGRAM_CHAT:
-        print("[Telegram] No token/chat configured — skipping")
+        print("[Telegram] No credentials — skip")
         return
-
     date_str = NOW.strftime("%d.%m.%Y %H:%M UTC")
-
     if changed:
         lines = "\n".join(f"  • {c}" for c in changed[:25])
-        body = (
-            f"🚗 *Car Registrations — Data Updated*\n"
-            f"📅 {date_str}\n"
-            f"🌍 {n_countries} countries processed\n\n"
-            f"*Updated ({len(changed)} countries):*\n{lines}"
-        )
+        body = (f"🚗 *Car Registrations — Updated*\n📅 {date_str}\n"
+                f"🌍 {n_countries} countries processed\n\n"
+                f"*Changed ({len(changed)}):*\n{lines}")
     else:
-        body = (
-            f"🚗 *Car Registrations — No Changes*\n"
-            f"📅 {date_str}\n"
-            f"🌍 {n_countries} countries checked\n\n"
-            f"ℹ️ All data already up to date."
-        )
-
-    body += (
-        f"\n\n"
-        f"🗺️ [Open Map](https://altair02.github.io/EV-adoption-worldmap/)\n"
-        f"📁 [GitHub](https://github.com/Altair02/EV-adoption-worldmap)"
-    )
-
-    payload = json.dumps({
-        "chat_id":    TELEGRAM_CHAT,
-        "text":       body,
-        "parse_mode": "Markdown",
-        "disable_web_page_preview": False,
+        body = (f"🚗 *Car Registrations — No Changes*\n📅 {date_str}\n"
+                f"🌍 {n_countries} countries checked — all up to date.")
+    body += ("\n\n🗺️ [Open Map](https://altair02.github.io/EV-adoption-worldmap/)\n"
+             "📁 [GitHub](https://github.com/Altair02/EV-adoption-worldmap)")
+    data = json.dumps({
+        "chat_id": TELEGRAM_CHAT, "text": body,
+        "parse_mode": "Markdown", "disable_web_page_preview": False,
     }).encode("utf-8")
-
     req = urllib.request.Request(
         f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
-        data=payload,
-        headers={"Content-Type": "application/json"},
+        data=data, headers={"Content-Type": "application/json"}
     )
     try:
         with urllib.request.urlopen(req, timeout=10) as r:
             msg_id = json.loads(r.read()).get("result", {}).get("message_id", "?")
-        print(f"[Telegram] Sent ✓ (message_id={msg_id})")
+        print(f"[Telegram] Sent ✓ (id={msg_id})")
     except Exception as e:
         print(f"[Telegram] Error: {e}")
 
-
 # ── Main ──────────────────────────────────────────────────────────────────────
-
 def main():
-    print("=" * 65)
+    print("=" * 60)
     print(f"  Car Registration Updater  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
-    print("=" * 65)
-
-    # 1. Fetch monthly totals from ECB
+    print("=" * 60)
     monthly = fetch_ecb_monthly()
-
-    # 2. Fetch annual fuel breakdown from Eurostat
-    annual = fetch_eurostat_annual()
-
+    annual  = fetch_eurostat_annual()
     if not monthly and not annual:
-        print("\n⚠️  No data received from either source.")
+        print("⚠️  No data received from either source")
         send_telegram([], 0)
         sys.exit(1)
-
-    # 3. Merge and write JSON files
-    changed = write_country_files(monthly, annual)
-
-    # 4. Telegram notification
+    changed = write_files(monthly, annual)
     send_telegram(changed, len(COUNTRIES))
-
     print(f"\n✓ Done — {len(changed)} countries updated")
-
 
 if __name__ == "__main__":
     main()
