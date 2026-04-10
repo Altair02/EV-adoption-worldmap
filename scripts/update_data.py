@@ -1,15 +1,3 @@
-"""
-scripts/update_data.py  —  v3 FINAL
-=====================================
-Key fixes vs v2:
-  1. ECB: correct series key M.{GEO}.N.NEWCARS.NSA (with N dimension)
-  2. ECB: wildcard fallback M.{GEO}..NEWCARS.NSA if first attempt fails
-  3. Eurostat: script discovers ALL available fuel codes from the API response
-               and logs them — no more hardcoded guessing
-  4. Eurostat: robust linear index using strides computed from actual dim order
-  5. Better debug logging so you can see exactly what's happening in GitHub Actions
-"""
-
 import csv, io, json, os, sys, urllib.error, urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
