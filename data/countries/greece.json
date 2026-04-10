@@ -4,7 +4,7 @@
   "population_mio": 10.4,
   "source_monthly": "ECB Data Portal / ACEA",
   "source_annual": "Eurostat road_eqr_carpda",
-  "last_updated": "2026-04-10T18:05:00.585576+00:00",
+  "last_updated": "2026-04-10T18:11:15.518457+00:00",
   "monthly": {},
   "annual": {
     "labels": [
@@ -20,12 +20,12 @@
       "2024"
     ],
     "bev": [
-      32,
-      20,
-      37,
-      77,
-      188,
-      678,
+      64,
+      40,
+      74,
+      154,
+      376,
+      1356,
       2174,
       2826,
       6377,
