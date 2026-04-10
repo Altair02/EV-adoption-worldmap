@@ -1,4 +1,20 @@
-import csv, io, json, os, sys, urllib.error, urllib.request
+"""
+scripts/update_data.py  —  v4
+==============================
+Fixes vs v3:
+  1. Fuel mapping corrected:
+       PET_X_HYB  = Petrol EXCLUDING hybrids → petrol  (NOT hybrid)
+       DIE_X_HYB  = Diesel EXCLUDING hybrids → diesel  (NOT hybrid)
+       ELC_PET_HYB = Hybrid electric-petrol  → hybrid  ✓
+       ELC_DIE_HYB = Hybrid diesel-electric  → hybrid  ✓
+       ELC_PET_PI  = Plug-in hybrid petrol   → phev    ✓
+       ELC_DIE_PI  = Plug-in hybrid diesel   → phev    ✓
+       LPG, GAS    → other (not petrol)
+  2. ECB: one request per country (avoids HTTP 400 from URL length limit)
+  3. ECB: tries both 5-dim and 4-dim key variants per country
+"""
+
+import csv, io, json, os, sys, time, urllib.error, urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -9,7 +25,6 @@ DATA_DIR       = REPO_ROOT / "data" / "countries"
 NOW            = datetime.now(timezone.utc)
 START_YEAR     = 2015
 
-# ECB code → (display name, Eurostat code, population Mio)
 COUNTRIES = {
     "AT": ("Austria",        "AT",  9.1),
     "BE": ("Belgium",        "BE", 11.6),
@@ -43,166 +58,134 @@ COUNTRIES = {
     "GB": ("United Kingdom", "UK", 67.4),
 }
 
-def http_get(url, timeout=45):
+# Correct fuel code → category mapping
+# Key insight: PET_X_HYB = petrol EXCLUDING hybrids = still petrol
+#              DIE_X_HYB = diesel EXCLUDING hybrids = still diesel
+#              We use the granular codes and skip the aggregates (TOTAL, ALT, PET, DIE)
+# This way we avoid double-counting.
+FUEL_MAP = {
+    # --- BEV ---
+    "ELC":         "bev",      # Electricity (pure BEV)
+    # --- PHEV ---
+    "ELC_PET_PI":  "phev",     # Plug-in hybrid petrol-electric
+    "ELC_DIE_PI":  "phev",     # Plug-in hybrid diesel-electric
+    # --- Hybrid (non-plug) ---
+    "ELC_PET_HYB": "hybrid",   # Hybrid electric-petrol (non-plug)
+    "ELC_DIE_HYB": "hybrid",   # Hybrid diesel-electric (non-plug)
+    # --- Petrol ---
+    "PET_X_HYB":   "petrol",   # Petrol EXCLUDING hybrids (pure ICE petrol)
+    # --- Diesel ---
+    "DIE_X_HYB":   "diesel",   # Diesel EXCLUDING hybrids (pure ICE diesel)
+    # --- Other ---
+    "LPG":         "other",    # Liquefied petroleum gas
+    "GAS":         "other",    # Natural gas
+    "HYD_FCELL":   "other",    # Hydrogen / fuel cell
+    "BIOETH":      "other",    # Bioethanol
+    "BIODIE":      "other",    # Biodiesel
+    "BIFUEL":      "other",    # Bi-fuel
+    "OTH":         "other",    # Other
+    # SKIP these aggregates to avoid double-counting:
+    # TOTAL, PET, DIE, ALT, ELC (when granular codes present)
+}
+
+def http_get(url, timeout=30):
     req = urllib.request.Request(
-        url, headers={"User-Agent": "EV-Map-Bot/3.0 (github.com/Altair02/EV-adoption-worldmap)"}
+        url,
+        headers={"User-Agent": "EV-Map-Bot/4.0 (github.com/Altair02/EV-adoption-worldmap)"}
     )
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read()
 
-# ── ECB monthly ───────────────────────────────────────────────────────────────
-def fetch_ecb_monthly():
-    codes = "+".join(COUNTRIES.keys())
+# ── ECB monthly: one request per country ─────────────────────────────────────
+def fetch_ecb_one(ecb_code):
+    """Fetch monthly registrations for a single country. Returns {period: value}."""
+    base = "https://data-api.ecb.europa.eu/service/data/CAR"
+    start = f"{START_YEAR}-01"
+    params = "format=csvdata&detail=dataonly"
 
-    # Try correct 5-dimension key first, then wildcard fallback
-    attempts = [
-        f"https://data-api.ecb.europa.eu/service/data/CAR/M.{codes}.N.NEWCARS.NSA?format=csvdata&startPeriod={START_YEAR}-01&detail=dataonly",
-        f"https://data-api.ecb.europa.eu/service/data/CAR/M.{codes}..NEWCARS.NSA?format=csvdata&startPeriod={START_YEAR}-01&detail=dataonly",
-        f"https://data-api.ecb.europa.eu/service/data/CAR/M.{codes}.N.CARS.NSA?format=csvdata&startPeriod={START_YEAR}-01&detail=dataonly",
+    # Try different key formats — ECB changed naming in March 2025
+    keys = [
+        f"M.{ecb_code}.N.NEWCARS.NSA",   # new format with adjustment dim
+        f"M.{ecb_code}.N.CARS.NSA",       # alternative indicator name
+        f"M.{ecb_code}..NEWCARS.NSA",     # wildcard adjustment
+        f"M.{ecb_code}..CARS.NSA",        # wildcard + alt name
     ]
 
-    raw = None
-    for url in attempts:
-        print(f"[ECB] Trying: {url[:100]}…")
+    for key in keys:
+        url = f"{base}/{key}?startPeriod={start}&{params}"
         try:
             raw = http_get(url).decode("utf-8")
-            # Check if we got actual CSV data (not an error page)
-            if "TIME_PERIOD" in raw or "OBS_VALUE" in raw:
-                print(f"[ECB] Success with this URL ✓")
-                break
-            else:
-                print(f"[ECB] Response has no data columns, trying next…")
-                print(f"[ECB] Response preview: {raw[:200]}")
-                raw = None
-        except urllib.error.HTTPError as e:
-            print(f"[ECB] HTTP {e.code} — trying next URL…")
-        except Exception as e:
-            print(f"[ECB] Error: {e} — trying next URL…")
+            if "TIME_PERIOD" not in raw and "time_period" not in raw.lower():
+                continue
+            result = {}
+            reader = csv.DictReader(io.StringIO(raw))
+            for row in reader:
+                period = (row.get("TIME_PERIOD") or row.get("time_period") or "").strip()
+                value  = (row.get("OBS_VALUE")   or row.get("obs_value")   or "").strip()
+                if period and value:
+                    try:
+                        v = int(float(value))
+                        if v > 0:
+                            result[period] = v
+                    except ValueError:
+                        pass
+            if result:
+                return result
+        except urllib.error.HTTPError:
+            pass
+        except Exception:
+            pass
+    return {}
 
-    if not raw:
-        print("[ECB] All attempts failed — no monthly data")
-        return {}
-
-    # Log first few lines to understand the CSV structure
-    lines = raw.split("\n")
-    print(f"[ECB] CSV header: {lines[0][:200]}")
-    print(f"[ECB] First data row: {lines[1][:200] if len(lines) > 1 else 'none'}")
-
-    result = {}
-    reader = csv.DictReader(io.StringIO(raw))
-    headers = reader.fieldnames or []
-    print(f"[ECB] CSV columns: {headers}")
-
-    rows_read = 0
-    for row in reader:
-        rows_read += 1
-        # Try all common column name variants
-        geo    = (row.get("REF_AREA") or row.get("ref_area") or
-                  row.get("AREA") or row.get("COUNTRY") or "").strip()
-        period = (row.get("TIME_PERIOD") or row.get("time_period") or
-                  row.get("TIME") or row.get("PERIOD") or "").strip()
-        value  = (row.get("OBS_VALUE") or row.get("obs_value") or
-                  row.get("VALUE") or "").strip()
-
-        if not geo or not period or not value:
-            continue
-        try:
-            v = int(float(value))
-        except ValueError:
-            continue
-        if v <= 0:
-            continue
-        if geo not in result:
-            result[geo] = {}
-        result[geo][period] = v
-
-    print(f"[ECB] Read {rows_read} data rows → {len(result)} countries")
-
-    final = {}
-    for geo, months in result.items():
-        sorted_months = sorted(months.keys())
-        if sorted_months:
-            final[geo] = {
+def fetch_ecb_monthly():
+    print("[ECB] Fetching monthly data — one request per country…")
+    all_results = {}
+    ok = 0
+    for ecb_code in COUNTRIES:
+        data = fetch_ecb_one(ecb_code)
+        if data:
+            sorted_months = sorted(data.keys())
+            all_results[ecb_code] = {
                 "labels": sorted_months,
-                "total":  [months[m] for m in sorted_months],
+                "total":  [data[m] for m in sorted_months],
             }
-            print(f"[ECB]   {geo}: {len(sorted_months)} months "
-                  f"({sorted_months[0]}→{sorted_months[-1]}) "
-                  f"latest={final[geo]['total'][-1]:,}")
+            ok += 1
+        else:
+            print(f"[ECB]   {ecb_code}: no data")
+        time.sleep(0.3)   # be polite to the API
 
-    return final
+    print(f"[ECB] Done — {ok}/{len(COUNTRIES)} countries with monthly data")
+    if "DE" in all_results:
+        m = all_results["DE"]
+        print(f"[ECB] DE sample: {len(m['labels'])} months, "
+              f"latest {m['labels'][-1]} = {m['total'][-1]:,}")
+    return all_results
 
 # ── Eurostat annual ───────────────────────────────────────────────────────────
 def fetch_eurostat_annual():
     url = ("https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/"
            "road_eqr_carpda?format=JSON&lang=EN&unit=NR")
-    print(f"\n[Eurostat] Fetching: {url[:80]}…")
-
+    print(f"\n[Eurostat] Fetching annual breakdown…")
     try:
-        raw = json.loads(http_get(url).decode("utf-8"))
+        raw = json.loads(http_get(url, timeout=60).decode("utf-8"))
     except Exception as e:
         print(f"[Eurostat] Error: {e}")
         return {}
 
-    dims       = raw.get("dimension", {})
-    values     = raw.get("value", {})
-    dim_order  = raw.get("id", [])
-    dim_sizes  = raw.get("size", [])
+    dims      = raw.get("dimension", {})
+    values    = raw.get("value", {})
+    dim_order = raw.get("id",   [])
+    dim_sizes = raw.get("size", [])
 
-    print(f"[Eurostat] Dimensions in order: {dim_order}")
-    print(f"[Eurostat] Sizes: {dim_sizes}")
-    print(f"[Eurostat] Total values in dataset: {len(values)}")
+    # Index lookups
+    def idx(dim):
+        return dims.get(dim, {}).get("category", {}).get("index", {})
 
-    # Log ALL available fuel codes so we know what's actually in the data
-    fuel_cat    = dims.get("mot_nrg", {}).get("category", {})
-    fuel_labels = fuel_cat.get("label", {})
-    fuel_index  = fuel_cat.get("index", {})
-    print(f"\n[Eurostat] Available mot_nrg codes ({len(fuel_labels)}):")
-    for code, label in sorted(fuel_labels.items(), key=lambda x: fuel_index.get(x[0], 99)):
-        print(f"  [{fuel_index.get(code, '?'):2}] {code:12s} → {label}")
+    geo_idx = idx("geo")
+    time_idx = idx("time")
+    mot_idx  = idx("mot_nrg")
 
-    # Now build our fuel mapping based on what's ACTUALLY available
-    # We map discovered codes to our 6 display categories
-    FUEL_MAP = {}
-    for code in fuel_index:
-        cl = code.upper()
-        label = fuel_labels.get(code, "").upper()
-        # Battery electric
-        if cl in ("ELC", "BEV", "ELEC") or "BATTERY" in label or "PURE ELECTRIC" in label:
-            FUEL_MAP[code] = "bev"
-        # Plug-in hybrid
-        elif cl in ("PHEV", "PHEV_TEV", "TEV") or "PLUG-IN" in label or "PLUGIN" in label:
-            FUEL_MAP[code] = "phev"
-        # Hybrid non-plug (HEV, mild hybrid)
-        elif cl in ("HEV", "MHEV", "FHEV", "HYBRID") or ("HYBRID" in label and "PLUG" not in label):
-            FUEL_MAP[code] = "hybrid"
-        # Petrol
-        elif cl in ("PET", "PETROL", "GAS", "GASOLINE") or "PETROL" in label or "GASOLINE" in label:
-            FUEL_MAP[code] = "petrol"
-        # Diesel
-        elif cl in ("DIE", "DIESEL") or "DIESEL" in label:
-            FUEL_MAP[code] = "diesel"
-        # Skip aggregates (TOTAL, ALT = alternative aggregate, etc.)
-        elif cl in ("TOTAL", "ALT", "OTHER_NEC", "UNK"):
-            pass  # skip aggregates
-        # Everything else → other
-        elif cl not in ("TOTAL", "ALT"):
-            FUEL_MAP[code] = "other"
-
-    print(f"\n[Eurostat] Fuel code mapping:")
-    for code, field in FUEL_MAP.items():
-        print(f"  {code:12s} → {field}")
-
-    # Build index lookups
-    dim_idx = {}
-    for d in dim_order:
-        dim_idx[d] = dims.get(d, {}).get("category", {}).get("index", {})
-
-    geo_idx  = dim_idx.get("geo",     {})
-    time_idx = dim_idx.get("time",    {})
-    mot_idx  = dim_idx.get("mot_nrg", {})
-
-    # Compute strides (row-major)
+    # Strides for linear index
     strides = {}
     for i, d in enumerate(dim_order):
         s = 1
@@ -210,12 +193,7 @@ def fetch_eurostat_annual():
             s *= dim_sizes[j]
         strides[d] = s
 
-    print(f"\n[Eurostat] Strides: {strides}")
-
     years = sorted([y for y in time_idx if int(y) >= START_YEAR])
-    print(f"[Eurostat] Years {START_YEAR}+: {years}")
-
-    # Map Eurostat geo codes → ECB codes
     estat_to_ecb = {v[1]: k for k, v in COUNTRIES.items()}
 
     result = {}
@@ -223,52 +201,37 @@ def fetch_eurostat_annual():
         ecb_key = estat_to_ecb.get(estat_geo)
         if not ecb_key:
             continue
-
         country_data = {}
         for year in years:
             t_pos = time_idx.get(year)
             if t_pos is None:
                 continue
             year_vals = {f: 0 for f in ["bev","phev","hybrid","petrol","diesel","other"]}
-
             for fuel_code, our_field in FUEL_MAP.items():
                 f_pos = mot_idx.get(fuel_code)
                 if f_pos is None:
                     continue
-                linear = sum(
-                    pos * strides.get(dim, 1)
-                    for dim, pos in [
-                        ("geo", g_pos), ("time", t_pos), ("mot_nrg", f_pos)
-                    ]
-                    if dim in strides
-                )
+                linear = (g_pos  * strides.get("geo",     1) +
+                          t_pos  * strides.get("time",    1) +
+                          f_pos  * strides.get("mot_nrg", 1))
                 v = values.get(str(linear)) or values.get(linear)
                 if v is not None:
                     year_vals[our_field] += int(v)
-
             country_data[year] = year_vals
-
         if country_data:
             result[ecb_key] = country_data
 
-    # Sanity check for Germany 2023
+    # Sanity check
     if "DE" in result and "2023" in result["DE"]:
-        de23 = result["DE"]["2023"]
-        bev = de23.get("bev", 0)
-        pet = de23.get("petrol", 0)
-        hyb = de23.get("hybrid", 0)
-        phev = de23.get("phev", 0)
-        print(f"\n[Sanity DE 2023] BEV={bev:,}  PHEV={phev:,}  "
-              f"Hybrid={hyb:,}  Petrol={pet:,}")
-        print(f"[Sanity DE 2023] BEV expected ~524,000 → "
-              f"{'OK ✓' if bev > 200000 else 'WRONG ✗'}")
-        print(f"[Sanity DE 2023] PHEV expected ~228,000 → "
-              f"{'OK ✓' if phev > 100000 else 'likely still 0 — check fuel codes above'}")
+        de = result["DE"]["2023"]
+        print(f"[Eurostat] DE 2023 — BEV={de['bev']:,}  PHEV={de['phev']:,}  "
+              f"Hybrid={de['hybrid']:,}  Petrol={de['petrol']:,}  Diesel={de['diesel']:,}")
+        print(f"[Eurostat] Expected: BEV~524k PHEV~228k Hybrid~700k Petrol~1.6M Diesel~700k")
 
-    print(f"\n[Eurostat] Done — {len(result)} countries")
+    print(f"[Eurostat] Done — {len(result)} countries")
     return result
 
-# ── Write files ───────────────────────────────────────────────────────────────
+# ── Write JSON files ──────────────────────────────────────────────────────────
 def write_files(monthly, annual):
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     changed = []
@@ -300,7 +263,7 @@ def write_files(monthly, annual):
         }
         fname = name.lower().replace(" ", "_") + ".json"
         path  = DATA_DIR / fname
-        old   = {}
+        old = {}
         if path.exists():
             try:
                 old = json.loads(path.read_text("utf-8"))
@@ -319,7 +282,6 @@ def write_files(monthly, annual):
 # ── Telegram ──────────────────────────────────────────────────────────────────
 def send_telegram(changed, n_countries):
     if not TELEGRAM_TOKEN or not TELEGRAM_CHAT:
-        print("[Telegram] No credentials — skip")
         return
     date_str = NOW.strftime("%d.%m.%Y %H:%M UTC")
     if changed:
@@ -328,7 +290,7 @@ def send_telegram(changed, n_countries):
                 f"🌍 {n_countries} countries\n\n*Changed ({len(changed)}):*\n{lines}")
     else:
         body = (f"🚗 *Car Registrations — No Changes*\n📅 {date_str}\n"
-                f"🌍 {n_countries} countries checked — all up to date.")
+                f"🌍 {n_countries} countries — all up to date.")
     body += ("\n\n🗺️ [Open Map](https://altair02.github.io/EV-adoption-worldmap/)\n"
              "📁 [GitHub](https://github.com/Altair02/EV-adoption-worldmap)")
     data = json.dumps({
@@ -349,7 +311,7 @@ def send_telegram(changed, n_countries):
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     print("=" * 60)
-    print(f"  Car Registration Updater v3  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
+    print(f"  Car Registration Updater v4  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
     print("=" * 60)
     monthly = fetch_ecb_monthly()
     annual  = fetch_eurostat_annual()
