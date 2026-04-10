@@ -122,7 +122,7 @@
 
         <!-- Section 1: Monthly total (ECB) -->
         <div class="section-heading">&#x1F4C5; Monthly Total Registrations &#x00B7; ECB / ACEA</div>
-        <div class="chart-wrap"><canvas id="chart-monthly"></canvas></div>
+        <div id="monthly-wrap" class="chart-wrap"><canvas id="chart-monthly"></canvas></div>
 
         <hr class="section-divider">
 
@@ -133,7 +133,7 @@
           <button class="chart-tab" onclick="switchTab('share',this)">Market share %</button>
           <button class="chart-tab" onclick="switchTab('stacked',this)">Stacked</button>
         </div>
-        <div class="chart-wrap"><canvas id="chart-annual"></canvas></div>
+        <div id="annual-wrap" class="chart-wrap"><canvas id="chart-annual"></canvas></div>
         <div class="summary-grid" id="summary-grid"></div>
 
       </div>
@@ -500,12 +500,16 @@ window.openModal=async function(countryName){
   nodata.style.display="none";
   destroyCharts();
 
+  // Restore canvas elements in case they were replaced
+  document.getElementById("monthly-wrap").innerHTML='<canvas id="chart-monthly"></canvas>';
+  document.getElementById("annual-wrap").innerHTML='<canvas id="chart-annual"></canvas>';
+
   const fileKey=FILE_MAP[countryName];
   if(!fileKey){loading.style.display="none";nodata.style.display="block";return;}
 
   try{
     const resp=await fetch("data/countries/"+fileKey+".json");
-    if(!resp.ok)throw new Error("File not found");
+    if(!resp.ok)throw new Error("HTTP "+resp.status+" for "+fileKey+".json");
     modalData=await resp.json();
 
     const srcParts=[];
@@ -513,17 +517,14 @@ window.openModal=async function(countryName){
     if(modalData.source_annual)  srcParts.push("Annual: "+modalData.source_annual);
     document.getElementById("modal-source").textContent=srcParts.join("  ·  ");
 
-    // Last updated hint
     if(modalData.last_updated){
       const d=new Date(modalData.last_updated);
       document.getElementById("modal-subtitle").textContent=
-        "New car registrations  ·  Last updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
+        "New car registrations  ·  Updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
     }
 
-    // Reset powertrain tabs
     document.querySelectorAll(".chart-tab").forEach((b,i)=>b.classList.toggle("active",i===0));
 
-    // Render both charts
     renderMonthlyChart(modalData);
     renderAnnualChart(modalData,"absolute");
     renderSummary(modalData);
@@ -531,8 +532,9 @@ window.openModal=async function(countryName){
     loading.style.display="none";
     content.style.display="block";
   }catch(e){
-    loading.style.display="none";
-    nodata.style.display="block";
+    console.error("openModal error:",e);
+    document.getElementById("modal-loading").innerHTML=
+      `<p style="color:#ff6b35;font-size:.75rem">Error loading data: ${e.message}</p>`;
   }
 };
 
@@ -553,11 +555,12 @@ window.switchTab=function(tab,btn){
 // Chart 1 — Monthly total registrations (ECB)
 function renderMonthlyChart(data){
   const m=data.monthly;
+  const wrap=document.getElementById("monthly-wrap");
   if(!m||!m.labels||!m.labels.length){
-    document.getElementById("chart-monthly").parentElement.innerHTML=
-      `<div style="height:300px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.72rem">No monthly data available</div>`;
+    wrap.innerHTML='<div style="height:300px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.72rem;flex-direction:column;gap:8px"><span style="font-size:1.2rem">📅</span>Monthly data coming soon — ECB API integration in progress</div>';
     return;
   }
+  wrap.innerHTML='<canvas id="chart-monthly"></canvas>';
   const ctx=document.getElementById("chart-monthly").getContext("2d");
   chartMonthly=new Chart(ctx,{
     type:"line",
@@ -577,9 +580,7 @@ function renderMonthlyChart(data){
         ...CHART_DEFAULTS.plugins,
         tooltip:{
           ...CHART_DEFAULTS.plugins.tooltip,
-          callbacks:{
-            label:ctx=>" "+ctx.parsed.y.toLocaleString("en")+" vehicles",
-          }
+          callbacks:{label:ctx=>" "+ctx.parsed.y.toLocaleString("en")+" vehicles"}
         }
       },
       scales:{
@@ -595,11 +596,12 @@ function renderMonthlyChart(data){
 // Chart 2 — Annual by powertrain (Eurostat)
 function renderAnnualChart(data, mode){
   const a=data.annual;
+  const wrap=document.getElementById("annual-wrap");
   if(!a||!a.labels||!a.labels.length){
-    document.getElementById("chart-annual").parentElement.innerHTML=
-      `<div style="height:300px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.72rem">No annual fuel-type data available</div>`;
+    wrap.innerHTML='<div style="height:300px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.72rem">No annual fuel-type data available</div>';
     return;
   }
+  wrap.innerHTML='<canvas id="chart-annual"></canvas>';
   const ctx=document.getElementById("chart-annual").getContext("2d");
   const keys=["bev","phev","hybrid","petrol","diesel","other"];
 
