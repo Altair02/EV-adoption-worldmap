@@ -500,14 +500,16 @@ window.openModal=async function(countryName){
   nodata.style.display="none";
   destroyCharts();
 
-  // Restore canvas elements in case they were replaced
-  document.getElementById("monthly-wrap").innerHTML='<canvas id="chart-monthly"></canvas>';
-  document.getElementById("annual-wrap").innerHTML='<canvas id="chart-annual"></canvas>';
-
   const fileKey=FILE_MAP[countryName];
   if(!fileKey){loading.style.display="none";nodata.style.display="block";return;}
 
   try{
+    // Restore canvas elements (do this inside try so errors are caught)
+    const mw=document.getElementById("monthly-wrap");
+    const aw=document.getElementById("annual-wrap");
+    if(mw) mw.innerHTML='<canvas id="chart-monthly"></canvas>';
+    if(aw) aw.innerHTML='<canvas id="chart-annual"></canvas>';
+
     const resp=await fetch("data/countries/"+fileKey+".json?v="+Date.now());
     if(!resp.ok)throw new Error("HTTP "+resp.status+" for "+fileKey+".json");
     modalData=await resp.json();
