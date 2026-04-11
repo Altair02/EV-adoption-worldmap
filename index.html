@@ -533,8 +533,14 @@ window.openModal=async function(countryName){
     content.style.display="block";
   }catch(e){
     console.error("openModal error:",e);
-    document.getElementById("modal-loading").innerHTML=
-      `<p style="color:#ff6b35;font-size:.75rem">Error loading data: ${e.message}</p>`;
+    loading.style.display="none";
+    nodata.style.display="block";
+    document.getElementById("modal-nodata").innerHTML=
+      `<div class="no-data-msg">
+        <div style="color:#ff6b35;font-size:0.8rem;margin-bottom:8px">&#x26A0; Error loading chart data</div>
+        <div style="font-size:0.68rem;color:var(--muted);font-family:monospace">${e.message}</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-top:12px">Check browser console (F12) for details</div>
+      </div>`;
   }
 };
 
