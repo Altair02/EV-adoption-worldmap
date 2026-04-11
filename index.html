@@ -508,7 +508,7 @@ window.openModal=async function(countryName){
   if(!fileKey){loading.style.display="none";nodata.style.display="block";return;}
 
   try{
-    const resp=await fetch("data/countries/"+fileKey+".json");
+    const resp=await fetch("data/countries/"+fileKey+".json?v="+Date.now());
     if(!resp.ok)throw new Error("HTTP "+resp.status+" for "+fileKey+".json");
     modalData=await resp.json();
 
