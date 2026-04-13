@@ -1,13 +1,17 @@
-"""
-scripts/update_data.py - v10
+# “””
+scripts/update_data.py  —  v7
 
+Fix: Monthly data was cut off at 2022 because the old STS dataset
+was used (discontinued end-2022). New CAR dataset has 2023-present.
 
-Key fix vs v9:
-The ECB CAR dataset does NOT support lastNObservations parameter.
-v9 used it for probing → always returned empty → fell back to old STS.
-v10 fetches directly with startPeriod=2023-01 to check for recent data,
-then fetches full history if found.
-Working key confirmed: CAR / M.{GEO}.N.NEWCARS.ABS
+Solution: fetch BOTH datasets per country and merge them:
+STS → historical data (2015-2022)
+CAR → recent data (2023-present)
+Result → complete series 2015-March 2026
+
+Note on powertrain charts: Eurostat road_eqr_carpda is ANNUAL only.
+Monthly breakdown by fuel type is not available as a free API.
+The 3 powertrain charts remain annual — this is a data limitation.
 “””
 
 import csv, io, json, os, sys, time, urllib.error, urllib.request
@@ -70,6 +74,7 @@ FUEL_MAP_GRANULAR = {
 “BIFUEL”:      “other”,
 “OTH”:         “other”,
 }
+
 FUEL_MAP_FALLBACK = {
 “ELC”: “bev”,
 “PET”: “petrol”,
@@ -82,12 +87,13 @@ FUEL_MAP_FALLBACK = {
 def http_get(url, timeout=30):
 req = urllib.request.Request(
 url,
-headers={“User-Agent”: “EV-Map-Bot/10.0 (github.com/Altair02/EV-adoption-worldmap)”}
+headers={“User-Agent”: “EV-Map-Bot/7.0 (github.com/Altair02/EV-adoption-worldmap)”}
 )
 with urllib.request.urlopen(req, timeout=timeout) as r:
 return r.read()
 
-def parse_csv(raw):
+def parse_ecb_csv(raw):
+“”“Parse ECB CSV response into {period: value} dict.”””
 result = {}
 try:
 reader = csv.DictReader(io.StringIO(raw))
@@ -106,102 +112,111 @@ except Exception:
 pass
 return result
 
-def fetch_url(url):
-“”“Fetch URL, return parsed CSV dict or {} on any error.”””
+def fetch_dataset(dataset, key, geo, params):
+“”“Try one dataset/key combination. Returns {period: value} or {}.”””
+actual_key = key.replace(“XX”, geo)
+url = f”https://data-api.ecb.europa.eu/service/data/{dataset}/{actual_key}?{params}”
 try:
-raw = http_get(url).decode(“utf-8”)
+raw = http_get(url, timeout=20).decode(“utf-8”)
 if “TIME_PERIOD” not in raw.upper():
 return {}
-return parse_csv(raw)
+return parse_ecb_csv(raw)
 except Exception:
 return {}
 
-# ── ECB: per-country, direct fetch ───────────────────────────────────────────
-
-def fetch_ecb_one_country(geo):
-“””
-Strategy:
-1. Try CAR dataset with confirmed working key M.{GEO}.N.NEWCARS.ABS
-- First check if recent data (2023+) exists
-- If yes, fetch full history from 2015
-2. Fall back to alternative CAR keys
-3. Last resort: old STS key (data until ~2022)
-“””
-base = “https://data-api.ecb.europa.eu/service/data”
-
-```
-# Step 1: Try primary CAR key — check recent data first (no lastNObservations!)
-car_primary = f"M.{geo}.N.NEWCARS.ABS"
-recent = fetch_url(f"{base}/CAR/{car_primary}?format=csvdata&startPeriod=2023-01&detail=dataonly")
-if recent:
-    # Recent data found — now fetch full history
-    full = fetch_url(f"{base}/CAR/{car_primary}?format=csvdata&startPeriod={START_YEAR}-01&detail=dataonly")
-    if full:
-        latest = max(full.keys())
-        return full, "CAR", car_primary, latest
-time.sleep(0.15)
-
-# Step 2: Try alternative CAR keys (also without lastNObservations)
-car_alternatives = [
-    f"M.{geo}.N.NEWCARS.N",
-    f"M.{geo}.N.NEWCARS.NSA",
-    f"M.{geo}.N.CARS.ABS",
-    f"M.{geo}.N.CARS.N",
-    f"M.{geo}.N.CREG.PC0000.ABS",
-    f"M.{geo}.N.CREG.PC0000.3.ABS",
-]
-for key in car_alternatives:
-    recent = fetch_url(f"{base}/CAR/{key}?format=csvdata&startPeriod=2023-01&detail=dataonly")
-    if recent:
-        full = fetch_url(f"{base}/CAR/{key}?format=csvdata&startPeriod={START_YEAR}-01&detail=dataonly")
-        if full:
-            latest = max(full.keys())
-            return full, "CAR", key, latest
-    time.sleep(0.1)
-
-# Step 3: Old STS fallback (will only have data until ~2022)
-sts_keys = [
-    f"M.{geo}.N.CREG.PC0000.3.ABS",
-    f"M.{geo}.W.CREG.PC0000.3.ABS",
-]
-for key in sts_keys:
-    data = fetch_url(f"{base}/STS/{key}?format=csvdata&startPeriod={START_YEAR}-01&detail=dataonly")
-    if data:
-        latest = max(data.keys())
-        return data, "STS", key, latest
-    time.sleep(0.1)
-
-return {}, None, None, None
-```
+# ── ECB monthly: merge STS (historic) + CAR (recent) ─────────────────────────
 
 def fetch_ecb_monthly():
-print(f”[ECB] Fetching {len(COUNTRIES)} countries…”)
-results = {}
-for geo in COUNTRIES:
-data, dataset, key, latest = fetch_ecb_one_country(geo)
-if data:
-months = sorted(data.keys())
-results[geo] = {“labels”: months, “total”: [data[m] for m in months]}
-is_recent = latest and latest >= “2024-01”
-flag = “✓” if is_recent else “⚠ old”
-print(f”[ECB]   {geo} {flag}: {dataset}/{key} → {months[-1]}”)
-else:
-print(f”[ECB]   {geo}: no data”)
-time.sleep(0.15)
+params = f”format=csvdata&startPeriod={START_YEAR}-01&detail=dataonly”
 
 ```
-ok = len(results)
-recent = sum(1 for v in results.values() if v["labels"][-1] >= "2024-01")
-print(f"[ECB] Done — {ok}/{len(COUNTRIES)} total, {recent} with data up to 2024+")
+# STS keys (historic, works up to ~end 2022 when STS was discontinued)
+STS_KEYS = [
+    "M.XX.N.CREG.PC0000.3.ABS",   # not seasonally adjusted
+    "M.XX.W.CREG.PC0000.3.ABS",   # working day adjusted
+]
+
+# CAR keys (new dataset, from ~Jan 2023 onwards)
+CAR_KEYS = [
+    "M.XX.N.CREG.PC0000.3.ABS",
+    "M.XX.N.CREG.PC0000..ABS",
+    "M.XX..CREG.PC0000.3.ABS",
+    "M.XX.N.NEWCARS.N",
+    "M.XX.N.NEWCARS.NSA",
+    "M.XX.....",
+]
+
+# First: find working STS key using Germany as test
+print("[ECB] Testing STS keys with Germany…")
+sts_key = None
+for k in STS_KEYS:
+    d = fetch_dataset("STS", k, "DE", params)
+    if d:
+        sts_key = k
+        latest = max(d.keys())
+        print(f"[ECB] STS working key: {k} → {len(d)} months, latest={latest}")
+        break
+
+# Find working CAR key using Germany as test
+print("[ECB] Testing CAR keys with Germany…")
+car_key = None
+for k in CAR_KEYS:
+    d = fetch_dataset("CAR", k, "DE", params)
+    if d:
+        car_key = k
+        latest = max(d.keys())
+        print(f"[ECB] CAR working key: {k} → {len(d)} months, latest={latest}")
+        break
+
+if not sts_key and not car_key:
+    print("[ECB] No working key found — skipping monthly data")
+    return {}
+
+print(f"\n[ECB] Fetching all {len(COUNTRIES)} countries…")
+results = {}
+
+for geo in COUNTRIES:
+    merged = {}
+
+    # Fetch STS (historic)
+    if sts_key:
+        sts_data = fetch_dataset("STS", sts_key, geo, params)
+        merged.update(sts_data)
+
+    # Fetch CAR (recent) — overwrites STS where overlap exists
+    if car_key:
+        car_data = fetch_dataset("CAR", car_key, geo, params)
+        merged.update(car_data)
+
+    if merged:
+        months = sorted(merged.keys())
+        results[geo] = {
+            "labels": months,
+            "total":  [merged[m] for m in months],
+        }
+        latest = months[-1]
+        print(f"[ECB]   {geo}: {len(months)} months ({months[0]}→{latest})")
+    else:
+        print(f"[ECB]   {geo}: no data")
+
+    time.sleep(0.2)
+
+# Summary
+countries_with_2025 = sum(
+    1 for v in results.values()
+    if any(l >= "2025" for l in v["labels"])
+)
+print(f"\n[ECB] Done — {len(results)} countries, "
+      f"{countries_with_2025} with data up to 2025+")
 return results
 ```
 
-# ── Eurostat annual ───────────────────────────────────────────────────────────
+# ── Eurostat annual powertrain breakdown ──────────────────────────────────────
 
 def fetch_eurostat_annual():
 url = (“https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/”
 “road_eqr_carpda?format=JSON&lang=EN&unit=NR”)
-print(f”\n[Eurostat] Fetching annual breakdown…”)
+print(f”\n[Eurostat] Fetching annual powertrain breakdown…”)
 try:
 raw = json.loads(http_get(url, timeout=60).decode(“utf-8”))
 except Exception as e:
@@ -254,6 +269,7 @@ for estat_geo, g_pos in geo_idx.items():
         year_vals = {f: 0 for f in ["bev","phev","hybrid","petrol","diesel","other"]}
         for fuel_code, field in FUEL_MAP_GRANULAR.items():
             year_vals[field] += get_val(g_pos, t_pos, fuel_code)
+        # Fallback to aggregates if granular petrol+diesel = 0
         if year_vals["petrol"] == 0 and year_vals["diesel"] == 0:
             for fuel_code, field in FUEL_MAP_FALLBACK.items():
                 v = get_val(g_pos, t_pos, fuel_code)
@@ -263,7 +279,13 @@ for estat_geo, g_pos in geo_idx.items():
     if country_data:
         result[ecb_key] = country_data
 
-print(f"[Eurostat] Done — {len(result)} countries")
+if "DE" in result:
+    de23 = result["DE"].get("2023", {})
+    print(f"[Eurostat] DE 2023: BEV={de23.get('bev',0):,} "
+          f"PHEV={de23.get('phev',0):,} Hybrid={de23.get('hybrid',0):,} "
+          f"Petrol={de23.get('petrol',0):,} Diesel={de23.get('diesel',0):,}")
+
+print(f"[Eurostat] Done — {len(result)} countries, years: {years[0]}–{years[-1]}")
 return result
 ```
 
@@ -272,85 +294,66 @@ return result
 def write_files(monthly, annual):
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 changed = []
-
-```
 for ecb_code, (name, estat_code, pop) in COUNTRIES.items():
-    new_monthly = monthly.get(ecb_code, {})
-    new_annual  = annual.get(ecb_code, {})
-
-    if not new_monthly and not new_annual:
-        continue
-
-    # Load existing file
-    old_payload = {}
-    fname = name.lower().replace(" ", "_") + ".json"
-    path  = DATA_DIR / fname
-    if path.exists():
-        try:
-            old_payload = json.loads(path.read_text("utf-8"))
-        except Exception:
-            pass
-
-    # Merge monthly: keep whichever is more recent
-    old_monthly = old_payload.get("monthly", {})
-    old_latest  = old_monthly.get("labels", [""])[-1] if old_monthly.get("labels") else ""
-    new_latest  = new_monthly.get("labels", [""])[-1] if new_monthly.get("labels") else ""
-
-    if new_monthly and new_latest >= old_latest:
-        merged_monthly = new_monthly
-    else:
-        merged_monthly = old_monthly
-
-    # Annual block
-    years = sorted(new_annual.keys()) if new_annual else []
-    annual_block = old_payload.get("annual", {})
-    if years:
-        annual_block = {
-            "labels": years,
-            "bev":    [new_annual[y].get("bev",    0) for y in years],
-            "phev":   [new_annual[y].get("phev",   0) for y in years],
-            "hybrid": [new_annual[y].get("hybrid", 0) for y in years],
-            "petrol": [new_annual[y].get("petrol", 0) for y in years],
-            "diesel": [new_annual[y].get("diesel", 0) for y in years],
-            "other":  [new_annual[y].get("other",  0) for y in years],
-        }
-
-    payload = {
-        "name": name, "ecb_code": ecb_code, "population_mio": pop,
-        "source_monthly": "ECB Data Portal / ACEA",
-        "source_annual":  "Eurostat road_eqr_carpda",
-        "last_updated":   NOW.isoformat(),
-        "monthly": merged_monthly,
-        "annual":  annual_block,
-    }
-
-    def no_ts(d):
-        d2 = dict(d); d2.pop("last_updated", None); return d2
-
-    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), "utf-8")
-    if no_ts(payload) != no_ts(old_payload):
-        changed.append(name)
-        m_end = merged_monthly.get("labels", ["?"])[-1] if merged_monthly.get("labels") else "none"
-        print(f"[Write] {name} ✓  monthly → {m_end}")
-    else:
-        print(f"[Write] {name} (no change)")
-
+m = monthly.get(ecb_code, {})
+a = annual.get(ecb_code, {})
+if not m and not a:
+continue
+years = sorted(a.keys()) if a else []
+annual_block = {}
+if years:
+annual_block = {
+“labels”: years,
+“bev”:    [a[y].get(“bev”,    0) for y in years],
+“phev”:   [a[y].get(“phev”,   0) for y in years],
+“hybrid”: [a[y].get(“hybrid”, 0) for y in years],
+“petrol”: [a[y].get(“petrol”, 0) for y in years],
+“diesel”: [a[y].get(“diesel”, 0) for y in years],
+“other”:  [a[y].get(“other”,  0) for y in years],
+}
+payload = {
+“name”: name, “ecb_code”: ecb_code, “population_mio”: pop,
+“source_monthly”: “ECB Data Portal / ACEA”,
+“source_annual”:  “Eurostat road_eqr_carpda”,
+“last_updated”:   NOW.isoformat(),
+“monthly”: m,
+“annual”:  annual_block,
+}
+fname = name.lower().replace(” “, “_”) + “.json”
+path  = DATA_DIR / fname
+old = {}
+if path.exists():
+try:
+old = json.loads(path.read_text(“utf-8”))
+except Exception:
+pass
+def no_ts(d):
+d2 = dict(d); d2.pop(“last_updated”, None); return d2
+path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), “utf-8”)
+if no_ts(payload) != no_ts(old):
+changed.append(name)
+print(f”[Write] {name} ✓ updated”)
+else:
+print(f”[Write] {name} (no change)”)
 return changed
-```
 
 # ── Telegram ──────────────────────────────────────────────────────────────────
 
-def send_telegram(changed, n_countries):
+def send_telegram(changed, n_countries, monthly_coverage):
 if not TELEGRAM_TOKEN or not TELEGRAM_CHAT:
 return
 date_str = NOW.strftime(”%d.%m.%Y %H:%M UTC”)
 if changed:
 lines = “\n”.join(f”  • {c}” for c in changed[:25])
-body = (f”🚗 *Car Registrations — Updated*\n📅 {date_str}\n”
-f”🌍 {n_countries} countries\n\n*Changed ({len(changed)}):*\n{lines}”)
+body = (f”🚗 *Car Registrations — Updated*\n”
+f”📅 {date_str}\n”
+f”🌍 {n_countries} countries\n”
+f”📈 Monthly data: {monthly_coverage} countries up to date\n\n”
+f”*Changed ({len(changed)}):*\n{lines}”)
 else:
-body = (f”🚗 *Car Registrations — No Changes*\n📅 {date_str}\n”
-f”🌍 {n_countries} — all up to date.”)
+body = (f”🚗 *Car Registrations — No Changes*\n”
+f”📅 {date_str}\n”
+f”🌍 {n_countries} countries — all up to date.”)
 body += (”\n\n🗺️ [Open Map](https://altair02.github.io/EV-adoption-worldmap/)\n”
 “📁 [GitHub](https://github.com/Altair02/EV-adoption-worldmap)”)
 data = json.dumps({
@@ -372,17 +375,22 @@ print(f”[Telegram] Error: {e}”)
 
 def main():
 print(”=” * 60)
-print(f”  Car Registration Updater v10  —  {NOW.strftime(’%d.%m.%Y %H:%M UTC’)}”)
+print(f”  Car Registration Updater v7  —  {NOW.strftime(’%d.%m.%Y %H:%M UTC’)}”)
 print(”=” * 60)
 monthly = fetch_ecb_monthly()
 annual  = fetch_eurostat_annual()
 if not monthly and not annual:
 print(“⚠️  No data from either source”)
-send_telegram([], 0)
+send_telegram([], 0, 0)
 sys.exit(1)
 changed = write_files(monthly, annual)
-send_telegram(changed, len(COUNTRIES))
-print(f”\n✓ Done — {len(changed)} countries updated”)
+coverage = sum(
+1 for v in monthly.values()
+if any(l >= “2025” for l in v.get(“labels”, []))
+)
+send_telegram(changed, len(COUNTRIES), coverage)
+print(f”\n✓ Done — {len(changed)} countries updated, “
+f”{coverage} with 2025+ monthly data”)
 
 if **name** == “**main**”:
 main()
