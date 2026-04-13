@@ -3,7 +3,7 @@ name: Update Car Registration Data
 
 on:
   schedule:
-    - cron: "0 9 1 * *"      # jeden 1. des Monats
+    - cron: "0 9 1 * *"
   workflow_dispatch:
 
 permissions:
@@ -22,7 +22,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install pdfplumber
+        run: pip install pdfplumber beautifulsoup4
 
       - name: Run update script
         env:
