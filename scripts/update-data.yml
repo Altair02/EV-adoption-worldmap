@@ -24,7 +24,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install pdfplumber beautifulsoup4
-          echo "pdfplumber successfully installed"
+          echo "pdfplumber installed successfully"
 
       - name: Run update script
         env:
