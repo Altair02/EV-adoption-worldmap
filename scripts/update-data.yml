@@ -1,4 +1,3 @@
-# .github/workflows/update-data.yml
 name: Update Car Registration Data
 
 on:
@@ -22,7 +21,11 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install pdfplumber beautifulsoup4
+        run: |
+          pip install --upgrade pip
+          pip install pdfplumber beautifulsoup4
+          echo "=== Installed packages ==="
+          pip list | grep -E "pdfplumber|beautifulsoup4"
 
       - name: Run update script
         env:
