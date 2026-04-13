@@ -1,5 +1,5 @@
 """
-scripts/update_data.py  —  v13 FINAL (ACEA PDF)
+scripts/update_data.py  —  v13 FINAL (ACEA PDF — stabilisiert)
 """
 
 import re
@@ -22,7 +22,6 @@ NOW       = datetime.now(timezone.utc)
 print("=" * 60)
 print(f"  Car Registration Updater v13 FINAL — {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
 print("=" * 60)
-print("✅ Alle Imports erfolgreich")
 
 def http_get(url):
     req = urllib.request.Request(url, headers={"User-Agent": "EV-Map-Bot/13.0"})
@@ -30,22 +29,29 @@ def http_get(url):
         return r.read()
 
 def get_latest_acea_pdf():
-    print("[ACEA] Suche neueste PDF...")
+    print("[ACEA] Suche neueste Pressemitteilung...")
     list_url = "https://www.acea.auto/pc-registrations/"
     html = http_get(list_url).decode("utf-8")
     soup = BeautifulSoup(html, "html.parser")
 
-    link = soup.find("a", href=re.compile(r"/pc-registrations/new-car-registrations-"))
-    if not link:
-        print("[ACEA] Kein Artikel gefunden")
+    # Verbesserte Suche: alle Links, die "new-car-registrations" oder "press" enthalten
+    links = soup.find_all("a", href=re.compile(r"new-car-registrations|press-release|registrations", re.IGNORECASE))
+    
+    if not links:
+        print("[ACEA] Keine passenden Links gefunden")
         return None, None
 
-    article_url = "https://www.acea.auto" + link["href"]
-    article_html = http_get(article_url).decode("utf-8")
+    # Neuesten Artikel nehmen (erster Link)
+    article = links[0]
+    article_url = "https://www.acea.auto" + article["href"]
+    print(f"[ACEA] Artikel gefunden: {article_url}")
 
-    pdf_match = re.search(r'href="(https://www\.acea\.auto/files/Press_release_car_registrations_[^"]+\.pdf)"', article_html)
+    # Auf der Artikelseite nach PDF suchen
+    article_html = http_get(article_url).decode("utf-8")
+    pdf_match = re.search(r'href="(https://www\.acea\.auto/files/[^"]*Press_release_car_registrations_[^"]+\.pdf)"', article_html, re.IGNORECASE)
+
     if not pdf_match:
-        print("[ACEA] Kein PDF-Link gefunden")
+        print("[ACEA] Kein PDF-Link im Artikel gefunden")
         return None, None
 
     pdf_url = pdf_match.group(1)
@@ -79,8 +85,7 @@ def parse_acea_pdf(pdf_path):
     with pdfplumber.open(pdf_path) as pdf:
         for page in pdf.pages:
             text = page.extract_text()
-            if not text:
-                continue
+            if not text: continue
             for full_name, code in country_map.items():
                 match = re.search(rf"{full_name}\s*[\d\.,]+\s*([\d\.,]+)", text, re.IGNORECASE)
                 if match:
