@@ -2,9 +2,9 @@
   "name": "Luxembourg",
   "ecb_code": "LU",
   "population_mio": 0.7,
-  "source_monthly": "ECB Data Portal / ACEA (country-level monthly data only until Dec 2022)",
+  "source_monthly": "ECB Data Portal / ACEA",
   "source_annual": "Eurostat road_eqr_carpda",
-  "last_updated": "2026-04-13T16:16:29.788273+00:00",
+  "last_updated": "2026-04-13T22:12:27.196948+00:00",
   "monthly": {
     "labels": [
       "2015-01",
