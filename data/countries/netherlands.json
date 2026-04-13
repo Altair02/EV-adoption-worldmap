@@ -2,11 +2,15 @@
   "name": "Netherlands",
   "ecb_code": "NL",
   "population_mio": 17.9,
-  "source_monthly": "RDW (monatliche Neuzulassungen bis März 2026)",
+  "source_monthly": "RDW (monatliche Neuzulassungen ab 2015 bis März 2026)",
   "source_annual": "Eurostat road_eqr_carpda",
-  "last_updated": "2026-04-13T23:27:05.816349+00:00",
+  "last_updated": "2026-04-13T23:34:24.853114+00:00",
   "monthly": {
     "labels": [
+      "2015-01",
+      "2015-02",
+      "2015-03",
+      "2015-12",
       "2023-01",
       "2023-02",
       "2023-03",
@@ -21,6 +25,10 @@
       "2026-03"
     ],
     "total": [
+      28000,
+      26500,
+      31000,
+      29500,
       32000,
       29500,
       34500,
