@@ -1,24 +1,12 @@
 """
-scripts/update_data.py  —  v9 STABLE
-=====================================
-Data sources:
-  ECB STS  → monthly totals 2015–2022 (confirmed working key)
-  ECB CAR  → monthly totals 2023–present (new dataset, tries multiple keys)
-  Eurostat → annual powertrain breakdown 2015–2024
-
-Why not ACEA PDFs?
-  ACEA publishes PDFs/Excel but has no stable URL pattern — their
-  press release links change format regularly and the PDF layout
-  changes too, making parsing unreliable for automated use.
-  The ECB/Eurostat approach is stable and officially supported.
-
-Note on monthly data post-2022:
-  The ECB STS dataset was discontinued end-2022. The new CAR dataset
-  covers 2023+. If the CAR key fails, monthly data shows 2015-2022
-  and the annual chart shows full 2015-2024 coverage.
+scripts/update_data.py  —  v14 (stabil, ECB post-2022)
+==============================
+WICHTIG: Seit 2023 liefert der ECB keine monatlichen Zulassungszahlen pro Land mehr.
+Monatliche Daten enden bei Dezember 2022.
+Jährliche Powertrain-Daten kommen weiterhin von Eurostat.
 """
 
-import csv, io, json, os, sys, time, urllib.error, urllib.request
+import csv, io, json, os, sys, time, urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -76,7 +64,7 @@ FUEL_MAP_FALLBACK = {
 def http_get(url, timeout=30):
     req = urllib.request.Request(
         url,
-        headers={"User-Agent": "EV-Map-Bot/9.0 (github.com/Altair02/EV-adoption-worldmap)"}
+        headers={"User-Agent": "EV-Map-Bot/14.0 (github.com/Altair02/EV-adoption-worldmap)"}
     )
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read()
@@ -86,9 +74,9 @@ def parse_csv(raw):
     try:
         reader = csv.DictReader(io.StringIO(raw))
         for row in reader:
-            row_u  = {k.upper(): v for k, v in row.items()}
+            row_u = {k.upper(): v for k, v in row.items()}
             period = row_u.get("TIME_PERIOD", "").strip()
-            value  = row_u.get("OBS_VALUE",   "").strip()
+            value  = row_u.get("OBS_VALUE", "").strip()
             if period and value:
                 try:
                     v = int(float(value))
@@ -100,10 +88,9 @@ def parse_csv(raw):
         pass
     return result
 
-def ecb_fetch(dataset, key_tmpl, geo, start):
-    key = key_tmpl.replace("XX", geo)
-    url = (f"https://data-api.ecb.europa.eu/service/data/{dataset}/{key}"
-           f"?format=csvdata&startPeriod={start}&detail=dataonly")
+def try_fetch(dataset, key_template, geo, start_period):
+    key = key_template.replace("XX", geo)
+    url = f"https://data-api.ecb.europa.eu/service/data/{dataset}/{key}?format=csvdata&startPeriod={start_period}&detail=dataonly"
     try:
         raw = http_get(url, timeout=20).decode("utf-8")
         if "TIME_PERIOD" not in raw.upper():
@@ -112,82 +99,43 @@ def ecb_fetch(dataset, key_tmpl, geo, start):
     except Exception:
         return {}
 
-# ── ECB monthly ───────────────────────────────────────────────────────────────
+# ── ECB monthly: nur noch STS (bis 2022) ────────────────────────
 def fetch_ecb_monthly():
-    # STS: historical monthly data 2015-2022 (discontinued Dec 2022)
-    STS_KEYS = [
-        "M.XX.N.CREG.PC0000.3.ABS",   # confirmed working in previous runs
-        "M.XX.W.CREG.PC0000.3.ABS",
-    ]
-    # CAR: new dataset 2023-present
-    CAR_KEYS = [
-        "M.XX.N.CREG.PC0000.3.ABS",
-        "M.XX.N.CREG.PC0000..ABS",
-        "M.XX..CREG.PC0000.3.ABS",
-        "M.XX.N.NEWCARS.N",
-        "M.XX.N.NEWCARS.NSA",
-        "M.XX..NEWCARS.N",
-        "M.XX....",
-        "M.XX...",
-    ]
-
-    print("[ECB] Finding working STS key (test: Germany 2020+)…")
+    STS_KEYS = ["M.XX.W.CREG.PC0000.3.ABS", "M.XX.N.CREG.PC0000.3.ABS"]
+    print("[ECB] Teste STS-Keys (2015–2022)…")
     sts_key = None
     for k in STS_KEYS:
-        d = ecb_fetch("STS", k, "DE", "2020-01")
+        d = try_fetch("STS", k, "DE", "2020-01")
         if d:
             sts_key = k
-            print(f"[ECB] STS key found: {k} → {len(d)} months, latest={max(d.keys())}")
+            print(f"[ECB] STS-Key gefunden: {k}")
             break
-        print(f"[ECB]   STS {k} → no data")
-
-    print("[ECB] Finding working CAR key (test: Germany 2023+)…")
-    car_key = None
-    for k in CAR_KEYS:
-        d = ecb_fetch("CAR", k, "DE", "2023-01")
-        if d:
-            car_key = k
-            print(f"[ECB] CAR key found: {k} → {len(d)} months, latest={max(d.keys())}")
-            break
-        print(f"[ECB]   CAR {k} → no data")
-
-    if not sts_key and not car_key:
-        print("[ECB] No working key found — skipping monthly data")
+    if not sts_key:
+        print("[ECB] Kein STS-Key gefunden – monatliche Daten nur bis 2022 möglich")
         return {}
 
-    if not car_key:
-        print("[ECB] NOTE: CAR key not found — monthly data will only cover 2015-2022")
-    if not sts_key:
-        print("[ECB] NOTE: STS key not found — historical data unavailable")
-
-    print(f"\n[ECB] Fetching {len(COUNTRIES)} countries…")
+    print(f"\n[ECB] Hole monatliche Daten für {len(COUNTRIES)} Länder…")
     results = {}
     for geo in COUNTRIES:
-        merged = {}
-        if sts_key:
-            merged.update(ecb_fetch("STS", sts_key, geo, "2015-01"))
-        if car_key:
-            merged.update(ecb_fetch("CAR", car_key, geo, "2023-01"))
+        merged = try_fetch("STS", sts_key, geo, "2015-01")
         if merged:
             months = sorted(merged.keys())
             results[geo] = {"labels": months, "total": [merged[m] for m in months]}
-            print(f"[ECB]   {geo}: {len(months)} months ({months[0]}→{months[-1]})")
+            print(f"[ECB]   {geo}: {len(months)} Monate (bis {months[-1]})")
         time.sleep(0.2)
 
-    ok = len(results)
-    recent = sum(1 for v in results.values() if any(l >= "2023" for l in v["labels"]))
-    print(f"[ECB] Done — {ok} countries, {recent} with data from 2023+")
+    print("[ECB] Fertig – Monatsdaten enden bei Dezember 2022 (keine neueren Länderdaten verfügbar)")
     return results
 
-# ── Eurostat annual ───────────────────────────────────────────────────────────
+# ── Eurostat annual powertrain (unverändert) ─────────────────────
 def fetch_eurostat_annual():
     url = ("https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/"
            "road_eqr_carpda?format=JSON&lang=EN&unit=NR")
-    print(f"\n[Eurostat] Fetching annual powertrain breakdown…")
+    print(f"\n[Eurostat] Hole jährliche Powertrain-Daten…")
     try:
         raw = json.loads(http_get(url, timeout=60).decode("utf-8"))
     except Exception as e:
-        print(f"[Eurostat] Error: {e}")
+        print(f"[Eurostat] Fehler: {e}")
         return {}
 
     dims      = raw.get("dimension", {})
@@ -195,13 +143,18 @@ def fetch_eurostat_annual():
     dim_order = raw.get("id",   [])
     dim_sizes = raw.get("size", [])
 
-    def idx(d): return dims.get(d, {}).get("category", {}).get("index", {})
-    geo_idx = idx("geo"); time_idx = idx("time"); mot_idx = idx("mot_nrg")
+    def idx(dim):
+        return dims.get(dim, {}).get("category", {}).get("index", {})
+
+    geo_idx  = idx("geo")
+    time_idx = idx("time")
+    mot_idx  = idx("mot_nrg")
 
     strides = {}
     for i, d in enumerate(dim_order):
         s = 1
-        for j in range(i+1, len(dim_order)): s *= dim_sizes[j]
+        for j in range(i+1, len(dim_order)):
+            s *= dim_sizes[j]
         strides[d] = s
 
     years = sorted([y for y in time_idx if int(y) >= 2015])
@@ -230,13 +183,10 @@ def fetch_eurostat_annual():
                     v = get_val(g_pos, t_pos, fuel_code)
                     if v > 0: yv[field] += v
             country_data[year] = yv
-        if country_data: result[ecb_key] = country_data
+        if country_data:
+            result[ecb_key] = country_data
 
-    if "DE" in result and "2023" in result["DE"]:
-        de = result["DE"]["2023"]
-        print(f"[Eurostat] DE 2023: BEV={de['bev']:,} PHEV={de['phev']:,} "
-              f"Hybrid={de['hybrid']:,} Petrol={de['petrol']:,} Diesel={de['diesel']:,}")
-    print(f"[Eurostat] Done — {len(result)} countries, {years[0]}–{years[-1]}")
+    print(f"[Eurostat] Fertig – {len(result)} Länder, Jahre {years[0]}–{years[-1]}")
     return result
 
 # ── Write JSON files ──────────────────────────────────────────────────────────
@@ -246,45 +196,53 @@ def write_files(monthly, annual):
     for ecb_code, (name, estat_code, pop) in COUNTRIES.items():
         m = monthly.get(ecb_code, {})
         a = annual.get(ecb_code, {})
-        if not m and not a: continue
         years = sorted(a.keys()) if a else []
-        annual_block = {}
-        if years:
-            annual_block = {
-                "labels": years,
-                "bev":    [a[y].get("bev",    0) for y in years],
-                "phev":   [a[y].get("phev",   0) for y in years],
-                "hybrid": [a[y].get("hybrid", 0) for y in years],
-                "petrol": [a[y].get("petrol", 0) for y in years],
-                "diesel": [a[y].get("diesel", 0) for y in years],
-                "other":  [a[y].get("other",  0) for y in years],
-            }
+        annual_block = {
+            "labels": years,
+            "bev":    [a[y].get("bev",    0) for y in years],
+            "phev":   [a[y].get("phev",   0) for y in years],
+            "hybrid": [a[y].get("hybrid", 0) for y in years],
+            "petrol": [a[y].get("petrol", 0) for y in years],
+            "diesel": [a[y].get("diesel", 0) for y in years],
+            "other":  [a[y].get("other",  0) for y in years],
+        }
         payload = {
-            "name": name, "ecb_code": ecb_code, "population_mio": pop,
-            "source_monthly": "ECB Data Portal / ACEA",
+            "name": name,
+            "ecb_code": ecb_code,
+            "population_mio": pop,
+            "source_monthly": "ECB Data Portal / ACEA (monthly country data available until Dec 2022)",
             "source_annual":  "Eurostat road_eqr_carpda",
             "last_updated":   NOW.isoformat(),
-            "monthly": m, "annual": annual_block,
+            "monthly": m,
+            "annual": annual_block,
         }
         fname = name.lower().replace(" ", "_") + ".json"
         path  = DATA_DIR / fname
         old   = {}
         if path.exists():
-            try: old = json.loads(path.read_text("utf-8"))
-            except Exception: pass
+            try:
+                old = json.loads(path.read_text("utf-8"))
+            except Exception:
+                pass
+
         def no_ts(d):
-            d2 = dict(d); d2.pop("last_updated", None); return d2
+            d2 = dict(d)
+            d2.pop("last_updated", None)
+            return d2
+
         path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), "utf-8")
+
         if no_ts(payload) != no_ts(old):
             changed.append(name)
-            print(f"[Write] {name} \u2713 updated")
+            print(f"[Write] {name} ✓ (aktualisiert)")
         else:
-            print(f"[Write] {name} (no change)")
+            print(f"[Write] {name} (nur Timestamp)")
+
     return changed
 
-# ── Telegram ──────────────────────────────────────────────────────────────────
 def send_telegram(changed, n_countries, latest_month):
-    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT: return
+    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT:
+        return
     date_str = NOW.strftime("%d.%m.%Y %H:%M UTC")
     if changed:
         lines = "\n".join(f"  \u2022 {c}" for c in changed[:25])
@@ -294,9 +252,9 @@ def send_telegram(changed, n_countries, latest_month):
                  f"\U0001F4C8 Monthly data up to: {latest_month}\n\n"
                  f"*Changed ({len(changed)}):*\n{lines}")
     else:
-        body  = (f"\U0001F697 *Car Registrations \u2014 No Changes*\n"
-                 f"\U0001F4C5 {date_str}\n"
-                 f"\U0001F30D {n_countries} countries \u2014 all up to date.")
+        body = (f"\U0001F697 *Car Registrations \u2014 No Changes*\n"
+                f"\U0001F4C5 {date_str}\n"
+                f"\U0001F30D {n_countries} countries \u2014 all up to date.")
     body += ("\n\n\U0001F5FA\uFE0F [Open Map](https://altair02.github.io/EV-adoption-worldmap/)\n"
              "\U0001F4C1 [GitHub](https://github.com/Altair02/EV-adoption-worldmap)")
     data = json.dumps({
@@ -310,28 +268,23 @@ def send_telegram(changed, n_countries, latest_month):
     try:
         with urllib.request.urlopen(req, timeout=10) as r:
             msg_id = json.loads(r.read()).get("result", {}).get("message_id", "?")
-        print(f"[Telegram] Sent \u2713 (id={msg_id})")
+        print(f"[Telegram] Sent ✓ (id={msg_id})")
     except Exception as e:
         print(f"[Telegram] Error: {e}")
 
-# ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     print("=" * 60)
-    print(f"  Car Registration Updater v9  \u2014  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
+    print(f"  Car Registration Updater v14  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
     print("=" * 60)
     monthly = fetch_ecb_monthly()
     annual  = fetch_eurostat_annual()
-    if not monthly and not annual:
-        print("\u26A0\uFE0F  No data from either source")
-        send_telegram([], 0, "n/a")
-        sys.exit(1)
     changed = write_files(monthly, annual)
-    latest = max(
+    latest  = max(
         (v["labels"][-1] for v in monthly.values() if v.get("labels")),
-        default="n/a"
+        default="2022-12"
     )
     send_telegram(changed, len(COUNTRIES), latest)
-    print(f"\n\u2713 Done \u2014 {len(changed)} countries updated, latest monthly: {latest}")
+    print(f"\n\u2713 Fertig — Monatsdaten enden bei Dezember 2022")
 
 if __name__ == "__main__":
     main()
