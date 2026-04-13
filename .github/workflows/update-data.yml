@@ -1,37 +1,26 @@
+# .github/workflows/update-data.yml
 name: Update Car Registration Data
-
 on:
   schedule:
     - cron: "0 9 1 * *"
   workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
   update:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
-      - name: Install pdfplumber
-        run: |
-          pip install --upgrade pip
-          pip install pdfplumber beautifulsoup4
-          echo "pdfplumber installed successfully"
-
       - name: Run update script
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python scripts/update_data.py
-
       - name: Commit & push
         run: |
           git config user.name  "github-actions[bot]"
@@ -40,7 +29,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "data: update registrations $(date +%Y-%m-%d) [ACEA PDF]"
+            git commit -m "data: update registrations $(date +%Y-%m-%d) [ECB+Eurostat]"
             git push
             echo "Pushed ✓"
           fi
