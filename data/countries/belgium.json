@@ -2,9 +2,9 @@
   "name": "Belgium",
   "ecb_code": "BE",
   "population_mio": 11.6,
-  "source_monthly": "ECB Data Portal / ACEA",
+  "source_monthly": "ECB Data Portal / ACEA (country-level monthly data only until Dec 2022)",
   "source_annual": "Eurostat road_eqr_carpda",
-  "last_updated": "2026-04-13T15:58:31.696349+00:00",
+  "last_updated": "2026-04-13T16:16:29.788273+00:00",
   "monthly": {
     "labels": [
       "2015-01",
