@@ -15,16 +15,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.12
+      - name: Set up Python 3.12 + Install packages
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
-      - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install pdfplumber beautifulsoup4
-          echo "=== Installed packages ==="
+          echo "=== Packages installed ==="
           pip list | grep -E "pdfplumber|beautifulsoup4"
 
       - name: Run update script
