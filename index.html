@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -10,94 +9,107 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#0a0e17;--surface:#111827;--border:#1e2d45;--accent:#00e5ff;--accent2:#ff6b35;--text:#e2e8f0;--muted:#64748b;}
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;}
-  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-    background-image:linear-gradient(rgba(0,229,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.03) 1px,transparent 1px);
-    background-size:40px 40px;}
-  .container{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:24px;}
-  header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border);}
-  .title-block h1{font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;letter-spacing:-0.03em;line-height:1.1;
-    background:linear-gradient(135deg,#fff 40%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-  .subtitle{color:var(--muted);font-size:0.75rem;margin-top:6px;letter-spacing:0.08em;text-transform:uppercase;}
-  .meta-block{display:flex;flex-direction:column;gap:8px;align-items:flex-end;}
-  .update-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.2);border-radius:20px;padding:5px 12px;font-size:0.7rem;color:var(--accent);}
-  .update-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite;}
-  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
-  .year-select{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;font-family:'DM Mono',monospace;font-size:0.75rem;cursor:pointer;outline:none;}
-  .year-select:focus{border-color:var(--accent);}
-  .main-grid{display:grid;grid-template-columns:1fr 320px;gap:20px;}
-  .map-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:relative;}
-  .map-panel svg{width:100%;height:auto;display:block;}
-  .country-path{stroke:rgba(0,229,255,0.12);stroke-width:0.4px;transition:all 0.15s;cursor:pointer;}
-  .country-path:hover{stroke:var(--accent);stroke-width:1px;filter:brightness(1.4);}
-  .country-path.selected{stroke:var(--accent2);stroke-width:1.5px;}
-  .sidebar{display:flex;flex-direction:column;gap:16px;}
-  .panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;}
-  .panel-title{font-family:'Syne',sans-serif;font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
-  .legend-bar{height:10px;border-radius:5px;background:linear-gradient(to right,#0a3d62,#1565c0,#2196f3,#00bcd4,#00e5ff,#00ffcc);margin-bottom:8px;}
-  .legend-labels{display:flex;justify-content:space-between;font-size:0.65rem;color:var(--muted);}
-  .sources-note{font-size:0.62rem;color:var(--muted);margin-top:10px;line-height:1.6;}
-  .sources-note a{color:var(--accent);text-decoration:none;}
-  .country-name{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:16px;color:#fff;}
-  .stat-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.72rem;}
-  .stat-row:last-child{border-bottom:none;}
-  .stat-label{color:var(--muted);}
-  .stat-value{color:var(--text);}
-  .stat-value.hl{color:var(--accent);}
-  .top-list{display:flex;flex-direction:column;gap:8px;}
-  .top-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;background:rgba(255,255,255,0.02);border:1px solid transparent;cursor:pointer;transition:all 0.15s;font-size:0.72rem;}
-  .top-item:hover{border-color:var(--border);background:rgba(0,229,255,0.05);}
-  .top-rank{font-family:'Syne',sans-serif;font-weight:800;font-size:0.65rem;color:var(--muted);width:18px;text-align:center;}
-  .top-bar-wrap{flex:1;}
-  .top-bar-label{margin-bottom:3px;}
-  .top-bar-track{height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;}
-  .top-bar-fill{height:100%;border-radius:2px;background:linear-gradient(to right,#2196f3,#00e5ff);}
-  .top-value{color:var(--accent);font-size:0.68rem;white-space:nowrap;}
-  #tooltip{position:fixed;background:rgba(10,14,23,0.95);border:1px solid var(--accent);border-radius:8px;padding:10px 14px;font-size:0.72rem;pointer-events:none;z-index:999;display:none;max-width:220px;backdrop-filter:blur(8px);}
-  #tooltip strong{font-family:'Syne',sans-serif;font-size:0.85rem;display:block;margin-bottom:4px;color:#fff;}
-  .tt-row{display:flex;justify-content:space-between;gap:16px;color:var(--muted);margin-top:3px;}
-  .tt-val{color:var(--accent);}
+  :root {
+    --bg:      #0a0e17;
+    --surface: #111827;
+    --border:  #1e2d45;
+    --accent:  #00e5ff;
+    --accent2: #ff6b35;
+    --text:    #e2e8f0;
+    --muted:   #64748b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; min-height: 100vh; }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 24px; }
 
-/* ── Modal ── */
-#modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(6px);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;}
-#modal-overlay.open{display:flex;}
-#modal-box{background:var(–surface);border:1px solid var(–border);border-radius:16px;width:100%;max-width:860px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 80px rgba(0,229,255,0.1);animation:modalIn .2s ease;}
-@keyframes modalIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-#modal-header{display:flex;justify-content:space-between;align-items:flex-start;padding:22px 24px 16px;border-bottom:1px solid var(–border);flex-shrink:0;}
-#modal-title{font-family:‘Syne’,sans-serif;font-weight:800;font-size:1.35rem;color:#fff;}
-#modal-subtitle{font-size:0.68rem;color:var(–muted);margin-top:4px;}
-#modal-source{font-size:0.6rem;color:var(–muted);margin-top:2px;}
-#modal-close{background:rgba(255,255,255,0.06);border:1px solid var(–border);color:var(–text);width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
-#modal-close:hover{background:rgba(255,107,53,0.2);border-color:var(–accent2);color:var(–accent2);}
-#modal-body{padding:20px 24px 24px;overflow-y:auto;}
-#modal-loading{text-align:center;padding:60px 0;color:var(–muted);font-size:0.8rem;}
-.modal-spinner{width:28px;height:28px;border:2px solid var(–border);border-top-color:var(–accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;}
-@keyframes spin{to{transform:rotate(360deg)}}
-.chart-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
-.chart-tab{padding:5px 14px;border-radius:20px;font-size:0.7rem;cursor:pointer;border:1px solid var(–border);background:transparent;color:var(–muted);font-family:‘DM Mono’,monospace;transition:all .15s;}
-.chart-tab.active{background:rgba(0,229,255,0.12);border-color:var(–accent);color:var(–accent);}
-.chart-tab:hover:not(.active){border-color:var(–muted);color:var(–text);}
-.chart-wrap{position:relative;height:380px;}
-.section-divider{border:none;border-top:1px solid var(–border);margin:22px 0 18px;}
-.section-heading{font-family:‘Syne’,sans-serif;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(–muted);margin-bottom:14px;}
-.summary-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:16px;}
-.summary-card{background:rgba(255,255,255,0.03);border:1px solid var(–border);border-radius:10px;padding:10px 6px;text-align:center;}
-.sc-val{font-family:‘Syne’,sans-serif;font-size:0.88rem;font-weight:700;margin-bottom:3px;}
-.sc-label{font-size:0.55rem;color:var(–muted);text-transform:uppercase;letter-spacing:0.06em;}
-.sc-pct{font-size:0.58rem;color:var(–muted);margin-top:2px;}
-.no-data-msg{text-align:center;padding:50px 0;color:var(–muted);font-size:0.8rem;line-height:2;}
+  header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .title-block h1 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2rem; letter-spacing: -0.03em; line-height: 1.1; background: linear-gradient(135deg, #fff 40%, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .subtitle { color: var(--muted); font-size: 0.75rem; margin-top: 6px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .meta-block { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+  .update-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.2); border-radius: 20px; padding: 5px 12px; font-size: 0.7rem; color: var(--accent); }
+  .update-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.4; transform:scale(.7); } }
+  .year-select { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 0.75rem; cursor: pointer; outline: none; }
+  .year-select:focus { border-color: var(--accent); }
 
-#map-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(–surface);flex-direction:column;gap:12px;z-index:10;}
-.spinner{width:32px;height:32px;border:2px solid var(–border);border-top-color:var(–accent);border-radius:50%;animation:spin .8s linear infinite;}
-#map-loading p{font-size:0.72rem;color:var(–muted);}
-.open-chart-btn{margin-top:14px;width:100%;padding:9px;background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.4);color:var(–accent);border-radius:8px;cursor:pointer;font-family:‘DM Mono’,monospace;font-size:0.72rem;transition:all .15s;}
-.open-chart-btn:hover{background:rgba(0,229,255,0.15);}
-@media(max-width:900px){.main-grid{grid-template-columns:1fr;}header{flex-direction:column;gap:12px;}.meta-block{align-items:flex-start;}.summary-grid{grid-template-columns:repeat(3,1fr);}}
-@media(max-width:500px){.summary-grid{grid-template-columns:repeat(2,1fr);}}
+  .main-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
+  .map-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; position: relative; }
+  .map-panel svg { width: 100%; height: auto; display: block; }
+  .country-path { stroke: rgba(0,229,255,0.12); stroke-width: 0.4px; transition: all 0.15s; cursor: pointer; }
+  .country-path:hover { stroke: var(--accent); stroke-width: 1px; filter: brightness(1.4); }
+  .country-path.selected { stroke: var(--accent2); stroke-width: 1.5px; }
+  .sidebar { display: flex; flex-direction: column; gap: 16px; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+  .panel-title { font-family: 'Syne', sans-serif; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .legend-bar { height: 10px; border-radius: 5px; background: linear-gradient(to right, #0a3d62, #1565c0, #2196f3, #00bcd4, #00e5ff, #00ffcc); margin-bottom: 8px; }
+  .legend-labels { display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--muted); }
+  .sources-note { font-size: 0.62rem; color: var(--muted); margin-top: 10px; line-height: 1.6; }
+  .sources-note a { color: var(--accent); text-decoration: none; }
+  .country-name { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; color: #fff; }
+  .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.72rem; }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-label { color: var(--muted); }
+  .stat-value { color: var(--text); }
+  .stat-value.hl { color: var(--accent); }
+  .top-list { display: flex; flex-direction: column; gap: 8px; }
+  .top-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; background: rgba(255,255,255,0.02); border: 1px solid transparent; cursor: pointer; transition: all 0.15s; font-size: 0.72rem; }
+  .top-item:hover { border-color: var(--border); background: rgba(0,229,255,0.05); }
+  .top-rank { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.65rem; color: var(--muted); width: 18px; text-align: center; }
+  .top-bar-wrap { flex: 1; }
+  .top-bar-label { margin-bottom: 3px; }
+  .top-bar-track { height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+  .top-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(to right, #2196f3, #00e5ff); }
+  .top-value { color: var(--accent); font-size: 0.68rem; white-space: nowrap; }
+  .open-chart-btn { margin-top: 14px; width: 100%; padding: 9px; background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.4); color: var(--accent); border-radius: 8px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 0.72rem; transition: all .15s; }
+  .open-chart-btn:hover { background: rgba(0,229,255,0.15); }
+
+  /* Tooltip */
+  #tooltip { position: fixed; background: rgba(10,14,23,0.95); border: 1px solid var(--accent); border-radius: 8px; padding: 10px 14px; font-size: 0.72rem; pointer-events: none; z-index: 999; display: none; max-width: 220px; backdrop-filter: blur(8px); }
+  #tooltip strong { font-family: 'Syne', sans-serif; font-size: 0.85rem; display: block; margin-bottom: 4px; color: #fff; }
+  .tt-row { display: flex; justify-content: space-between; gap: 16px; color: var(--muted); margin-top: 3px; }
+  .tt-val { color: var(--accent); }
+
+  /* Modal — NOTE: all CSS variables use -- (two hyphens), never a single dash or en-dash */
+  #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(6px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+  #modal-overlay.open { display: flex; }
+  #modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 860px; max-height: 92vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 80px rgba(0,229,255,0.1); animation: modalIn .2s ease; }
+  @keyframes modalIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+  #modal-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 22px 24px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  #modal-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.35rem; color: #fff; }
+  #modal-subtitle { font-size: 0.68rem; color: var(--muted); margin-top: 4px; }
+  #modal-source { font-size: 0.6rem; color: var(--muted); margin-top: 2px; }
+  #modal-close { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text); width: 34px; height: 34px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s; }
+  #modal-close:hover { background: rgba(255,107,53,0.2); border-color: var(--accent2); color: var(--accent2); }
+  #modal-body { padding: 20px 24px 24px; overflow-y: auto; }
+  #modal-loading { text-align: center; padding: 60px 0; color: var(--muted); font-size: 0.8rem; }
+  .modal-spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .chart-tabs { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .chart-tab { padding: 5px 14px; border-radius: 20px; font-size: 0.7rem; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--muted); font-family: 'DM Mono', monospace; transition: all .15s; }
+  .chart-tab.active { background: rgba(0,229,255,0.12); border-color: var(--accent); color: var(--accent); }
+  .chart-tab:hover:not(.active) { border-color: var(--muted); color: var(--text); }
+  .tab-source { font-size: 0.62rem; color: var(--muted); margin-bottom: 12px; }
+  .chart-wrap { position: relative; height: 360px; }
+  .summary-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 16px; }
+  .summary-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 10px 6px; text-align: center; }
+  .sc-val { font-family: 'Syne', sans-serif; font-size: 0.88rem; font-weight: 700; margin-bottom: 3px; }
+  .sc-label { font-size: 0.55rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .sc-pct { font-size: 0.58rem; color: var(--muted); margin-top: 2px; }
+  .no-data-msg { text-align: center; padding: 50px 0; color: var(--muted); font-size: 0.8rem; line-height: 2; }
+
+  #map-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--surface); flex-direction: column; gap: 12px; z-index: 10; }
+  .spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+  #map-loading p { font-size: 0.72rem; color: var(--muted); }
+
+  @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } header { flex-direction: column; gap: 12px; } .meta-block { align-items: flex-start; } .summary-grid { grid-template-columns: repeat(3,1fr); } }
+  @media (max-width: 500px) { .summary-grid { grid-template-columns: repeat(2,1fr); } }
 </style>
-
 </head>
 <body>
 
@@ -113,35 +125,29 @@
     <div id="modal-header">
       <div>
         <div id="modal-title"></div>
-        <div id="modal-subtitle">New car registrations by powertrain</div>
+        <div id="modal-subtitle">New car registrations</div>
         <div id="modal-source"></div>
       </div>
       <button id="modal-close" onclick="closeModal()">&#x2715;</button>
     </div>
     <div id="modal-body">
-      <div id="modal-loading"><div class="modal-spinner"></div>Loading data&#x2026;</div>
+      <div id="modal-loading"><div class="modal-spinner"></div>Loading&#x2026;</div>
       <div id="modal-content" style="display:none">
-
-```
-    <div class="chart-tabs" id="main-tabs">
-      <button class="chart-tab active" onclick="switchMainTab('monthly',this)">&#x1F4C5; Monthly total</button>
-      <button class="chart-tab" onclick="switchMainTab('absolute',this)">Absolute</button>
-      <button class="chart-tab" onclick="switchMainTab('share',this)">Market share %</button>
-      <button class="chart-tab" onclick="switchMainTab('stacked',this)">Stacked</button>
+        <div class="chart-tabs" id="main-tabs">
+          <button class="chart-tab active" onclick="switchTab('monthly',this)">&#x1F4C5; Monthly total</button>
+          <button class="chart-tab" onclick="switchTab('absolute',this)">Powertrain absolute</button>
+          <button class="chart-tab" onclick="switchTab('share',this)">Market share %</button>
+          <button class="chart-tab" onclick="switchTab('stacked',this)">Stacked</button>
+        </div>
+        <div class="tab-source" id="tab-source"></div>
+        <div class="chart-wrap" id="chart-wrap"><canvas id="main-chart"></canvas></div>
+        <div class="summary-grid" id="summary-grid"></div>
+      </div>
+      <div id="modal-nodata" style="display:none" class="no-data-msg">
+        &#x1F4ED; No data available for this country yet.<br>
+        <span style="font-size:0.68rem">ECB/ACEA covers ~30 EU/EEA countries</span>
+      </div>
     </div>
-
-    <div id="tab-source" style="font-size:0.62rem;color:var(--muted);margin-bottom:12px"></div>
-    <div id="chart-wrap" class="chart-wrap"><canvas id="main-chart"></canvas></div>
-    <div class="summary-grid" id="summary-grid"></div>
-
-  </div>
-  <div id="modal-nodata" style="display:none" class="no-data-msg">
-    &#x1F4ED; No data available for this country yet.<br>
-    <span style="font-size:0.68rem;color:var(--muted)">ECB covers ~30 EU/EEA countries &#x00B7; Eurostat covers annual fuel-type breakdowns</span>
-  </div>
-</div>
-```
-
   </div>
 </div>
 
@@ -149,10 +155,10 @@
   <header>
     <div class="title-block">
       <h1>Global Car<br>Registrations</h1>
-      <div class="subtitle">All powertrains &#x00B7; Absolute &amp; per capita &#x00B7; OICA / ACEA / IEA</div>
+      <div class="subtitle">All powertrains &middot; Absolute &amp; per capita &middot; OICA / ACEA / Eurostat</div>
     </div>
     <div class="meta-block">
-      <div class="update-badge"><span class="dot"></span><span id="last-update">Loading&#x2026;</span></div>
+      <div class="update-badge"><span class="dot"></span><span id="last-update">Loading&hellip;</span></div>
       <select class="year-select" id="year-select">
         <option value="2024">2024</option>
         <option value="2023">2023</option>
@@ -163,25 +169,25 @@
 
   <div class="main-grid">
     <div class="map-panel">
-      <div id="map-loading"><div class="spinner"></div><p>Loading map&#x2026;</p></div>
+      <div id="map-loading"><div class="spinner"></div><p>Loading map&hellip;</p></div>
       <svg id="map-svg" viewBox="0 0 960 500"></svg>
     </div>
     <div class="sidebar">
       <div class="panel">
-        <div class="panel-title">Colour scale &#x00B7; Registrations (log scale)</div>
+        <div class="panel-title">Colour scale &middot; Registrations (log scale)</div>
         <div class="legend-bar"></div>
         <div class="legend-labels"><span>50k</span><span id="legend-mid"></span><span id="legend-max"></span></div>
         <div class="sources-note">
-          Sources: <a href="https://www.oica.net/category/sales-statistics/" target="_blank">OICA</a> &#x00B7;
-          <a href="https://www.acea.auto/stats/" target="_blank">ACEA</a> &#x00B7;
-          <a href="https://www.iea.org/data-and-statistics/" target="_blank">IEA</a><br>
-          Grey = no data &#x00B7; Click any country for powertrain breakdown
+          Sources: <a href="https://www.oica.net/category/sales-statistics/" target="_blank">OICA</a> &middot;
+          <a href="https://www.acea.auto/stats/" target="_blank">ACEA</a> &middot;
+          <a href="https://ec.europa.eu/eurostat" target="_blank">Eurostat</a><br>
+          Grey = no data &middot; Click any country for monthly &amp; powertrain chart
         </div>
       </div>
-      <div class="panel" id="detail-panel">
+      <div class="panel">
         <div class="panel-title">Country Details</div>
         <div id="detail-content" style="color:var(--muted);font-size:.72rem">
-          &#x2190; Click a country for details
+          &larr; Click a country for details
         </div>
       </div>
       <div class="panel">
@@ -193,201 +199,125 @@
 </div>
 
 <script>
-// ── Data ─────────────────────────────────────────────────────────────────────
-// Format: "Country": [total_registrations, population_mio, "source"]
-// Last update: 10.04.2026 — Sources: OICA, ACEA, IEA
+// ── Annual totals for world map colouring ─────────────────────────────────────
+// Source: OICA, ACEA, IEA — Last updated: April 2026
 const DATA = {
   2024: {
-    "China":          [30090000,1412,"OICA/CAAM"],
-    "United States":  [15900000,334,"OICA/Wards"],
-    "India":          [4200000,1428,"OICA/SIAM"],
-    "Japan":          [2700000,124,"OICA/JAMA"],
-    "Germany":        [2800000,84,"KBA"],
-    "Brazil":         [2400000,216,"OICA/ANFAVEA"],
-    "United Kingdom": [1900000,67,"SMMT"],
-    "France":         [1700000,68,"CCFA"],
-    "South Korea":    [1700000,52,"OICA/KAMA"],
-    "Italy":          [1550000,60,"ANFIA"],
-    "Canada":         [1850000,38,"OICA"],
-    "Spain":          [1200000,47,"ANFAC"],
-    "Mexico":         [1300000,128,"OICA/AMIA"],
-    "Australia":      [1100000,26,"VFACTS"],
-    "Russia":         [1400000,144,"AEB"],
-    "Turkey":         [1100000,85,"OSD"],
-    "Indonesia":      [1000000,278,"Gaikindo"],
-    "Malaysia":       [800000,33,"MAA"],
-    "Iran":           [900000,87,"OICA"],
-    "Thailand":       [700000,72,"TAI"],
-    "Argentina":      [450000,46,"ADEFA"],
-    "South Africa":   [560000,60,"NAAMSA"],
-    "Saudi Arabia":   [650000,36,"OICA"],
-    "Poland":         [600000,38,"ACEA/PZPM"],
-    "Netherlands":    [430000,17,"ACEA/RAI"],
-    "Belgium":        [380000,11,"ACEA/FEBIAC"],
-    "Sweden":         [300000,10,"BIL Sweden"],
-    "Switzerland":    [280000,9,"auto-schweiz"],
-    "Austria":        [270000,9,"ACEA/WKO"],
-    "Norway":         [170000,5,"OFV"],
-    "Denmark":        [200000,6,"ACEA/DAF"],
-    "Finland":        [110000,6,"ACEA"],
-    "Portugal":       [220000,10,"ACEA/ACAP"],
-    "Czech Republic": [240000,11,"ACEA/SDA"],
-    "UAE":            [350000,10,"OICA"],
-    "Pakistan":       [200000,231,"PAMA"]
+    "China":[30090000,1412,"OICA/CAAM"],"United States":[15900000,334,"OICA/Wards"],
+    "India":[4200000,1428,"OICA/SIAM"],"Japan":[2700000,124,"OICA/JAMA"],
+    "Germany":[2800000,84,"KBA"],"Brazil":[2400000,216,"OICA/ANFAVEA"],
+    "United Kingdom":[1900000,67,"SMMT"],"France":[1700000,68,"CCFA"],
+    "South Korea":[1700000,52,"OICA/KAMA"],"Italy":[1550000,60,"ANFIA"],
+    "Canada":[1850000,38,"OICA"],"Spain":[1200000,47,"ANFAC"],
+    "Mexico":[1300000,128,"OICA/AMIA"],"Australia":[1100000,26,"VFACTS"],
+    "Russia":[1400000,144,"AEB"],"Turkey":[1100000,85,"OSD"],
+    "Indonesia":[1000000,278,"Gaikindo"],"Malaysia":[800000,33,"MAA"],
+    "Iran":[900000,87,"OICA"],"Thailand":[700000,72,"TAI"],
+    "Argentina":[450000,46,"ADEFA"],"South Africa":[560000,60,"NAAMSA"],
+    "Saudi Arabia":[650000,36,"OICA"],"Poland":[600000,38,"ACEA/PZPM"],
+    "Netherlands":[430000,17,"ACEA/RAI"],"Belgium":[380000,11,"ACEA/FEBIAC"],
+    "Sweden":[300000,10,"BIL Sweden"],"Switzerland":[280000,9,"auto-schweiz"],
+    "Austria":[270000,9,"ACEA/WKO"],"Norway":[170000,5,"OFV"],
+    "Denmark":[200000,6,"ACEA/DAF"],"Finland":[110000,6,"ACEA"],
+    "Portugal":[220000,10,"ACEA/ACAP"],"Czech Republic":[240000,11,"ACEA/SDA"],
+    "UAE":[350000,10,"OICA"],"Pakistan":[200000,231,"PAMA"]
   },
   2023: {
-    "China":          [30190000,1412,"OICA/CAAM"],
-    "United States":  [15600000,334,"OICA/Wards"],
-    "India":          [4100000,1428,"OICA/SIAM"],
-    "Japan":          [4780000,124,"OICA/JAMA"],
-    "Germany":        [2840000,84,"KBA"],
-    "Brazil":         [2200000,216,"OICA/ANFAVEA"],
-    "United Kingdom": [1900000,67,"SMMT"],
-    "France":         [1800000,68,"CCFA"],
-    "South Korea":    [1700000,52,"OICA/KAMA"],
-    "Italy":          [1540000,60,"ANFIA"],
-    "Canada":         [1840000,38,"OICA"],
-    "Spain":          [1150000,47,"ANFAC"],
-    "Mexico":         [1400000,128,"OICA/AMIA"],
-    "Australia":      [1200000,26,"VFACTS"],
-    "Russia":         [1020000,144,"AEB"],
-    "Turkey":         [1200000,85,"OSD"],
-    "Indonesia":      [1010000,278,"Gaikindo"],
-    "Thailand":       [750000,72,"TAI"],
-    "Malaysia":       [780000,33,"MAA"],
-    "South Africa":   [540000,60,"NAAMSA"],
-    "Iran":           [870000,87,"OICA"],
-    "Poland":         [530000,38,"ACEA"],
-    "Netherlands":    [400000,17,"ACEA"],
-    "Belgium":        [360000,11,"ACEA"],
-    "Sweden":         [290000,10,"BIL Sweden"],
-    "Switzerland":    [270000,9,"auto-schweiz"],
-    "Austria":        [250000,9,"ACEA"],
-    "Norway":         [160000,5,"OFV"],
-    "Denmark":        [190000,6,"ACEA"],
-    "Finland":        [100000,6,"ACEA"],
-    "Portugal":       [210000,10,"ACEA"],
-    "Czech Republic": [230000,11,"ACEA"]
+    "China":[30190000,1412,"OICA/CAAM"],"United States":[15600000,334,"OICA/Wards"],
+    "India":[4100000,1428,"OICA/SIAM"],"Japan":[4780000,124,"OICA/JAMA"],
+    "Germany":[2840000,84,"KBA"],"Brazil":[2200000,216,"OICA/ANFAVEA"],
+    "United Kingdom":[1900000,67,"SMMT"],"France":[1800000,68,"CCFA"],
+    "South Korea":[1700000,52,"OICA/KAMA"],"Italy":[1540000,60,"ANFIA"],
+    "Canada":[1840000,38,"OICA"],"Spain":[1150000,47,"ANFAC"],
+    "Mexico":[1400000,128,"OICA/AMIA"],"Australia":[1200000,26,"VFACTS"],
+    "Russia":[1020000,144,"AEB"],"Turkey":[1200000,85,"OSD"],
+    "Indonesia":[1010000,278,"Gaikindo"],"Thailand":[750000,72,"TAI"],
+    "Malaysia":[780000,33,"MAA"],"South Africa":[540000,60,"NAAMSA"],
+    "Iran":[870000,87,"OICA"],"Poland":[530000,38,"ACEA"],
+    "Netherlands":[400000,17,"ACEA"],"Belgium":[360000,11,"ACEA"],
+    "Sweden":[290000,10,"BIL Sweden"],"Switzerland":[270000,9,"auto-schweiz"],
+    "Austria":[250000,9,"ACEA"],"Norway":[160000,5,"OFV"],
+    "Denmark":[190000,6,"ACEA"],"Finland":[100000,6,"ACEA"],
+    "Portugal":[210000,10,"ACEA"],"Czech Republic":[230000,11,"ACEA"]
   },
   2022: {
-    "China":          [26860000,1412,"OICA/CAAM"],
-    "United States":  [13760000,334,"OICA/Wards"],
-    "India":          [4720000,1380,"OICA/SIAM"],
-    "Japan":          [4200000,124,"OICA/JAMA"],
-    "Germany":        [2650000,84,"KBA"],
-    "Brazil":         [2100000,215,"OICA/ANFAVEA"],
-    "United Kingdom": [1610000,67,"SMMT"],
-    "France":         [1530000,68,"CCFA"],
-    "South Korea":    [1690000,52,"OICA/KAMA"],
-    "Italy":          [1310000,60,"ANFIA"],
-    "Canada":         [1550000,38,"OICA"],
-    "Spain":          [860000,47,"ANFAC"],
-    "Mexico":         [1080000,128,"OICA/AMIA"],
-    "Australia":      [1080000,26,"VFACTS"],
-    "Russia":         [690000,144,"AEB"],
-    "Turkey":         [980000,85,"OSD"],
-    "Indonesia":      [1050000,278,"Gaikindo"],
-    "Thailand":       [850000,72,"TAI"],
-    "Malaysia":       [730000,33,"MAA"],
-    "South Africa":   [490000,60,"NAAMSA"],
-    "Iran":           [800000,87,"OICA"],
-    "Poland":         [420000,38,"ACEA"],
-    "Netherlands":    [350000,17,"ACEA"],
-    "Sweden":         [270000,10,"BIL Sweden"],
-    "Norway":         [140000,5,"OFV"],
-    "Switzerland":    [260000,9,"auto-schweiz"],
-    "Austria":        [240000,9,"ACEA"],
-    "Denmark":        [170000,6,"ACEA"],
-    "Finland":        [95000,6,"ACEA"],
-    "Portugal":       [190000,10,"ACEA"],
-    "Czech Republic": [210000,11,"ACEA"]
+    "China":[26860000,1412,"OICA/CAAM"],"United States":[13760000,334,"OICA/Wards"],
+    "India":[4720000,1380,"OICA/SIAM"],"Japan":[4200000,124,"OICA/JAMA"],
+    "Germany":[2650000,84,"KBA"],"Brazil":[2100000,215,"OICA/ANFAVEA"],
+    "United Kingdom":[1610000,67,"SMMT"],"France":[1530000,68,"CCFA"],
+    "South Korea":[1690000,52,"OICA/KAMA"],"Italy":[1310000,60,"ANFIA"],
+    "Canada":[1550000,38,"OICA"],"Spain":[860000,47,"ANFAC"],
+    "Mexico":[1080000,128,"OICA/AMIA"],"Australia":[1080000,26,"VFACTS"],
+    "Russia":[690000,144,"AEB"],"Turkey":[980000,85,"OSD"],
+    "Indonesia":[1050000,278,"Gaikindo"],"Thailand":[850000,72,"TAI"],
+    "Malaysia":[730000,33,"MAA"],"South Africa":[490000,60,"NAAMSA"],
+    "Iran":[800000,87,"OICA"],"Poland":[420000,38,"ACEA"],
+    "Netherlands":[350000,17,"ACEA"],"Sweden":[270000,10,"BIL Sweden"],
+    "Norway":[140000,5,"OFV"],"Switzerland":[260000,9,"auto-schweiz"],
+    "Austria":[240000,9,"ACEA"],"Denmark":[170000,6,"ACEA"],
+    "Finland":[95000,6,"ACEA"],"Portugal":[190000,10,"ACEA"],
+    "Czech Republic":[210000,11,"ACEA"]
   }
 };
 
-// Country display name → JSON filename
-// All 30 EU/EEA countries covered by ECB + Eurostat
+// Country name → JSON file key (ECB/Eurostat coverage)
 const FILE_MAP = {
-  "Austria":        "austria",
-  "Belgium":        "belgium",
-  "Bulgaria":       "bulgaria",
-  "Cyprus":         "cyprus",
-  "Czech Republic": "czech_republic",
-  "Germany":        "germany",
-  "Denmark":        "denmark",
-  "Estonia":        "estonia",
-  "Greece":         "greece",
-  "Spain":          "spain",
-  "Finland":        "finland",
-  "France":         "france",
-  "Croatia":        "croatia",
-  "Hungary":        "hungary",
-  "Ireland":        "ireland",
-  "Italy":          "italy",
-  "Lithuania":      "lithuania",
-  "Luxembourg":     "luxembourg",
-  "Latvia":         "latvia",
-  "Malta":          "malta",
-  "Netherlands":    "netherlands",
-  "Poland":         "poland",
-  "Portugal":       "portugal",
-  "Romania":        "romania",
-  "Sweden":         "sweden",
-  "Slovenia":       "slovenia",
-  "Slovakia":       "slovakia",
-  "Norway":         "norway",
-  "Switzerland":    "switzerland",
-  "United Kingdom": "united_kingdom",
+  "Austria":"austria","Belgium":"belgium","Bulgaria":"bulgaria","Cyprus":"cyprus",
+  "Czech Republic":"czech_republic","Germany":"germany","Denmark":"denmark",
+  "Estonia":"estonia","Greece":"greece","Spain":"spain","Finland":"finland",
+  "France":"france","Croatia":"croatia","Hungary":"hungary","Ireland":"ireland",
+  "Italy":"italy","Lithuania":"lithuania","Luxembourg":"luxembourg","Latvia":"latvia",
+  "Malta":"malta","Netherlands":"netherlands","Poland":"poland","Portugal":"portugal",
+  "Romania":"romania","Sweden":"sweden","Slovenia":"slovenia","Slovakia":"slovakia",
+  "Norway":"norway","Switzerland":"switzerland","United Kingdom":"united_kingdom"
 };
 
 const NAME_MAP = {
-  "United States of America":"United States",
-  "Republic of Korea":"South Korea",
-  "Czechia":"Czech Republic",
-  "United Arab Emirates":"UAE",
-  "Iran (Islamic Republic of)":"Iran",
-  "Russian Federation":"Russia",
+  "United States of America":"United States","Republic of Korea":"South Korea",
+  "Czechia":"Czech Republic","United Arab Emirates":"UAE",
+  "Iran (Islamic Republic of)":"Iran","Russian Federation":"Russia",
   "United Kingdom of Great Britain and Northern Ireland":"United Kingdom"
 };
-function normName(n){return NAME_MAP[n]||n;}
+function normName(n){ return NAME_MAP[n]||n; }
 function fmt(n){
-  if(!n&&n!==0)return"—";
-  if(n>=1e6)return(n/1e6).toFixed(2).replace(".",",")+"\u00a0M";
-  if(n>=1e3)return Math.round(n/1e3).toLocaleString("en")+"\u00a0k";
+  if(!n&&n!==0) return "—";
+  if(n>=1e6) return (n/1e6).toFixed(2).replace(".",",")+"\u00a0M";
+  if(n>=1e3) return Math.round(n/1e3).toLocaleString("en")+"\u00a0k";
   return n.toLocaleString("en");
 }
 
 // ── Map ───────────────────────────────────────────────────────────────────────
-let currentYear=2024,selectedCountry=null,colorScale;
-const svg=d3.select("#map-svg");
-const proj=d3.geoNaturalEarth1().scale(153).translate([480,270]);
-const pathGen=d3.geoPath().projection(proj);
+let currentYear=2024, selectedCountry=null, colorScale;
+const svg     = d3.select("#map-svg");
+const proj    = d3.geoNaturalEarth1().scale(153).translate([480,270]);
+const pathGen = d3.geoPath().projection(proj);
 
 function buildScale(year){
-  const vals=Object.values(DATA[year]).map(d=>d[0]);
-  const maxV=d3.max(vals);
-  document.getElementById("legend-max").textContent=fmt(maxV);
-  document.getElementById("legend-mid").textContent=fmt(Math.round(Math.sqrt(50000*maxV)));
+  const vals = Object.values(DATA[year]).map(d=>d[0]);
+  const maxV = d3.max(vals);
+  document.getElementById("legend-max").textContent = fmt(maxV);
+  document.getElementById("legend-mid").textContent = fmt(Math.round(Math.sqrt(50000*maxV)));
   return d3.scaleSequentialLog()
-    .domain([50000,maxV])
+    .domain([50000, maxV])
     .interpolator(d3.interpolateRgbBasis(["#0a3d62","#1565c0","#1976d2","#2196f3","#00bcd4","#00e5ff","#00ffcc"]))
     .clamp(true);
 }
 
 function renderMap(year){
-  colorScale=buildScale(year);
-  svg.selectAll(".country-path").attr("fill",d=>{
-    const k=normName(d.properties.name);
-    return DATA[year][k]?colorScale(DATA[year][k][0]):"#1a2030";
+  colorScale = buildScale(year);
+  svg.selectAll(".country-path").attr("fill", d => {
+    const k = normName(d.properties.name);
+    return DATA[year][k] ? colorScale(DATA[year][k][0]) : "#1a2030";
   });
   renderTopList(year);
-  document.getElementById("top-year").textContent=year;
-  document.getElementById("last-update").textContent="Data "+year+" \u00b7 OICA/ACEA/IEA";
+  document.getElementById("top-year").textContent = year;
+  document.getElementById("last-update").textContent = "Data "+year+" \u00b7 OICA/ACEA/Eurostat";
 }
 
 function renderTopList(year){
-  const entries=Object.entries(DATA[year]).sort((a,b)=>b[1][0]-a[1][0]).slice(0,10);
-  const maxV=entries[0][1][0];
-  document.getElementById("top-list").innerHTML=entries.map(([name,d],i)=>`
+  const entries = Object.entries(DATA[year]).sort((a,b)=>b[1][0]-a[1][0]).slice(0,10);
+  const maxV = entries[0][1][0];
+  document.getElementById("top-list").innerHTML = entries.map(([name,d],i)=>`
     <div class="top-item" onclick="selectByName('${name.replace(/'/g,"\\'")}')">
       <span class="top-rank">${i+1}</span>
       <div class="top-bar-wrap">
@@ -398,19 +328,19 @@ function renderTopList(year){
     </div>`).join("");
 }
 
-function showDetail(rawName,year){
-  const name=normName(rawName);
-  const d=DATA[year][name];
-  const panel=document.getElementById("detail-content");
+function showDetail(rawName, year){
+  const name = normName(rawName);
+  const d    = DATA[year][name];
+  const panel = document.getElementById("detail-content");
   if(!d){
-    panel.innerHTML=`<span style="color:var(--muted)">No data for <b style="color:var(--text)">${rawName}</b> in ${year}.</span>`;
+    panel.innerHTML = `<span style="color:var(--muted)">No data for <b style="color:var(--text)">${rawName}</b> in ${year}.</span>`;
     return;
   }
-  const perK=(d[0]/(d[1]*1000)).toFixed(1);
-  const sorted=Object.entries(DATA[year]).sort((a,b)=>b[1][0]-a[1][0]);
-  const rank=sorted.findIndex(([k])=>k===name)+1;
-  const hasChart=!!FILE_MAP[name];
-  panel.innerHTML=`
+  const perK   = (d[0]/(d[1]*1000)).toFixed(1);
+  const sorted = Object.entries(DATA[year]).sort((a,b)=>b[1][0]-a[1][0]);
+  const rank   = sorted.findIndex(([k])=>k===name)+1;
+  const hasChart = !!FILE_MAP[name];
+  panel.innerHTML = `
     <div class="country-name">${rawName}</div>
     <div class="stat-row"><span class="stat-label">Registrations ${year}</span><span class="stat-value hl">${d[0].toLocaleString("en")}</span></div>
     <div class="stat-row"><span class="stat-label">Per 1,000 pop.</span><span class="stat-value">${perK}</span></div>
@@ -418,107 +348,104 @@ function showDetail(rawName,year){
     <div class="stat-row"><span class="stat-label">World rank</span><span class="stat-value">#${rank} of ${sorted.length}</span></div>
     <div class="stat-row"><span class="stat-label">Source</span><span class="stat-value" style="font-size:.65rem">${d[2]}</span></div>
     ${hasChart
-      ?`<button class="open-chart-btn" onclick="openModal('${name}')">&#x1F4CA; Monthly &amp; powertrain chart \u2192</button>`
-      :`<div style="margin-top:10px;font-size:.65rem;color:var(--muted)">&#x1F4ED; Chart data available for EU/EEA countries only</div>`
+      ? `<button class="open-chart-btn" onclick="openModal('${name}')">&#x1F4CA; Monthly &amp; powertrain chart \u2192</button>`
+      : `<div style="margin-top:10px;font-size:.65rem;color:var(--muted)">&#x1F4ED; Chart available for EU/EEA countries only</div>`
     }`;
 }
 
-window.selectByName=function(name){
-  selectedCountry=name;
-  showDetail(name,currentYear);
-  svg.selectAll(".country-path").classed("selected",d=>normName(d.properties.name)===name);
+window.selectByName = function(name){
+  selectedCountry = name;
+  showDetail(name, currentYear);
+  svg.selectAll(".country-path").classed("selected", d => normName(d.properties.name)===name);
 };
 
 // ── Hover tooltip ─────────────────────────────────────────────────────────────
-const tooltip=document.getElementById("tooltip");
-function showTip(e,rawName,year){
-  const d=DATA[year][normName(rawName)];
-  document.getElementById("tt-name").textContent=rawName;
+const tooltip = document.getElementById("tooltip");
+function showTip(e, rawName, year){
+  const d = DATA[year][normName(rawName)];
+  document.getElementById("tt-name").textContent = rawName;
   if(d){
-    document.getElementById("tt-reg").textContent=d[0].toLocaleString("en");
-    document.getElementById("tt-per").textContent=(d[0]/(d[1]*1000)).toFixed(1);
-    document.getElementById("tt-src").textContent=d[2];
-  }else{
-    ["tt-reg","tt-per","tt-src"].forEach(id=>document.getElementById(id).textContent="—");
+    document.getElementById("tt-reg").textContent = d[0].toLocaleString("en");
+    document.getElementById("tt-per").textContent = (d[0]/(d[1]*1000)).toFixed(1);
+    document.getElementById("tt-src").textContent = d[2];
+  } else {
+    ["tt-reg","tt-per","tt-src"].forEach(id => document.getElementById(id).textContent = "—");
   }
-  tooltip.style.display="block";
-  tooltip.style.left=Math.min(e.clientX+14,window.innerWidth-230)+"px";
-  tooltip.style.top=Math.max(e.clientY-44,0)+"px";
+  tooltip.style.display = "block";
+  tooltip.style.left = Math.min(e.clientX+14, window.innerWidth-230)+"px";
+  tooltip.style.top  = Math.max(e.clientY-44, 0)+"px";
 }
 
 // ── Chart modal ───────────────────────────────────────────────────────────────
-let mainChart=null, modalData=null, activeTab="monthly";
+let mainChart = null, modalData = null, activeTab = "monthly";
 
-const COLORS={
-  bev:   {line:"#00e5ff", fill:"rgba(0,229,255,0.12)"},
-  phev:  {line:"#4ade80", fill:"rgba(74,222,128,0.10)"},
-  hybrid:{line:"#facc15", fill:"rgba(250,204,21,0.08)"},
-  petrol:{line:"#f87171", fill:"rgba(248,113,113,0.08)"},
-  diesel:{line:"#94a3b8", fill:"rgba(148,163,184,0.08)"},
-  other: {line:"#c084fc", fill:"rgba(192,132,252,0.08)"},
+const COLORS = {
+  bev:   { line:"#00e5ff", fill:"rgba(0,229,255,0.12)" },
+  phev:  { line:"#4ade80", fill:"rgba(74,222,128,0.10)" },
+  hybrid:{ line:"#facc15", fill:"rgba(250,204,21,0.08)" },
+  petrol:{ line:"#f87171", fill:"rgba(248,113,113,0.08)" },
+  diesel:{ line:"#94a3b8", fill:"rgba(148,163,184,0.08)" },
+  other: { line:"#c084fc", fill:"rgba(192,132,252,0.08)" },
 };
-const LABELS={
+const LABELS = {
   bev:"BEV", phev:"PHEV", hybrid:"Hybrid (non-plug)",
   petrol:"Petrol / Gasoline", diesel:"Diesel", other:"Other / LPG"
 };
 
 const CHART_BASE = {
   responsive:true, maintainAspectRatio:false,
-  interaction:{mode:"index",intersect:false},
+  interaction:{ mode:"index", intersect:false },
   plugins:{
-    legend:{position:"top",labels:{color:"#94a3b8",font:{family:"DM Mono",size:11},boxWidth:14,padding:14}},
-    tooltip:{backgroundColor:"rgba(10,14,23,0.95)",borderColor:"rgba(0,229,255,0.3)",borderWidth:1,titleColor:"#fff",bodyColor:"#94a3b8"}
+    legend:{ position:"top", labels:{ color:"#94a3b8", font:{ family:"DM Mono", size:11 }, boxWidth:14, padding:14 } },
+    tooltip:{ backgroundColor:"rgba(10,14,23,0.95)", borderColor:"rgba(0,229,255,0.3)", borderWidth:1, titleColor:"#fff", bodyColor:"#94a3b8" }
   },
   scales:{
-    x:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#64748b",font:{family:"DM Mono",size:9},maxTicksLimit:20}},
-    y:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#64748b",font:{family:"DM Mono",size:9},
-      callback:v=>v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v}}
+    x:{ grid:{ color:"rgba(255,255,255,0.04)" }, ticks:{ color:"#64748b", font:{ family:"DM Mono", size:9 }, maxTicksLimit:20 } },
+    y:{ grid:{ color:"rgba(255,255,255,0.04)" }, ticks:{ color:"#64748b", font:{ family:"DM Mono", size:9 }, callback: v => v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v } }
   }
 };
 
-function destroyCharts(){
-  if(mainChart){mainChart.destroy();mainChart=null;}
-}
+function destroyChart(){ if(mainChart){ mainChart.destroy(); mainChart=null; } }
 
 function resetWrap(){
-  const wrap=document.getElementById("chart-wrap");
-  if(wrap) wrap.innerHTML='<canvas id="main-chart"></canvas>';
+  const w = document.getElementById("chart-wrap");
+  if(w) w.innerHTML = '<canvas id="main-chart"></canvas>';
 }
 
-window.openModal=async function(countryName){
-  const overlay=document.getElementById("modal-overlay");
-  const content=document.getElementById("modal-content");
-  const nodata=document.getElementById("modal-nodata");
-  const loading=document.getElementById("modal-loading");
+window.openModal = async function(countryName){
+  const overlay = document.getElementById("modal-overlay");
+  const content = document.getElementById("modal-content");
+  const nodata  = document.getElementById("modal-nodata");
+  const loading = document.getElementById("modal-loading");
 
-  document.getElementById("modal-title").textContent=countryName;
+  document.getElementById("modal-title").textContent = countryName;
   overlay.classList.add("open");
-  loading.style.display="block";
-  content.style.display="none";
-  nodata.style.display="none";
-  destroyCharts();
+  loading.style.display = "block";
+  content.style.display = "none";
+  nodata.style.display  = "none";
+  destroyChart();
 
-  const fileKey=FILE_MAP[countryName];
-  if(!fileKey){loading.style.display="none";nodata.style.display="block";return;}
+  const fileKey = FILE_MAP[countryName];
+  if(!fileKey){ loading.style.display="none"; nodata.style.display="block"; return; }
 
   try{
-    const resp=await fetch("data/countries/"+fileKey+".json?v="+Date.now());
-    if(!resp.ok) throw new Error("HTTP "+resp.status+" for "+fileKey+".json");
-    modalData=await resp.json();
+    const resp = await fetch("data/countries/"+fileKey+".json?v="+Date.now());
+    if(!resp.ok) throw new Error("HTTP "+resp.status+" — "+fileKey+".json");
+    modalData = await resp.json();
 
     if(modalData.last_updated){
-      const d=new Date(modalData.last_updated);
-      document.getElementById("modal-subtitle").textContent=
-        "New car registrations  ·  Updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
+      const d = new Date(modalData.last_updated);
+      document.getElementById("modal-subtitle").textContent =
+        "Updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
     }
+    document.getElementById("modal-source").textContent =
+      "Monthly: ECB/ACEA  \u00b7  Annual powertrain: Eurostat";
 
-    // Set active tab — default to monthly if data exists, else absolute
-    const hasMonthly = modalData.monthly && modalData.monthly.labels && modalData.monthly.labels.length;
+    const hasMonthly = !!(modalData.monthly && modalData.monthly.labels && modalData.monthly.labels.length);
     activeTab = hasMonthly ? "monthly" : "absolute";
 
-    // Reset tab buttons
-    document.querySelectorAll("#main-tabs .chart-tab").forEach(b=>{
-      const t=b.getAttribute("onclick").match(/'(\w+)'/)[1];
+    document.querySelectorAll("#main-tabs .chart-tab").forEach(b => {
+      const t = b.getAttribute("onclick").match(/'(\w+)'/)[1];
       b.classList.toggle("active", t===activeTab);
     });
 
@@ -526,139 +453,137 @@ window.openModal=async function(countryName){
     renderTab(activeTab);
     renderSummary(modalData);
 
-    loading.style.display="none";
-    content.style.display="block";
-  }catch(e){
-    console.error("openModal error:",e);
-    loading.style.display="none";
-    nodata.style.display="block";
-    document.getElementById("modal-nodata").innerHTML=
+    loading.style.display = "none";
+    content.style.display = "block";
+  } catch(e){
+    console.error("openModal:", e);
+    loading.style.display = "none";
+    nodata.style.display  = "block";
+    document.getElementById("modal-nodata").innerHTML =
       `<div class="no-data-msg">
-        <div style="color:#ff6b35;font-size:0.8rem;margin-bottom:8px">&#x26A0; Error loading data</div>
-        <div style="font-size:0.68rem;color:var(--muted);font-family:monospace">${e.message}</div>
+        <div style="color:#ff6b35;font-size:.8rem;margin-bottom:8px">&#x26A0; Error loading data</div>
+        <div style="font-size:.68rem;color:var(--muted);font-family:monospace">${e.message}</div>
       </div>`;
   }
 };
 
-window.closeModal=function(){
+window.closeModal = function(){
   document.getElementById("modal-overlay").classList.remove("open");
-  destroyCharts();
+  destroyChart();
 };
-document.getElementById("modal-overlay").addEventListener("click",function(e){if(e.target===this)closeModal();});
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
+document.getElementById("modal-overlay").addEventListener("click", function(e){ if(e.target===this) closeModal(); });
+document.addEventListener("keydown", e => { if(e.key==="Escape") closeModal(); });
 
-window.switchMainTab=function(tab,btn){
-  activeTab=tab;
-  document.querySelectorAll("#main-tabs .chart-tab").forEach(b=>b.classList.remove("active"));
+window.switchTab = function(tab, btn){
+  activeTab = tab;
+  document.querySelectorAll("#main-tabs .chart-tab").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
-  destroyCharts();
+  destroyChart();
   resetWrap();
   renderTab(tab);
 };
 
 function renderTab(tab){
-  const src=document.getElementById("tab-source");
+  const src = document.getElementById("tab-source");
   if(tab==="monthly"){
-    src.textContent="Source: ECB Data Portal / ACEA  ·  Monthly total registrations";
+    src.textContent = "Source: ECB Data Portal / ACEA  \u00b7  Monthly total registrations (all powertrains)";
     renderMonthlyChart(modalData);
   } else {
-    src.textContent="Source: Eurostat road_eqr_carpda  ·  Annual registrations by powertrain";
+    src.textContent = "Source: Eurostat road_eqr_carpda  \u00b7  Annual registrations by powertrain";
     renderAnnualChart(modalData, tab);
   }
 }
 
-// Monthly total chart
 function renderMonthlyChart(data){
-  const m=data.monthly;
-  const wrap=document.getElementById("chart-wrap");
-  if(!m||!m.labels||!m.labels.length){
-    wrap.innerHTML='<div style="height:360px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem;flex-direction:column;gap:10px"><span style="font-size:1.5rem">📅</span>Monthly data not yet available for this country</div>';
+  const m    = data.monthly;
+  const wrap = document.getElementById("chart-wrap");
+  if(!m || !m.labels || !m.labels.length){
+    wrap.innerHTML = '<div style="height:360px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem;flex-direction:column;gap:10px"><span style="font-size:1.5rem">&#x1F4C5;</span>Monthly data not yet available — ECB API integration in progress</div>';
     return;
   }
-  const ctx=document.getElementById("main-chart").getContext("2d");
-  mainChart=new Chart(ctx,{
-    type:"line",
-    data:{
-      labels:m.labels,
+  const ctx = document.getElementById("main-chart").getContext("2d");
+  mainChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: m.labels,
       datasets:[{
-        label:"Total registrations",
-        data:m.total,
-        borderColor:"#00e5ff",
-        backgroundColor:"rgba(0,229,255,0.08)",
-        borderWidth:2, tension:0.3, fill:true, pointRadius:0, pointHoverRadius:5,
+        label: "Total registrations",
+        data:  m.total,
+        borderColor: "#00e5ff",
+        backgroundColor: "rgba(0,229,255,0.08)",
+        borderWidth: 2, tension: 0.3, fill: true, pointRadius: 0, pointHoverRadius: 5,
       }]
     },
     options:{
       ...CHART_BASE,
       plugins:{
         ...CHART_BASE.plugins,
-        tooltip:{...CHART_BASE.plugins.tooltip,
-          callbacks:{label:ctx=>" "+ctx.parsed.y.toLocaleString("en")+" vehicles"}}
+        tooltip:{ ...CHART_BASE.plugins.tooltip,
+          callbacks:{ label: ctx => " "+ctx.parsed.y.toLocaleString("en")+" vehicles" }
+        }
       },
       scales:{
         ...CHART_BASE.scales,
-        y:{...CHART_BASE.scales.y,
-          title:{display:true,text:"Monthly registrations",color:"#64748b",font:{family:"DM Mono",size:9}}}
+        y:{ ...CHART_BASE.scales.y, title:{ display:true, text:"Monthly registrations", color:"#64748b", font:{ family:"DM Mono", size:9 } } }
       }
     }
   });
 }
 
-// Annual powertrain chart
 function renderAnnualChart(data, mode){
-  const a=data.annual;
-  const wrap=document.getElementById("chart-wrap");
-  if(!a||!a.labels||!a.labels.length){
-    wrap.innerHTML='<div style="height:360px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem">No annual data available</div>';
+  const a    = data.annual;
+  const wrap = document.getElementById("chart-wrap");
+  if(!a || !a.labels || !a.labels.length){
+    wrap.innerHTML = '<div style="height:360px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem">No annual data available</div>';
     return;
   }
-  const keys=["bev","phev","hybrid","petrol","diesel","other"];
+  const keys = ["bev","phev","hybrid","petrol","diesel","other"];
   let datasets;
   if(mode==="share"){
-    const totals=a.labels.map((_,i)=>keys.reduce((s,k)=>s+(a[k]?a[k][i]:0)||0,0));
-    datasets=keys.map(k=>({
-      label:LABELS[k],
-      data:(a[k]||[]).map((v,i)=>totals[i]?+((v/totals[i])*100).toFixed(1):0),
-      borderColor:COLORS[k].line, backgroundColor:COLORS[k].fill,
+    const totals = a.labels.map((_,i) => keys.reduce((s,k)=>s+(a[k]?a[k][i]:0)||0, 0));
+    datasets = keys.map(k => ({
+      label: LABELS[k],
+      data:  (a[k]||[]).map((v,i) => totals[i] ? +((v/totals[i])*100).toFixed(1) : 0),
+      borderColor: COLORS[k].line, backgroundColor: COLORS[k].fill,
       borderWidth:2, tension:0.3, fill:false, pointRadius:4, pointHoverRadius:7,
     }));
   } else if(mode==="stacked"){
-    datasets=keys.map(k=>({
-      label:LABELS[k], data:a[k]||[],
-      borderColor:COLORS[k].line, backgroundColor:COLORS[k].fill,
+    datasets = keys.map(k => ({
+      label: LABELS[k], data: a[k]||[],
+      borderColor: COLORS[k].line, backgroundColor: COLORS[k].fill,
       borderWidth:1.5, tension:0.3, fill:true, pointRadius:0,
     }));
   } else {
-    datasets=keys.map(k=>({
-      label:LABELS[k], data:a[k]||[],
-      borderColor:COLORS[k].line, backgroundColor:COLORS[k].fill,
+    datasets = keys.map(k => ({
+      label: LABELS[k], data: a[k]||[],
+      borderColor: COLORS[k].line, backgroundColor: COLORS[k].fill,
       borderWidth:2, tension:0.3, fill:false, pointRadius:4, pointHoverRadius:7,
     }));
   }
-  const ctx=document.getElementById("main-chart").getContext("2d");
-  mainChart=new Chart(ctx,{
+  const ctx = document.getElementById("main-chart").getContext("2d");
+  mainChart = new Chart(ctx, {
     type:"line",
-    data:{labels:a.labels, datasets},
+    data:{ labels: a.labels, datasets },
     options:{
       ...CHART_BASE,
       plugins:{
         ...CHART_BASE.plugins,
-        tooltip:{...CHART_BASE.plugins.tooltip,
-          callbacks:{label:ctx=>{
-            const v=ctx.parsed.y;
-            return " "+ctx.dataset.label+": "+(mode==="share"?v.toFixed(1)+"%":v.toLocaleString("en"));
-          }}}
+        tooltip:{ ...CHART_BASE.plugins.tooltip,
+          callbacks:{ label: ctx => {
+            const v = ctx.parsed.y;
+            return " "+ctx.dataset.label+": "+(mode==="share" ? v.toFixed(1)+"%" : v.toLocaleString("en"));
+          }}
+        }
       },
       scales:{
-        x:{...CHART_BASE.scales.x},
-        y:{
-          stacked:mode==="stacked",
+        x: { ...CHART_BASE.scales.x },
+        y: {
+          stacked: mode==="stacked",
           ...CHART_BASE.scales.y,
-          ticks:{...CHART_BASE.scales.y.ticks,
-            callback:v=>mode==="share"?v+"%":v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v},
-          title:{display:true,
-            text:mode==="share"?"Market share (%)":"Annual registrations",
-            color:"#64748b",font:{family:"DM Mono",size:9}}
+          ticks:{ ...CHART_BASE.scales.y.ticks,
+            callback: v => mode==="share" ? v+"%" : v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v
+          },
+          title:{ display:true, text: mode==="share"?"Market share (%)":"Annual registrations", color:"#64748b", font:{ family:"DM Mono", size:9 } }
         }
       }
     }
@@ -666,17 +591,17 @@ function renderAnnualChart(data, mode){
 }
 
 function renderSummary(data){
-  const a=data.annual;
-  const grid=document.getElementById("summary-grid");
-  if(!a||!a.labels||!a.labels.length){grid.innerHTML="";return;}
-  const keys=["bev","phev","hybrid","petrol","diesel","other"];
-  const last=a.labels.length-1;
-  const lastYear=a.labels[last];
-  const total=keys.reduce((s,k)=>s+((a[k]&&a[k][last])||0),0);
-  grid.innerHTML=keys.map(k=>{
-    const v=(a[k]&&a[k][last])||0;
-    const pct=total?((v/total)*100).toFixed(1):0;
-    return`<div class="summary-card">
+  const a    = data.annual;
+  const grid = document.getElementById("summary-grid");
+  if(!a || !a.labels || !a.labels.length){ grid.innerHTML=""; return; }
+  const keys     = ["bev","phev","hybrid","petrol","diesel","other"];
+  const last     = a.labels.length-1;
+  const lastYear = a.labels[last];
+  const total    = keys.reduce((s,k) => s+((a[k]&&a[k][last])||0), 0);
+  grid.innerHTML = keys.map(k => {
+    const v   = (a[k]&&a[k][last])||0;
+    const pct = total ? ((v/total)*100).toFixed(1) : 0;
+    return `<div class="summary-card">
       <div class="sc-val" style="color:${COLORS[k].line}">${fmt(v)}</div>
       <div class="sc-label">${LABELS[k]}</div>
       <div class="sc-pct">${pct}% (${lastYear})</div>
@@ -684,42 +609,44 @@ function renderSummary(data){
   }).join("");
 }
 
-// ── Map init ──────────────────────────────────────────────────────────────────
+// ── Map initialisation ────────────────────────────────────────────────────────
 async function init(){
   try{
-    const world=await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
-    const countries=topojson.feature(world,world.objects.countries);
-    const NUMNAMES={4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",40:"Austria",50:"Bangladesh",56:"Belgium",68:"Bolivia",76:"Brazil",100:"Bulgaria",120:"Cameroon",124:"Canada",144:"Sri Lanka",152:"Chile",156:"China",170:"Colombia",203:"Czech Republic",208:"Denmark",218:"Ecuador",818:"Egypt",231:"Ethiopia",246:"Finland",250:"France",276:"Germany",288:"Ghana",300:"Greece",320:"Guatemala",340:"Honduras",348:"Hungary",356:"India",360:"Indonesia",364:"Iran",368:"Iraq",372:"Ireland",376:"Israel",380:"Italy",392:"Japan",398:"Kazakhstan",404:"Kenya",408:"North Korea",410:"South Korea",414:"Kuwait",422:"Lebanon",434:"Libya",442:"Luxembourg",484:"Mexico",504:"Morocco",528:"Netherlands",554:"New Zealand",566:"Nigeria",578:"Norway",586:"Pakistan",604:"Peru",608:"Philippines",616:"Poland",620:"Portugal",634:"Qatar",642:"Romania",643:"Russia",682:"Saudi Arabia",703:"Slovakia",710:"South Africa",724:"Spain",752:"Sweden",756:"Switzerland",764:"Thailand",792:"Turkey",804:"Ukraine",784:"UAE",826:"United Kingdom",840:"United States",858:"Uruguay",862:"Venezuela",704:"Vietnam",887:"Yemen",894:"Zambia",458:"Malaysia"};
-    countries.features.forEach(f=>{f.properties.name=NUMNAMES[parseInt(f.id)]||f.properties.name||String(f.id);});
+    const world     = await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
+    const countries = topojson.feature(world, world.objects.countries);
+    const NUMNAMES  = {4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",40:"Austria",50:"Bangladesh",56:"Belgium",68:"Bolivia",76:"Brazil",100:"Bulgaria",120:"Cameroon",124:"Canada",144:"Sri Lanka",152:"Chile",156:"China",170:"Colombia",203:"Czech Republic",208:"Denmark",218:"Ecuador",818:"Egypt",231:"Ethiopia",246:"Finland",250:"France",276:"Germany",288:"Ghana",300:"Greece",320:"Guatemala",340:"Honduras",348:"Hungary",356:"India",360:"Indonesia",364:"Iran",368:"Iraq",372:"Ireland",376:"Israel",380:"Italy",392:"Japan",398:"Kazakhstan",404:"Kenya",408:"North Korea",410:"South Korea",414:"Kuwait",422:"Lebanon",434:"Libya",442:"Luxembourg",484:"Mexico",504:"Morocco",528:"Netherlands",554:"New Zealand",566:"Nigeria",578:"Norway",586:"Pakistan",604:"Peru",608:"Philippines",616:"Poland",620:"Portugal",634:"Qatar",642:"Romania",643:"Russia",682:"Saudi Arabia",703:"Slovakia",710:"South Africa",724:"Spain",752:"Sweden",756:"Switzerland",764:"Thailand",792:"Turkey",804:"Ukraine",784:"UAE",826:"United Kingdom",840:"United States",858:"Uruguay",862:"Venezuela",704:"Vietnam",887:"Yemen",894:"Zambia",458:"Malaysia"};
+    countries.features.forEach(f => {
+      f.properties.name = NUMNAMES[parseInt(f.id)] || f.properties.name || String(f.id);
+    });
 
     svg.append("path").datum({type:"Sphere"}).attr("d",pathGen).attr("fill","#0d1520");
     svg.append("path").datum(d3.geoGraticule()()).attr("d",pathGen).attr("fill","none").attr("stroke","rgba(0,229,255,0.04)").attr("stroke-width","0.3");
 
     svg.selectAll(".country-path").data(countries.features).join("path")
       .attr("class","country-path").attr("d",pathGen)
-      .on("mousemove",(event,d)=>showTip(event,d.properties.name,currentYear))
-      .on("mouseleave",()=>tooltip.style.display="none")
-      .on("click",(event,d)=>{
-        const name=normName(d.properties.name);
+      .on("mousemove", (event,d) => showTip(event, d.properties.name, currentYear))
+      .on("mouseleave", () => tooltip.style.display="none")
+      .on("click", (event,d) => {
+        const name = normName(d.properties.name);
         selectByName(name);
         openModal(name);
       });
 
     renderMap(currentYear);
-    document.getElementById("map-loading").style.display="none";
-  }catch(err){
-    document.getElementById("map-loading").innerHTML=`<p style="color:#ff6b35;text-align:center">Error loading map.<br><small>${err.message}</small></p>`;
+    document.getElementById("map-loading").style.display = "none";
+  } catch(err){
+    document.getElementById("map-loading").innerHTML =
+      `<p style="color:#ff6b35;text-align:center">Error loading map.<br><small>${err.message}</small></p>`;
   }
 }
 
-document.getElementById("year-select").addEventListener("change",function(){
-  currentYear=parseInt(this.value);
+document.getElementById("year-select").addEventListener("change", function(){
+  currentYear = parseInt(this.value);
   renderMap(currentYear);
-  if(selectedCountry)showDetail(selectedCountry,currentYear);
+  if(selectedCountry) showDetail(selectedCountry, currentYear);
 });
 
 init();
 </script>
-
 </body>
 </html>
