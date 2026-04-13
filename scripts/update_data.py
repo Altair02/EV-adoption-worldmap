@@ -5,7 +5,7 @@ Automatische monatliche Zulassungen pro Land aus der aktuellen ACEA-PDF.
 Funktioniert seit 2023 (ECB hat Länderdaten eingestellt).
 """
 
-import json, re, sys, time, urllib.request
+import json, re, sys, urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 import pdfplumber
@@ -41,12 +41,10 @@ def http_get(url):
         return r.read()
 
 def get_latest_acea_pdf():
-    """Findet die neueste ACEA PDF über die Artikel-Seite"""
     list_url = "https://www.acea.auto/pc-registrations/"
     html = http_get(list_url).decode("utf-8")
     soup = BeautifulSoup(html, "html.parser")
 
-    # Neueste Artikel finden
     article = soup.find("a", href=re.compile(r"/pc-registrations/new-car-registrations-"))
     if not article:
         print("[ACEA] Kein Artikel gefunden")
@@ -55,7 +53,6 @@ def get_latest_acea_pdf():
     article_url = "https://www.acea.auto" + article["href"]
     print(f"[ACEA] Neuesten Artikel gefunden: {article_url}")
 
-    # Auf der Artikelseite nach PDF suchen
     article_html = http_get(article_url).decode("utf-8")
     pdf_match = re.search(r'href="(https://www\.acea\.auto/files/Press_release_car_registrations_[^"]+\.pdf)"', article_html)
     if pdf_match:
@@ -69,7 +66,6 @@ def get_latest_acea_pdf():
     return None
 
 def parse_acea_pdf(pdf_path):
-    """Parst die PDF und gibt {ecb_code: total_registrations} zurück"""
     data = {}
     country_map = {
         "Germany": "DE", "France": "FR", "Italy": "IT", "Spain": "ES",
@@ -87,10 +83,8 @@ def parse_acea_pdf(pdf_path):
     with pdfplumber.open(pdf_path) as pdf:
         for page in pdf.pages:
             text = page.extract_text()
-            if not text:
-                continue
+            if not text: continue
             for full_name, code in country_map.items():
-                # Suche nach Land + Zahl (sehr robust)
                 match = re.search(rf"{full_name}\s*[\d.,]+\s*([\d.,]+)", text, re.IGNORECASE)
                 if match:
                     num = match.group(1).replace(",", "").replace(".", "")
