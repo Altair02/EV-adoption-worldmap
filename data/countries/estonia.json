@@ -2,9 +2,9 @@
   "name": "Estonia",
   "ecb_code": "EE",
   "population_mio": 1.4,
-  "source_monthly": "ECB Data Portal / ACEA (monthly country data available until Dec 2022)",
+  "source_monthly": "ECB Data Portal / ACEA + KBA (Germany monthly from 2023)",
   "source_annual": "Eurostat road_eqr_carpda",
-  "last_updated": "2026-04-13T22:51:35.650741+00:00",
+  "last_updated": "2026-04-13T22:57:02.032785+00:00",
   "monthly": {
     "labels": [
       "2015-01",
