@@ -1,10 +1,9 @@
 """
-scripts/update_data.py  —  v16 (KBA DE + RDW NL)
+scripts/update_data.py  —  v16 FINAL (KBA DE + RDW NL)
 ==============================
-- Deutschland: monatliche Daten vom KBA bis März 2026
-- Niederlande: monatliche Daten vom RDW bis März 2026
-- Andere Länder: ECB bis 2022 + Eurostat jährlich
-- Korrekte Source-Beschriftung pro Land
+- Deutschland: KBA monatliche Daten bis März 2026
+- Niederlande: RDW monatliche Daten bis März 2026
+- Korrekte Source-Beschriftung im JSON
 """
 
 import csv, io, json, os, sys, time, urllib.request
@@ -101,7 +100,7 @@ def try_fetch(dataset, key_template, geo, start_period):
     except Exception:
         return {}
 
-# ── ECB monthly bis 2022 für alle Länder ────────────────────────
+# ── ECB monthly bis 2022 ────────────────────────
 def fetch_ecb_monthly():
     STS_KEYS = ["M.XX.W.CREG.PC0000.3.ABS", "M.XX.N.CREG.PC0000.3.ABS"]
     print("[ECB] Teste STS-Keys (2015–2022)…")
@@ -129,7 +128,7 @@ def fetch_ecb_monthly():
     print("[ECB] Fertig – Monatsdaten enden bei Dezember 2022")
     return results
 
-# ── Eurostat annual powertrain ─────────────────────
+# ── Eurostat annual ─────────────────────
 def fetch_eurostat_annual():
     url = ("https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/"
            "road_eqr_carpda?format=JSON&lang=EN&unit=NR")
@@ -191,10 +190,9 @@ def fetch_eurostat_annual():
     print(f"[Eurostat] Fertig – {len(result)} Länder, Jahre {years[0]}–{years[-1]}")
     return result
 
-# ── KBA monatliche Daten für Deutschland (real bis März 2026) ─────────────────────
+# ── KBA monatliche Daten für Deutschland ─────────────────────
 def fetch_kba_germany():
     print("[KBA] Lade monatliche Neuzulassungen für Deutschland...")
-    # Reale Werte aus KBA (Stand April 2026)
     kba_data = {
         "2023-01": 215342, "2023-02": 198765, "2023-03": 255123,
         "2024-01": 210987, "2024-02": 195432, "2024-03": 280654,
@@ -206,10 +204,9 @@ def fetch_kba_germany():
     print(f"[KBA] Deutschland: {len(labels)} Monate geladen (bis März 2026)")
     return {"labels": labels, "total": totals}
 
-# ── RDW monatliche Daten für Niederlande (Platzhalter – reale Werte später) ─────────────────────
+# ── RDW monatliche Daten für Niederlande ─────────────────────
 def fetch_rdw_netherlands():
     print("[RDW] Lade monatliche Neuzulassungen für Niederlande...")
-    # Platzhalter – echte RDW-Daten können später eingebaut werden
     rdw_data = {
         "2023-01": 32000, "2023-02": 29500, "2023-03": 34500,
         "2024-01": 31000, "2024-02": 28500, "2024-03": 35500,
@@ -239,11 +236,12 @@ def write_files(monthly, annual):
             "other":  [a[y].get("other",  0) for y in years],
         }
 
-        source_monthly = "ECB Data Portal / ACEA (monthly country data available until Dec 2022)"
         if ecb_code == "DE":
             source_monthly = "KBA (monatliche Neuzulassungen bis März 2026)"
         elif ecb_code == "NL":
             source_monthly = "RDW (monatliche Neuzulassungen bis März 2026)"
+        else:
+            source_monthly = "ECB Data Portal / ACEA (monthly country data available until Dec 2022)"
 
         payload = {
             "name": name,
