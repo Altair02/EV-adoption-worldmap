@@ -1,7 +1,5 @@
 """
-scripts/update_data.py  —  v13 (ACEA PDF — korrigiert)
-==============================
-Lädt die neueste ACEA PDF und parst die monatlichen Zulassungen pro Land.
+scripts/update_data.py  —  v13 FINAL (ACEA PDF)
 """
 
 import re
@@ -10,32 +8,21 @@ import urllib.request
 import os
 from datetime import datetime, timezone
 from pathlib import Path
+
 import pdfplumber
 from bs4 import BeautifulSoup
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT  = os.environ.get("TELEGRAM_CHAT_ID", "")
-REPO_ROOT      = Path(__file__).resolve().parent.parent
-DATA_DIR       = REPO_ROOT / "data" / "countries"
-NOW            = datetime.now(timezone.utc)
 
-COUNTRIES = {
-    "AT": ("Austria", "AT", 9.1), "BE": ("Belgium", "BE", 11.6),
-    "BG": ("Bulgaria", "BG", 6.5), "CY": ("Cyprus", "CY", 1.2),
-    "CZ": ("Czech Republic", "CZ", 10.9), "DE": ("Germany", "DE", 84.4),
-    "DK": ("Denmark", "DK", 5.9), "EE": ("Estonia", "EE", 1.4),
-    "EL": ("Greece", "EL", 10.4), "ES": ("Spain", "ES", 47.4),
-    "FI": ("Finland", "FI", 5.6), "FR": ("France", "FR", 68.1),
-    "HR": ("Croatia", "HR", 3.9), "HU": ("Hungary", "HU", 9.7),
-    "IE": ("Ireland", "IE", 5.1), "IT": ("Italy", "IT", 59.1),
-    "LT": ("Lithuania", "LT", 2.8), "LU": ("Luxembourg", "LU", 0.7),
-    "LV": ("Latvia", "LV", 1.8), "MT": ("Malta", "MT", 0.5),
-    "NL": ("Netherlands", "NL", 17.9), "PL": ("Poland", "PL", 37.6),
-    "PT": ("Portugal", "PT", 10.3), "RO": ("Romania", "RO", 19.0),
-    "SE": ("Sweden", "SE", 10.5), "SI": ("Slovenia", "SI", 2.1),
-    "SK": ("Slovakia", "SK", 5.5), "NO": ("Norway", "NO", 5.5),
-    "CH": ("Switzerland", "CH", 8.8), "GB": ("United Kingdom", "UK", 67.4),
-}
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR  = REPO_ROOT / "data" / "countries"
+NOW       = datetime.now(timezone.utc)
+
+print("=" * 60)
+print(f"  Car Registration Updater v13 FINAL — {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
+print("=" * 60)
+print("✅ Alle Imports erfolgreich")
 
 def http_get(url):
     req = urllib.request.Request(url, headers={"User-Agent": "EV-Map-Bot/13.0"})
@@ -43,7 +30,7 @@ def http_get(url):
         return r.read()
 
 def get_latest_acea_pdf():
-    print("[ACEA] Suche neueste Pressemitteilung...")
+    print("[ACEA] Suche neueste PDF...")
     list_url = "https://www.acea.auto/pc-registrations/"
     html = http_get(list_url).decode("utf-8")
     soup = BeautifulSoup(html, "html.parser")
@@ -54,17 +41,15 @@ def get_latest_acea_pdf():
         return None, None
 
     article_url = "https://www.acea.auto" + link["href"]
-    print(f"[ACEA] Artikel gefunden: {article_url}")
-
     article_html = http_get(article_url).decode("utf-8")
-    pdf_match = re.search(r'href="(https://www\.acea\.auto/files/Press_release_car_registrations_[^"]+\.pdf)"', article_html)
 
+    pdf_match = re.search(r'href="(https://www\.acea\.auto/files/Press_release_car_registrations_[^"]+\.pdf)"', article_html)
     if not pdf_match:
         print("[ACEA] Kein PDF-Link gefunden")
         return None, None
 
     pdf_url = pdf_match.group(1)
-    print(f"[ACEA] PDF herunterladen: {pdf_url}")
+    print(f"[ACEA] PDF gefunden: {pdf_url}")
 
     pdf_data = http_get(pdf_url)
     pdf_path = "/tmp/acea_latest.pdf"
@@ -109,10 +94,6 @@ def parse_acea_pdf(pdf_path):
     return data
 
 def main():
-    print("=" * 60)
-    print(f"  Car Registration Updater v13 (ACEA PDF)  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
-    print("=" * 60)
-
     pdf_path, month_label = get_latest_acea_pdf()
     if not pdf_path:
         print("❌ Konnte keine ACEA PDF finden")
