@@ -69,13 +69,11 @@
   .open-chart-btn { margin-top: 14px; width: 100%; padding: 9px; background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.4); color: var(--accent); border-radius: 8px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 0.72rem; transition: all .15s; }
   .open-chart-btn:hover { background: rgba(0,229,255,0.15); }
 
-  /* Tooltip */
   #tooltip { position: fixed; background: rgba(10,14,23,0.95); border: 1px solid var(--accent); border-radius: 8px; padding: 10px 14px; font-size: 0.72rem; pointer-events: none; z-index: 999; display: none; max-width: 220px; backdrop-filter: blur(8px); }
   #tooltip strong { font-family: 'Syne', sans-serif; font-size: 0.85rem; display: block; margin-bottom: 4px; color: #fff; }
   .tt-row { display: flex; justify-content: space-between; gap: 16px; color: var(--muted); margin-top: 3px; }
   .tt-val { color: var(--accent); }
 
-  /* Modal */
   #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(6px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
   #modal-overlay.open { display: flex; }
   #modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 860px; max-height: 92vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 80px rgba(0,229,255,0.1); animation: modalIn .2s ease; }
@@ -107,7 +105,6 @@
   .spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
   #map-loading p { font-size: 0.72rem; color: var(--muted); }
 
-  /* Search */
   .search-wrap { position: relative; }
   .search-input { width: 100%; padding: 8px 12px 8px 32px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.72rem; outline: none; transition: border-color .15s; }
   .search-input::placeholder { color: var(--muted); }
@@ -143,10 +140,10 @@
       <button id="modal-close" onclick="closeModal()">&#x2715;</button>
     </div>
     <div id="modal-body">
-      <div id="modal-loading"><div class="modal-spinner"></div>Loading&#x2026;</div>
+      <div id="modal-loading"><div class="modal-spinner"></div>Loading…</div>
       <div id="modal-content" style="display:none">
         <div class="chart-tabs" id="main-tabs">
-          <button class="chart-tab active" onclick="switchTab('monthly',this)">&#x1F4C5; Monthly total</button>
+          <button class="chart-tab active" onclick="switchTab('monthly',this)">Monthly total</button>
           <button class="chart-tab" onclick="switchTab('absolute',this)">Powertrain absolute</button>
           <button class="chart-tab" onclick="switchTab('share',this)">Market share %</button>
           <button class="chart-tab" onclick="switchTab('stacked',this)">Stacked</button>
@@ -156,7 +153,7 @@
         <div class="summary-grid" id="summary-grid"></div>
       </div>
       <div id="modal-nodata" style="display:none" class="no-data-msg">
-        &#x1F4ED; No data available for this country yet.<br>
+        No data available for this country yet.<br>
         <span style="font-size:0.68rem">ECB/ACEA covers ~30 EU/EEA countries</span>
       </div>
     </div>
@@ -167,10 +164,10 @@
   <header>
     <div class="title-block">
       <h1>Global Car<br>Registrations</h1>
-      <div class="subtitle">BEV market share &middot; Colour = % electric &middot; Click for monthly &amp; powertrain detail</div>
+      <div class="subtitle">BEV market share · Colour = % electric · Click for monthly & powertrain detail</div>
     </div>
     <div class="meta-block">
-      <div class="update-badge"><span class="dot"></span><span id="last-update">Loading&hellip;</span></div>
+      <div class="update-badge"><span class="dot"></span><span id="last-update">Loading…</span></div>
       <select class="year-select" id="year-select">
         <option value="2024">2024</option>
         <option value="2023">2023</option>
@@ -181,32 +178,32 @@
 
   <div class="main-grid">
     <div class="map-panel">
-      <div id="map-loading"><div class="spinner"></div><p>Loading map&hellip;</p></div>
+      <div id="map-loading"><div class="spinner"></div><p>Loading map…</p></div>
       <svg id="map-svg" viewBox="0 0 960 500"></svg>
     </div>
     <div class="sidebar">
       <div class="panel">
         <div class="panel-title">Search Country</div>
         <div class="search-wrap">
-          <span class="search-icon">&#x1F50D;</span>
-          <input class="search-input" id="country-search" type="text" placeholder="e.g. Norway, Malta, Iceland&hellip;" autocomplete="off">
+          <span class="search-icon">🔎</span>
+          <input class="search-input" id="country-search" type="text" placeholder="e.g. Norway, Malta, Iceland…" autocomplete="off">
         </div>
         <div class="search-results" id="search-results"></div>
       </div>
       <div class="panel">
-        <div class="panel-title">BEV Market Share &middot; % of new registrations</div>
+        <div class="panel-title">BEV Market Share · % of new registrations</div>
         <div class="legend-bar"></div>
         <div class="legend-labels"><span>0%</span><span id="legend-mid"></span><span id="legend-max"></span></div>
         <div class="sources-note">
-          BEV share: <a href="https://www.acea.auto/stats/" target="_blank">ACEA</a> &middot;
+          BEV share: <a href="https://www.acea.auto/stats/" target="_blank">ACEA</a> · 
           <a href="https://www.iea.org/data-and-statistics/" target="_blank">IEA</a><br>
-          Grey = no data &middot; Click any country for monthly &amp; powertrain chart
+          Grey = no data · Click any country for monthly & powertrain chart
         </div>
       </div>
       <div class="panel">
         <div class="panel-title">Country Details</div>
         <div id="detail-content" style="color:var(--muted);font-size:.72rem">
-          &larr; Click a country for details
+          ← Click a country for details
         </div>
       </div>
       <div class="panel">
@@ -218,11 +215,8 @@
 </div>
 
 <script>
-// ── Annual totals for world map colouring ─────────────────────────────────────
-const DATA = { /* ... unverändert wie vorher ... */ };
-
-// BEV market share % by country
-const EV_SHARE = { /* ... unverändert wie vorher ... */ };
+const DATA = { /* annual data - bleibt unverändert */ };
+const EV_SHARE = { /* BEV share - bleibt unverändert */ };
 
 const FILE_MAP = {
   "Austria":"austria","Belgium":"belgium","Bulgaria":"bulgaria","Cyprus":"cyprus",
@@ -232,26 +226,27 @@ const FILE_MAP = {
   "Italy":"italy","Lithuania":"lithuania","Luxembourg":"luxembourg","Latvia":"latvia",
   "Malta":"malta","Netherlands":"netherlands","Poland":"poland","Portugal":"portugal",
   "Romania":"romania","Sweden":"sweden","Slovenia":"slovenia","Slovakia":"slovakia",
-  "Norway":"norway","Switzerland":"switzerland","United Kingdom":"united_kingdom"
+  "Norway":"norway","Switzerland":"switzerland","United Kingdom":"united_kingdom",
+  "Iceland":"iceland"
 };
 
-const NAME_MAP = { /* ... unverändert ... */ };
+const NAME_MAP = { /* bleibt unverändert */ };
 
 function normName(n){ return NAME_MAP[n]||n; }
-function fmt(n){ /* ... unverändert ... */ }
+function fmt(n){ return n.toLocaleString("en-US"); }
 
-// Der Rest der index.html bleibt exakt gleich wie in der letzten Version (mit Iceland jetzt in FILE_MAP)
+// ... (der komplette Rest des Scripts aus deiner letzten funktionierenden Version bleibt exakt gleich) ...
 
 async function init(){
   try{
     const world     = await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
     const countries = topojson.feature(world, world.objects.countries);
-    const NUMNAMES  = { /* ... unverändert ... */ };
+    const NUMNAMES  = { /* bleibt unverändert */ };
     countries.features.forEach(f => {
       f.properties.name = NUMNAMES[parseInt(f.id)] || f.properties.name || String(f.id);
     });
 
-    // ... Rest der init-Funktion bleibt gleich ...
+    // ... Rest der init-Funktion (svg, paths, renderMap, event listeners) bleibt unverändert ...
 
     renderMap(currentYear);
     document.getElementById("map-loading").style.display = "none";
@@ -261,7 +256,13 @@ async function init(){
   }
 }
 
-// ... der Rest des Scripts bleibt unverändert ...
+document.getElementById("year-select").addEventListener("change", function(){
+  currentYear = parseInt(this.value);
+  renderMap(currentYear);
+  if(selectedCountry) showDetail(selectedCountry, currentYear);
+});
+
+init();
 </script>
 </body>
 </html>
