@@ -2,9 +2,9 @@
   "name": "Croatia",
   "ecb_code": "HR",
   "population_mio": 3.9,
-  "source_monthly": "ECB Data Portal / ACEA (monthly country data available until Dec 2022)",
+  "source_monthly": "ECB Data Portal / ACEA",
   "source_annual": "Eurostat road_eqr_carpda",
-  "last_updated": "2026-04-14T03:04:54.689612+00:00",
+  "last_updated": "2026-04-14T03:18:07.214709+00:00",
   "monthly": {},
   "annual": {
     "labels": [
