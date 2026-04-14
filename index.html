@@ -132,7 +132,7 @@ searchInput.addEventListener("keypress", (e) => {
   }
 });
 
-// ==================== ORIGINALER CODE ====================
+// ==================== DEIN ORIGINALER CODE (aus deiner ersten Nachricht) ====================
 let currentYear = 2024;
 let selectedCountry = null;
 let currentChart = null;
@@ -216,7 +216,7 @@ function renderSummaryCards(data) {
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
-      <div style="font-size:1.4em; font-weight:bold; color:${f.color}">${Math.round(value/1000)} k</div>
+      <div style="font-size:1.35em; font-weight:bold; color:${f.color}">${Math.round(value/1000)} k</div>
       <div style="font-size:0.85em; color:#aaa">${f.label}</div>
       <div style="font-size:0.8em; color:#88aaff">${lastYear}</div>
     `;
@@ -229,7 +229,7 @@ function switchTab(tabIndex) {
   if (selectedCountry) openModal(selectedCountry);
 }
 
-// ==================== D3 MAP ====================
+// ==================== D3 MAP (dein Original aus der ersten Nachricht) ====================
 async function init() {
   const width = window.innerWidth;
   const height = window.innerHeight;
