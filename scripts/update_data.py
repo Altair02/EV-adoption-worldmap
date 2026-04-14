@@ -1,11 +1,12 @@
 """
-scripts/update_data.py  —  v25 (Override protection for DE + BE + LU + FR + ES + PT)
+scripts/update_data.py  —  v26 (Override protection for DE + BE + LU + FR + ES + PT + GB)
 - Germany:      KBA Override
 - Belgium:      FEBIAC Override (until March 2026)
 - Luxembourg:   STATEC / SNCA / ACEA Override (until March 2026)
 - France:       CCFA Override (until March 2026)
 - Spain:        ANFAC Override (until March 2026)
 - Portugal:     ACAP Override (until March 2026)
+- United Kingdom: SMMT Override (until March 2026)
 - Netherlands:  RDW
 """
 
@@ -55,7 +56,7 @@ FUEL_MAP_FALLBACK = {
 }
 
 def http_get(url, timeout=30):
-    req = urllib.request.Request(url, headers={"User-Agent": "EV-Map-Bot/25.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "EV-Map-Bot/26.0"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read()
 
@@ -216,6 +217,7 @@ def write_files(monthly, annual):
     fr_override = load_override("france_monthly_override.json")
     es_override = load_override("spain_monthly_override.json")
     pt_override = load_override("portugal_monthly_override.json")
+    gb_override = load_override("united_kingdom_monthly_override.json")   # ← UK
 
     for ecb_code, (name, estat_code, pop) in COUNTRIES.items():
         m = monthly.get(ecb_code, {})
@@ -238,6 +240,9 @@ def write_files(monthly, annual):
         elif ecb_code == "PT" and pt_override:
             m = pt_override
             print("[Override] Portugal monthly data protected")
+        elif ecb_code == "GB" and gb_override:                    # ← UK
+            m = gb_override
+            print("[Override] United Kingdom monthly data protected")
 
         a = annual.get(ecb_code, {})
         years = sorted(a.keys()) if a else []
@@ -266,6 +271,8 @@ def write_files(monthly, annual):
             source_monthly = "ANFAC (monthly new registrations up to March 2026)"
         elif ecb_code == "PT":
             source_monthly = "ACAP (monthly new registrations up to March 2026)"
+        elif ecb_code == "GB":                                      # ← UK
+            source_monthly = "SMMT (monthly new registrations up to March 2026)"
         else:
             source_monthly = "ECB Data Portal / ACEA"
 
@@ -324,7 +331,7 @@ def send_telegram(changed, n_countries, latest_month):
 
 def main():
     print("=" * 60)
-    print(f"  Car Registration Updater v25  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
+    print(f"  Car Registration Updater v26  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
     print("=" * 60)
 
     monthly = fetch_ecb_monthly()
@@ -340,7 +347,7 @@ def main():
     changed = write_files(monthly, annual)
     latest  = max((v["labels"][-1] for v in monthly.values() if v.get("labels")), default="2022-12")
     send_telegram(changed, len(COUNTRIES), latest)
-    print("\n✓ Done – Overrides for DE, BE, LU, FR, ES + PT active (data up to March 2026)")
+    print("\n✓ Done – Overrides for DE, BE, LU, FR, ES, PT + GB active (data up to March 2026)")
 
 if __name__ == "__main__":
     main()
