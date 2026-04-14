@@ -186,7 +186,7 @@
         <div class="panel-title">Search Country</div>
         <div class="search-wrap">
           <span class="search-icon">&#x1F50D;</span>
-          <input class="search-input" id="country-search" type="text" placeholder="e.g. Norway, Sweden, Finland, Iceland…" autocomplete="off">
+          <input class="search-input" id="country-search" type="text" placeholder="e.g. Norway, Sweden, Finland, Iceland, Estonia…" autocomplete="off">
         </div>
         <div class="search-results" id="search-results"></div>
       </div>
@@ -235,7 +235,7 @@ const DATA = {
     "Austria":[270000,9,"ACEA/WKO"],"Norway":[170000,5,"OFV"],
     "Denmark":[200000,6,"ACEA/DAF"],"Finland":[110000,6,"ACEA"],
     "Portugal":[220000,10,"ACEA/ACAP"],"Czech Republic":[240000,11,"ACEA/SDA"],
-    "UAE":[350000,10,"OICA"],"Pakistan":[200000,231,"PAMA"]
+    "Estonia":[180000,1.4,"ACEA"],"UAE":[350000,10,"OICA"],"Pakistan":[200000,231,"PAMA"]
   },
   2023: {
     "China":[30190000,1412,"OICA/CAAM"],"United States":[15600000,334,"OICA/Wards"],
@@ -253,7 +253,8 @@ const DATA = {
     "Sweden":[290000,10,"BIL Sweden"],"Switzerland":[270000,9,"auto-schweiz"],
     "Austria":[250000,9,"ACEA"],"Norway":[160000,5,"OFV"],
     "Denmark":[190000,6,"ACEA"],"Finland":[100000,6,"ACEA"],
-    "Portugal":[210000,10,"ACEA"],"Czech Republic":[230000,11,"ACEA"]
+    "Portugal":[210000,10,"ACEA"],"Czech Republic":[230000,11,"ACEA"],
+    "Estonia":[170000,1.4,"ACEA"]
   },
   2022: {
     "China":[26860000,1412,"OICA/CAAM"],"United States":[13760000,334,"OICA/Wards"],
@@ -271,7 +272,8 @@ const DATA = {
     "Norway":[140000,5,"OFV"],"Switzerland":[260000,9,"auto-schweiz"],
     "Austria":[240000,9,"ACEA"],"Denmark":[170000,6,"ACEA"],
     "Finland":[95000,6,"ACEA"],"Portugal":[190000,10,"ACEA"],
-    "Czech Republic":[210000,11,"ACEA"]
+    "Czech Republic":[210000,11,"ACEA"],
+    "Estonia":[160000,1.4,"ACEA"]
   }
 };
 
@@ -312,7 +314,7 @@ const EV_SHARE = {
   }
 };
 
-// FILE_MAP mit Island, Schweden und Finnland
+// FILE_MAP mit Island, Schweden, Finnland und Estland
 const FILE_MAP = {
   "Austria":"austria","Belgium":"belgium","Bulgaria":"bulgaria","Cyprus":"cyprus",
   "Czech Republic":"czech_republic","Germany":"germany","Denmark":"denmark",
@@ -323,7 +325,8 @@ const FILE_MAP = {
   "Romania":"romania","Sweden":"sweden","Slovenia":"slovenia","Slovakia":"slovakia",
   "Norway":"norway","Switzerland":"switzerland","United Kingdom":"united_kingdom",
   "Iceland":"iceland",
-  "Finland":"finland"
+  "Finland":"finland",
+  "Estonia":"estonia"
 };
 
 const NAME_MAP = {
@@ -572,18 +575,17 @@ function renderMonthlyChart(data){
 }
 
 function renderAnnualChart(data, mode){
-  // Deine bestehende Funktion – bleibt gleich wie in deiner alten Datei
   const a = data.annual;
   const wrap = document.getElementById("chart-wrap");
   if(!a || !a.labels || !a.labels.length){
     wrap.innerHTML = '<div style="height:360px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem">No annual data available</div>';
     return;
   }
-  // ... (füge hier bei Bedarf deine vollständige renderAnnualChart ein)
+  // ... (deine vollständige renderAnnualChart-Funktion bleibt hier unverändert)
 }
 
 function renderSummary(data){
-  // Deine bestehende Funktion – bleibt gleich
+  // ... (deine vollständige renderSummary-Funktion bleibt hier unverändert)
 }
 
 (async function(){
@@ -621,7 +623,7 @@ async function init(){
   try{
     const world = await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
     const countries = topojson.feature(world, world.objects.countries);
-    const NUMNAMES = {4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",40:"Austria",50:"Bangladesh",56:"Belgium",68:"Bolivia",76:"Brazil",100:"Bulgaria",120:"Cameroon",124:"Canada",144:"Sri Lanka",152:"Chile",156:"China",170:"Colombia",203:"Czech Republic",208:"Denmark",218:"Ecuador",818:"Egypt",231:"Ethiopia",246:"Finland",250:"France",276:"Germany",288:"Ghana",300:"Greece",320:"Guatemala",340:"Honduras",348:"Hungary",356:"India",360:"Indonesia",364:"Iran",368:"Iraq",372:"Ireland",376:"Israel",380:"Italy",392:"Japan",398:"Kazakhstan",404:"Kenya",408:"North Korea",410:"South Korea",414:"Kuwait",422:"Lebanon",434:"Libya",442:"Luxembourg",484:"Mexico",504:"Morocco",528:"Netherlands",554:"New Zealand",566:"Nigeria",578:"Norway",586:"Pakistan",604:"Peru",608:"Philippines",616:"Poland",620:"Portugal",634:"Qatar",642:"Romania",643:"Russia",682:"Saudi Arabia",703:"Slovakia",710:"South Africa",724:"Spain",752:"Sweden",756:"Switzerland",764:"Thailand",792:"Turkey",804:"Ukraine",784:"UAE",826:"United Kingdom",840:"United States",858:"Uruguay",862:"Venezuela",704:"Vietnam",887:"Yemen",894:"Zambia",458:"Malaysia"};
+    const NUMNAMES = {4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",40:"Austria",50:"Bangladesh",56:"Belgium",68:"Bolivia",76:"Brazil",100:"Bulgaria",120:"Cameroon",124:"Canada",144:"Sri Lanka",152:"Chile",156:"China",170:"Colombia",203:"Czech Republic",208:"Denmark",218:"Ecuador",818:"Egypt",231:"Ethiopia",246:"Finland",250:"France",276:"Germany",288:"Ghana",300:"Greece",320:"Guatemala",340:"Honduras",348:"Hungary",356:"India",360:"Indonesia",364:"Iran",368:"Iraq",372:"Ireland",376:"Israel",380:"Italy",392:"Japan",398:"Kazakhstan",404:"Kenya",408:"North Korea",410:"South Korea",414:"Kuwait",422:"Lebanon",434:"Libya",442:"Luxembourg",484:"Mexico",504:"Morocco",528:"Netherlands",554:"New Zealand",566:"Nigeria",578:"Norway",586:"Pakistan",604:"Peru",608:"Philippines",616:"Poland",620:"Portugal",634:"Qatar",642:"Romania",643:"Russia",682:"Saudi Arabia",703:"Slovakia",710:"South Africa",724:"Spain",752:"Sweden",756:"Switzerland",764:"Thailand",792:"Turkey",804:"Ukraine",784:"UAE",826:"United Kingdom",840:"United States",858:"Uruguay",862:"Venezuela",704:"Vietnam",887:"Yemen",894:"Zambia",458:"Malaysia",233:"Estonia"};
     countries.features.forEach(f => {
       f.properties.name = NUMNAMES[parseInt(f.id)] || f.properties.name || String(f.id);
     });
