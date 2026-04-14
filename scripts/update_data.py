@@ -1,14 +1,16 @@
 """
-scripts/update_data.py  —  v27 (Override protection for DE + BE + LU + FR + ES + PT + GB + IE)
-- Germany:      KBA Override
-- Belgium:      FEBIAC Override (until March 2026)
-- Luxembourg:   STATEC / SNCA / ACEA Override (until March 2026)
-- France:       CCFA Override (until March 2026)
-- Spain:        ANFAC Override (until March 2026)
-- Portugal:     ACAP Override (until March 2026)
+scripts/update_data.py  —  v28 (Override protection for DE + BE + LU + FR + ES + PT + GB + IE + IS + NO)
+- Germany:        KBA Override
+- Belgium:        FEBIAC Override (until March 2026)
+- Luxembourg:     STATEC / SNCA / ACEA Override (until March 2026)
+- France:         CCFA Override (until March 2026)
+- Spain:          ANFAC Override (until March 2026)
+- Portugal:       ACAP Override (until March 2026)
 - United Kingdom: SMMT Override (until March 2026)
-- Ireland:      SIMI Override (until March 2026)
-- Netherlands:  RDW
+- Ireland:        SIMI Override (until March 2026)
+- Iceland:        Statistics Iceland Override (until March 2026)
+- Norway:         OFV Override (until March 2026)
+- Netherlands:    RDW
 """
 
 import csv
@@ -42,6 +44,7 @@ COUNTRIES = {
     "SE": ("Sweden",         "SE", 10.5), "SI": ("Slovenia",       "SI",  2.1),
     "SK": ("Slovakia",       "SK",  5.5), "NO": ("Norway",         "NO",  5.5),
     "CH": ("Switzerland",    "CH",  8.8), "GB": ("United Kingdom", "UK", 67.4),
+    "IS": ("Iceland",        "IS",  0.4),
 }
 
 FUEL_MAP_GRANULAR = {
@@ -57,7 +60,7 @@ FUEL_MAP_FALLBACK = {
 }
 
 def http_get(url, timeout=30):
-    req = urllib.request.Request(url, headers={"User-Agent": "EV-Map-Bot/27.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "EV-Map-Bot/28.0"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read()
 
@@ -219,7 +222,9 @@ def write_files(monthly, annual):
     es_override = load_override("spain_monthly_override.json")
     pt_override = load_override("portugal_monthly_override.json")
     gb_override = load_override("united_kingdom_monthly_override.json")
-    ie_override = load_override("ireland_monthly_override.json")   # ← Ireland
+    ie_override = load_override("ireland_monthly_override.json")
+    is_override = load_override("iceland_monthly_override.json")
+    no_override = load_override("norway_monthly_override.json")
 
     for ecb_code, (name, estat_code, pop) in COUNTRIES.items():
         m = monthly.get(ecb_code, {})
@@ -245,9 +250,15 @@ def write_files(monthly, annual):
         elif ecb_code == "GB" and gb_override:
             m = gb_override
             print("[Override] United Kingdom monthly data protected")
-        elif ecb_code == "IE" and ie_override:                    # ← Ireland
+        elif ecb_code == "IE" and ie_override:
             m = ie_override
             print("[Override] Ireland monthly data protected")
+        elif ecb_code == "IS" and is_override:
+            m = is_override
+            print("[Override] Iceland monthly data protected")
+        elif ecb_code == "NO" and no_override:
+            m = no_override
+            print("[Override] Norway monthly data protected")
 
         a = annual.get(ecb_code, {})
         years = sorted(a.keys()) if a else []
@@ -278,8 +289,12 @@ def write_files(monthly, annual):
             source_monthly = "ACAP (monthly new registrations up to March 2026)"
         elif ecb_code == "GB":
             source_monthly = "SMMT (monthly new registrations up to March 2026)"
-        elif ecb_code == "IE":                                      # ← Ireland
+        elif ecb_code == "IE":
             source_monthly = "SIMI (monthly new registrations up to March 2026)"
+        elif ecb_code == "IS":
+            source_monthly = "Statistics Iceland (monthly new registrations up to March 2026)"
+        elif ecb_code == "NO":
+            source_monthly = "OFV (monthly new registrations up to March 2026)"
         else:
             source_monthly = "ECB Data Portal / ACEA"
 
@@ -338,7 +353,7 @@ def send_telegram(changed, n_countries, latest_month):
 
 def main():
     print("=" * 60)
-    print(f"  Car Registration Updater v27  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
+    print(f"  Car Registration Updater v28  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
     print("=" * 60)
 
     monthly = fetch_ecb_monthly()
@@ -354,7 +369,7 @@ def main():
     changed = write_files(monthly, annual)
     latest  = max((v["labels"][-1] for v in monthly.values() if v.get("labels")), default="2022-12")
     send_telegram(changed, len(COUNTRIES), latest)
-    print("\n✓ Done – Overrides for DE, BE, LU, FR, ES, PT, GB + IE active (data up to March 2026)")
+    print("\n✓ Done – Overrides for DE, BE, LU, FR, ES, PT, GB, IE, IS + NO active (data up to March 2026)")
 
 if __name__ == "__main__":
     main()
