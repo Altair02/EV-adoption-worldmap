@@ -75,7 +75,7 @@
   .tt-row { display: flex; justify-content: space-between; gap: 16px; color: var(--muted); margin-top: 3px; }
   .tt-val { color: var(--accent); }
 
-  /* Modal — NOTE: all CSS variables use -- (two hyphens), never a single dash or en-dash */
+  /* Modal */
   #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(6px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
   #modal-overlay.open { display: flex; }
   #modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 860px; max-height: 92vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 80px rgba(0,229,255,0.1); animation: modalIn .2s ease; }
@@ -219,7 +219,6 @@
 
 <script>
 // ── Annual totals for world map colouring ─────────────────────────────────────
-// Source: OICA, ACEA, IEA — Last updated: April 2026
 const DATA = {
   2024: {
     "China":[30090000,1412,"OICA/CAAM"],"United States":[15900000,334,"OICA/Wards"],
@@ -279,7 +278,7 @@ const DATA = {
   }
 };
 
-// BEV market share % by country — Source: ACEA, IEA, national authorities
+// BEV market share % by country
 const EV_SHARE = {
   2024: {
     "Norway":90.0,"Iceland":54.0,"Sweden":35.0,"Denmark":40.0,"Finland":25.0,
@@ -317,6 +316,7 @@ const EV_SHARE = {
     "Australia":3.8,"Canada":5.0
   }
 };
+
 const FILE_MAP = {
   "Austria":"austria","Belgium":"belgium","Bulgaria":"bulgaria","Cyprus":"cyprus",
   "Czech Republic":"czech_republic","Germany":"germany","Denmark":"denmark",
@@ -334,6 +334,7 @@ const NAME_MAP = {
   "Iran (Islamic Republic of)":"Iran","Russian Federation":"Russia",
   "United Kingdom of Great Britain and Northern Ireland":"United Kingdom"
 };
+
 function normName(n){ return NAME_MAP[n]||n; }
 function fmt(n){
   if(!n&&n!==0) return "—";
@@ -349,7 +350,6 @@ const proj    = d3.geoNaturalEarth1().scale(153).translate([480,270]);
 const pathGen = d3.geoPath().projection(proj);
 
 function buildScale(year){
-  // EV share colour scale: 0% grey → 5% yellow → 20% teal → 50%+ green
   const evScale = d3.scaleLinear()
     .domain([0, 5, 20, 50, 100])
     .range(["#1a2030", "#7c6700", "#0d7377", "#14a085", "#00e5a0"])
@@ -494,8 +494,11 @@ window.openModal = async function(countryName){
       document.getElementById("modal-subtitle").textContent =
         "Updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
     }
+
+    // Dynamische Quelle aus JSON (respektiert Overrides für BE, LU, DE etc.)
+    const monthlySource = modalData.source_monthly || "ECB Data Portal / ACEA";
     document.getElementById("modal-source").textContent =
-      "Monthly: ECB/ACEA  \u00b7  Annual powertrain: Eurostat";
+      `Monthly: ${monthlySource}  ·  Annual powertrain: Eurostat`;
 
     const hasMonthly = !!(modalData.monthly && modalData.monthly.labels && modalData.monthly.labels.length);
     activeTab = hasMonthly ? "monthly" : "absolute";
@@ -542,7 +545,8 @@ window.switchTab = function(tab, btn){
 function renderTab(tab){
   const src = document.getElementById("tab-source");
   if(tab==="monthly"){
-    src.textContent = "Source: ECB Data Portal / ACEA  \u00b7  Monthly total registrations (all powertrains)";
+    const monthlySource = modalData.source_monthly || "ECB Data Portal / ACEA";
+    src.textContent = `Source: ${monthlySource}  ·  Monthly total registrations (all powertrains)`;
     renderMonthlyChart(modalData);
   } else {
     src.textContent = "Source: Eurostat road_eqr_carpda  \u00b7  Annual registrations by powertrain";
@@ -665,13 +669,11 @@ function renderSummary(data){
   }).join("");
 }
 
-// ── Map initialisation ────────────────────────────────────────────────────────
 // ── Country search ────────────────────────────────────────────────────────────
 (function(){
   const input   = document.getElementById("country-search");
   const results = document.getElementById("search-results");
 
-  // All country names: DATA + FILE_MAP combined
   function allCountries(){
     const set = new Set([
       ...Object.keys(DATA[currentYear]),
@@ -709,14 +711,12 @@ function renderSummary(data){
     });
   });
 
-  // Hide results when clicking outside
   document.addEventListener("click", function(e){
     if(!e.target.closest(".search-wrap") && !e.target.closest(".search-results")){
       results.innerHTML = "";
     }
   });
 
-  // Navigate with keyboard
   input.addEventListener("keydown", function(e){
     const items = results.querySelectorAll(".search-result-item");
     if(!items.length) return;
@@ -726,6 +726,7 @@ function renderSummary(data){
   });
 })();
 
+// ── Map initialisation ────────────────────────────────────────────────────────
 async function init(){
   try{
     const world     = await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
