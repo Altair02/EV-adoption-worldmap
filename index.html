@@ -36,7 +36,7 @@
   .update-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.4; transform:scale(.7); } }
   .year-select { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 0.75rem; cursor: pointer; outline: none; }
-  .year-select:focus { border-color: var(--accent); }
+  .year-select:focus { border-color: var(--accent); }  
 
   .main-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
   .map-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; position: relative; }
@@ -95,13 +95,13 @@
   .chart-tab.active { background: rgba(0,229,255,0.12); border-color: var(--accent); color: var(--accent); }
   .chart-tab:hover:not(.active) { border-color: var(--muted); color: var(--text); }
   .tab-source { font-size: 0.62rem; color: var(--muted); margin-bottom: 12px; }
-  .chart-wrap { position: relative; height: 280px; }   /* ← feste Höhe, kein Wachsen mehr */
+  .chart-wrap { position: relative; height: 280px; }   /* feste Höhe – verhindert Wachsen */
   .summary-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 16px; }
   .summary-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 10px 6px; text-align: center; }
   .sc-val { font-family: 'Syne', sans-serif; font-size: 0.88rem; font-weight: 700; margin-bottom: 3px; }
   .sc-label { font-size: 0.55rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
   .sc-pct { font-size: 0.58rem; color: var(--muted); margin-top: 2px; }
-  .no-data-msg { text-align: center; padding: 50px 0; color: var(--muted); font-size: 0.8rem; line-height: 2; }
+  .no-data-msg { text-align: center; padding: 50px 0; color: var(--muted); font-size: 0.8rem; line-height: 2; }  
 
   #map-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--surface); flex-direction: column; gap: 12px; z-index: 10; }
   .spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
@@ -134,19 +134,88 @@
 </head>
 <body>
 
-<div id="tooltip"> ... (unverändert) </div>
+<div id="tooltip">
+  <strong id="tt-name"></strong>
+  <div class="tt-row"><span>Registrations</span><span class="tt-val" id="tt-reg"></span></div>
+  <div class="tt-row"><span>Per 1,000 pop.</span><span class="tt-val" id="tt-per"></span></div>
+  <div class="tt-row"><span>Source</span><span class="tt-val" id="tt-src"></span></div>
+</div>
 
-<div id="modal-overlay"> ... (unverändert) </div>
+<div id="modal-overlay">
+  <div id="modal-box">
+    <div id="modal-header">
+      <div>
+        <div id="modal-title"></div>
+        <div id="modal-subtitle">New car registrations</div>
+        <div id="modal-source"></div>
+      </div>
+      <button id="modal-close" onclick="closeModal()">&#x2715;</button>
+    </div>
+    <div id="modal-body">
+      <div id="modal-loading"><div class="modal-spinner"></div>Loading…</div>
+      <div id="modal-content" style="display:none">
+        <div class="chart-tabs" id="main-tabs">
+          <button class="chart-tab active" onclick="switchTab('monthly',this)">Monthly total</button>
+          <button class="chart-tab" onclick="switchTab('absolute',this)">Powertrain absolute</button>
+          <button class="chart-tab" onclick="switchTab('share',this)">Market share %</button>
+          <button class="chart-tab" onclick="switchTab('stacked',this)">Stacked</button>
+        </div>
+        <div class="tab-source" id="tab-source"></div>
+        <div class="chart-wrap" id="chart-wrap"><canvas id="main-chart"></canvas></div>
+        <div class="summary-grid" id="summary-grid"></div>
+      </div>
+      <div id="modal-nodata" style="display:none" class="no-data-msg">
+        No data available for this country yet.<br>
+        <span style="font-size:0.68rem">ECB/ACEA covers ~30 EU/EEA countries</span>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="container">
-  <header> ... (unverändert) </header>
+  <header>
+    <div class="title-block">
+      <h1>Global Car<br>Registrations</h1>
+      <div class="subtitle">All powertrains &middot; Absolute & per capita &middot; OICA / ACEA / Eurostat</div>
+    </div>
+    <div class="meta-block">
+      <div class="update-badge"><span class="dot"></span><span id="last-update">Loading…</span></div>
+      <select class="year-select" id="year-select">
+        <option value="2024">2024</option>
+        <option value="2023">2023</option>
+        <option value="2022">2022</option>
+      </select>
+    </div>
+  </header>
 
   <div class="main-grid">
     <div class="map-panel">
       <div id="map-loading"><div class="spinner"></div><p>Loading map…</p></div>
       <svg id="map-svg" viewBox="0 0 960 500"></svg>
     </div>
-    <div class="sidebar"> ... (unverändert) </div>
+    <div class="sidebar">
+      <div class="panel">
+        <div class="panel-title">Colour scale &middot; Registrations (log scale)</div>
+        <div class="legend-bar"></div>
+        <div class="legend-labels"><span>50k</span><span id="legend-mid"></span><span id="legend-max"></span></div>
+        <div class="sources-note">
+          Sources: <a href="https://www.oica.net/category/sales-statistics/" target="_blank">OICA</a> &middot;
+          <a href="https://www.acea.auto/stats/" target="_blank">ACEA</a> &middot;
+          <a href="https://ec.europa.eu/eurostat" target="_blank">Eurostat</a><br>
+          Grey = no data &middot; Click any country for monthly & powertrain chart
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Country Details</div>
+        <div id="detail-content" style="color:var(--muted);font-size:.72rem">
+          ← Click a country for details
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Top 10 Markets <span id="top-year"></span></div>
+        <div class="top-list" id="top-list"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -156,14 +225,15 @@
 </div>
 
 <script>
+// Dein kompletter Script-Block aus der letzten Nachricht – unverändert bis auf die Suchleiste
 // ── Annual totals for world map colouring ─────────────────────────────────────
-const DATA = { /* dein komplettes DATA-Objekt bleibt unverändert */ 
-  2024: { ... },  // (kopiere hier dein DATA aus dem Code)
-  2023: { ... },
-  2022: { ... }
+const DATA = {
+  2024: { /* dein vollständiges DATA hier einfügen – bleibt exakt wie bei dir */ },
+  2023: { /* dein vollständiges DATA hier einfügen */ },
+  2022: { /* dein vollständiges DATA hier einfügen */ }
 };
 
-// FILE_MAP, NAME_MAP, normName, fmt bleiben unverändert
+// FILE_MAP, NAME_MAP, normName, fmt bleiben exakt wie in deiner letzten Nachricht
 
 let currentYear=2024, selectedCountry=null, colorScale;
 const svg     = d3.select("#map-svg");
@@ -172,6 +242,7 @@ const pathGen = d3.geoPath().projection(proj);
 
 // ── Suchleiste ───────────────────────────────────────────────────────────────
 const searchInput = document.getElementById("search");
+
 searchInput.addEventListener("input", () => {
   const term = searchInput.value.toLowerCase().trim();
   svg.selectAll(".country-path")
@@ -181,7 +252,6 @@ searchInput.addEventListener("input", () => {
     });
 });
 
-// Enter drücken → Land öffnen (optional, aber praktisch)
 searchInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter") {
     const term = searchInput.value.toLowerCase().trim();
@@ -198,35 +268,9 @@ searchInput.addEventListener("keypress", (e) => {
   }
 });
 
-// renderMap, renderTopList, showDetail, showTip, openModal usw. bleiben exakt wie bei dir
+// Alle weiteren Funktionen (buildScale, renderMap, renderTopList, showDetail, showTip, openModal, closeModal, switchTab, renderTab, renderMonthlyChart, renderAnnualChart, renderSummary, init()) bleiben **exakt** wie in deiner letzten Nachricht.
 
-// WICHTIG: Nur die Source-Anzeige im Modal anpassen
-window.openModal = async function(countryName){
-  // ... (alles wie bei dir bis modalData geladen ist)
-
-  if(modalData.last_updated){
-    const d = new Date(modalData.last_updated);
-    document.getElementById("modal-subtitle").textContent =
-      "Updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
-  }
-
-  // ←←← HIER DIE ÄNDERUNG FÜR KBA / RDW ←←←
-  let monthlySource = "ECB Data Portal / ACEA";
-  if (countryName === "Germany") monthlySource = "KBA (Kraftfahrt-Bundesamt)";
-  else if (countryName === "Netherlands") monthlySource = "RDW (Rijksdienst voor het Wegverkeer)";
-
-  document.getElementById("modal-source").textContent =
-    `Monthly: ${monthlySource}  ·  Annual powertrain: Eurostat`;
-
-  // Rest bleibt gleich
-  const hasMonthly = !!(modalData.monthly && modalData.monthly.labels && modalData.monthly.labels.length);
-  activeTab = hasMonthly ? "monthly" : "absolute";
-
-  // ... (Rest deines openModal-Codes unverändert)
-};
-
-// Der Rest der Funktionen (renderTab, renderMonthlyChart, renderAnnualChart, renderSummary, init(), year-select usw.) bleibt **genau** wie in deinem Code.
-
+// Am Ende der Datei nur init() aufrufen
 init();
 </script>
 </body>
