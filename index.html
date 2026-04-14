@@ -58,7 +58,6 @@
   .tab.active { background:#00e5ff; color:#000; font-weight:bold; }
   .source { font-size:0.85em; color:#88aaff; margin:12px 0; }
 
-  /* Summary Cards */
   #summary-cards {
     margin-top:20px; 
     display:grid; 
@@ -133,7 +132,7 @@ searchInput.addEventListener("keypress", (e) => {
   }
 });
 
-// ==================== ORIGINALER CODE ====================
+// ==================== DEIN ORIGINALER CODE ====================
 let currentYear = 2024;
 let selectedCountry = null;
 let currentChart = null;
@@ -230,7 +229,7 @@ function switchTab(tabIndex) {
   if (selectedCountry) openModal(selectedCountry);
 }
 
-// ==================== D3 MAP (dein Original) ====================
+// ==================== D3 MAP ====================
 async function init() {
   const width = window.innerWidth;
   const height = window.innerHeight;
@@ -256,9 +255,6 @@ async function init() {
     .attr("d",pathGen)
     .attr("fill","#1a2333")
     .attr("stroke","#334155")
-    .on("mousemove", (event,d) => {
-      // Tooltip kannst du später wieder hinzufügen
-    })
     .on("click", (event,d) => {
       const name = d.properties.name;
       selectByName(name);
@@ -269,7 +265,7 @@ async function init() {
 }
 
 function selectByName(name) {
-  // falls du diese Funktion brauchst
+  // Placeholder - kann bei Bedarf erweitert werden
 }
 
 init();
