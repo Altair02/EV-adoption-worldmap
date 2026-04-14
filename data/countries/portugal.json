@@ -4,7 +4,7 @@
   "population_mio": 10.3,
   "source_monthly": "ACAP (monthly new registrations up to March 2026)",
   "source_annual": "Eurostat road_eqr_carpda",
-  "last_updated": "2026-04-14T21:07:56.690914+00:00",
+  "last_updated": "2026-04-14T21:21:58.636021+00:00",
   "monthly": {
     "labels": [
       "2015-01",
@@ -206,9 +206,9 @@
       16900,
       13500,
       12500,
-      78000,
-      42000,
-      95000,
+      14800,
+      2749,
+      9500,
       13800,
       15500,
       14500,
