@@ -143,7 +143,6 @@ const searchInput = document.getElementById("search");
 
 searchInput.addEventListener("input", () => {
   const term = searchInput.value.toLowerCase().trim();
-  
   d3.selectAll(".country-path")
     .attr("opacity", d => {
       const name = (d.properties.name || "").toLowerCase();
@@ -170,23 +169,18 @@ searchInput.addEventListener("keypress", (e) => {
   }
 });
 
-// ==================== DEIN RESTLICHER CODE ====================
-// Hier kommt dein kompletter bisheriger Map-, Modal- und Chart-Code hin
-// (openModal, renderMonthlyChart, init() usw.)
+// ==================== DEIN ALTER MAP-CODE ====================
+// Füge hier deinen kompletten bisherigen D3-Map-Code ein (alles ab "let svg = ..." bis "init();")
 
-async function openModal(countryName) {
-  // ... dein bisheriger openModal Code ...
-}
-
-function renderMonthlyChart(data) {
-  // ... dein bisheriger Chart Code ...
-}
-
+// Beispiel-Platzhalter – ersetze das mit deinem echten Map-Code:
 function init() {
-  // Dein kompletter D3 Map Code hier...
   console.log("EV Adoption World Map mit Suchleiste gestartet");
+  
+  // Hier kommt dein voller D3-Code hin (TopoJSON laden, svg zeichnen, .country-path usw.)
+  // WICHTIG: Stelle sicher, dass die Pfade die Klasse "country-path" haben und .on("click", ...) openModal aufruft.
 }
 
+// Starte die Karte
 init();
 </script>
 </body>
