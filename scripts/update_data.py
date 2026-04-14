@@ -20,7 +20,6 @@ import csv
 import io
 import json
 import os
-import time
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -68,13 +67,13 @@ def fetch_ecb_monthly():
         with urllib.request.urlopen(url, timeout=30) as response:
             text = response.read().decode("utf-8")
         reader = csv.reader(io.StringIO(text))
-        headers = next(reader)
+        next(reader)  # Skip header
         data = {}
         for row in reader:
             if len(row) < 6: continue
-            key = row[1] if len(row) > 1 else ""
-            period = row[4] if len(row) > 4 else ""
-            value = row[5] if len(row) > 5 else ""
+            key = row[1]
+            period = row[4]
+            value = row[5]
             if not key or not period or not value: continue
             if key not in data:
                 data[key] = {"labels": [], "total": []}
@@ -89,10 +88,8 @@ def fetch_ecb_monthly():
         print(f"ECB fetch failed: {e}")
         return {}
 
-def fetch_eurostat_annual():
-    return {}
-
 def fetch_rdw_netherlands():
+    # Hardcoded fallback for Netherlands
     return {
         "labels": [f"{y}-{m:02d}" for y in range(2015, 2027) for m in range(1,13)][:135],
         "total": [12000 + int(5000 * (i/50)) for i in range(135)]
@@ -100,6 +97,8 @@ def fetch_rdw_netherlands():
 
 def write_files(monthly, annual):
     changed = 0
+
+    # Load all overrides
     de_override = load_override("germany_monthly_override.json")
     be_override = load_override("belgium_monthly_override.json")
     lu_override = load_override("luxembourg_monthly_override.json")
@@ -160,7 +159,6 @@ def write_files(monthly, annual):
             source_monthly = "Statistics Estonia (monthly new registrations up to March 2026)"
         elif ecb_code == "LV" and lv_override:
             m = lv_override
-            print("[Override] Latvia monthly data protected")
             source_monthly = "CSDD / ACEA (monthly new registrations up to March 2026)"
 
         if m is None and ecb_code in monthly:
@@ -169,10 +167,9 @@ def write_files(monthly, annual):
         if m and m.get("labels") and m.get("total"):
             payload = {
                 "monthly": m,
-                "last_updated": NOW.isoformat()
+                "last_updated": NOW.isoformat(),
+                "source_monthly": source_monthly
             }
-            if source_monthly:
-                payload["source_monthly"] = source_monthly
 
             filepath = DATA_DIR / f"{name.lower().replace(' ', '_')}.json"
             with open(filepath, "w", encoding="utf-8") as f:
@@ -198,12 +195,12 @@ def main():
     print("=" * 60)
 
     monthly = fetch_ecb_monthly()
-    annual  = fetch_eurostat_annual()
+    annual  = {}
 
     rdw_nl = fetch_rdw_netherlands()
     if "NL" in monthly:
-        monthly["NL"]["labels"].extend(rdw_nl["labels"])
-        monthly["NL"]["total"].extend(rdw_nl["total"])
+        monthly["NL"]["labels"].extend(rdw_nl.get("labels", []))
+        monthly["NL"]["total"].extend(rdw_nl.get("total", []))
     else:
         monthly["NL"] = rdw_nl
 
