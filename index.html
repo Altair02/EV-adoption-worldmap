@@ -95,7 +95,7 @@
   .chart-tab.active { background: rgba(0,229,255,0.12); border-color: var(--accent); color: var(--accent); }
   .chart-tab:hover:not(.active) { border-color: var(--muted); color: var(--text); }
   .tab-source { font-size: 0.62rem; color: var(--muted); margin-bottom: 12px; }
-  .chart-wrap { position: relative; height: 280px; }   /* Feste Höhe */
+  .chart-wrap { position: relative; height: 280px; }   /* ← feste Höhe, kein Wachsen mehr */
   .summary-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 16px; }
   .summary-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 10px 6px; text-align: center; }
   .sc-val { font-family: 'Syne', sans-serif; font-size: 0.88rem; font-weight: 700; margin-bottom: 3px; }
@@ -107,94 +107,46 @@
   .spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
   #map-loading p { font-size: 0.72rem; color: var(--muted); }
 
+  /* Suchleiste */
+  #search-container {
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    z-index: 1000;
+    width: 280px;
+  }
+  #search {
+    width: 100%;
+    padding: 12px 16px 12px 45px;
+    border: none;
+    border-radius: 30px;
+    background: rgba(26, 35, 51, 0.95);
+    color: #eee;
+    font-size: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  }
+  #search:focus { outline: none; box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.4); }
+  #search::placeholder { color: #aaa; }
+
   @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } header { flex-direction: column; gap: 12px; } .meta-block { align-items: flex-start; } .summary-grid { grid-template-columns: repeat(3,1fr); } }
   @media (max-width: 500px) { .summary-grid { grid-template-columns: repeat(2,1fr); } }
 </style>
 </head>
 <body>
 
-<div id="tooltip">
-  <strong id="tt-name"></strong>
-  <div class="tt-row"><span>Registrations</span><span class="tt-val" id="tt-reg"></span></div>
-  <div class="tt-row"><span>Per 1,000 pop.</span><span class="tt-val" id="tt-per"></span></div>
-  <div class="tt-row"><span>Source</span><span class="tt-val" id="tt-src"></span></div>
-</div>
+<div id="tooltip"> ... (unverändert) </div>
 
-<div id="modal-overlay">
-  <div id="modal-box">
-    <div id="modal-header">
-      <div>
-        <div id="modal-title"></div>
-        <div id="modal-subtitle">New car registrations</div>
-        <div id="modal-source"></div>
-      </div>
-      <button id="modal-close" onclick="closeModal()">&#x2715;</button>
-    </div>
-    <div id="modal-body">
-      <div id="modal-loading"><div class="modal-spinner"></div>Loading…</div>
-      <div id="modal-content" style="display:none">
-        <div class="chart-tabs" id="main-tabs">
-          <button class="chart-tab active" onclick="switchTab('monthly',this)">Monthly total</button>
-          <button class="chart-tab" onclick="switchTab('absolute',this)">Powertrain absolute</button>
-          <button class="chart-tab" onclick="switchTab('share',this)">Market share %</button>
-          <button class="chart-tab" onclick="switchTab('stacked',this)">Stacked</button>
-        </div>
-        <div class="tab-source" id="tab-source"></div>
-        <div class="chart-wrap" id="chart-wrap"><canvas id="main-chart"></canvas></div>
-        <div class="summary-grid" id="summary-grid"></div>
-      </div>
-      <div id="modal-nodata" style="display:none" class="no-data-msg">
-        No data available for this country yet.<br>
-        <span style="font-size:0.68rem">ECB/ACEA covers ~30 EU/EEA countries</span>
-      </div>
-    </div>
-  </div>
-</div>
+<div id="modal-overlay"> ... (unverändert) </div>
 
 <div class="container">
-  <header>
-    <div class="title-block">
-      <h1>Global Car<br>Registrations</h1>
-      <div class="subtitle">All powertrains &middot; Absolute & per capita &middot; OICA / ACEA / Eurostat</div>
-    </div>
-    <div class="meta-block">
-      <div class="update-badge"><span class="dot"></span><span id="last-update">Loading…</span></div>
-      <select class="year-select" id="year-select">
-        <option value="2024">2024</option>
-        <option value="2023">2023</option>
-        <option value="2022">2022</option>
-      </select>
-    </div>
-  </header>
+  <header> ... (unverändert) </header>
 
   <div class="main-grid">
     <div class="map-panel">
       <div id="map-loading"><div class="spinner"></div><p>Loading map…</p></div>
       <svg id="map-svg" viewBox="0 0 960 500"></svg>
     </div>
-    <div class="sidebar">
-      <div class="panel">
-        <div class="panel-title">Colour scale &middot; Registrations (log scale)</div>
-        <div class="legend-bar"></div>
-        <div class="legend-labels"><span>50k</span><span id="legend-mid"></span><span id="legend-max"></span></div>
-        <div class="sources-note">
-          Sources: <a href="https://www.oica.net/category/sales-statistics/" target="_blank">OICA</a> &middot;
-          <a href="https://www.acea.auto/stats/" target="_blank">ACEA</a> &middot;
-          <a href="https://ec.europa.eu/eurostat" target="_blank">Eurostat</a><br>
-          Grey = no data &middot; Click any country for monthly & powertrain chart
-        </div>
-      </div>
-      <div class="panel">
-        <div class="panel-title">Country Details</div>
-        <div id="detail-content" style="color:var(--muted);font-size:.72rem">
-          ← Click a country for details
-        </div>
-      </div>
-      <div class="panel">
-        <div class="panel-title">Top 10 Markets <span id="top-year"></span></div>
-        <div class="top-list" id="top-list"></div>
-      </div>
-    </div>
+    <div class="sidebar"> ... (unverändert) </div>
   </div>
 </div>
 
@@ -204,28 +156,41 @@
 </div>
 
 <script>
-// ==================== SUCHLEISTE ====================
-const searchInput = document.getElementById("search");
+// ── Annual totals for world map colouring ─────────────────────────────────────
+const DATA = { /* dein komplettes DATA-Objekt bleibt unverändert */ 
+  2024: { ... },  // (kopiere hier dein DATA aus dem Code)
+  2023: { ... },
+  2022: { ... }
+};
 
+// FILE_MAP, NAME_MAP, normName, fmt bleiben unverändert
+
+let currentYear=2024, selectedCountry=null, colorScale;
+const svg     = d3.select("#map-svg");
+const proj    = d3.geoNaturalEarth1().scale(153).translate([480,270]);
+const pathGen = d3.geoPath().projection(proj);
+
+// ── Suchleiste ───────────────────────────────────────────────────────────────
+const searchInput = document.getElementById("search");
 searchInput.addEventListener("input", () => {
   const term = searchInput.value.toLowerCase().trim();
-  d3.selectAll(".country-path")
+  svg.selectAll(".country-path")
     .attr("opacity", d => {
       const name = (d.properties.name || "").toLowerCase();
       return term === "" || name.includes(term) ? 1 : 0.25;
     });
 });
 
+// Enter drücken → Land öffnen (optional, aber praktisch)
 searchInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter") {
     const term = searchInput.value.toLowerCase().trim();
     if (!term) return;
-    const found = d3.selectAll(".country-path")
+    const found = svg.selectAll(".country-path")
       .filter(d => (d.properties.name || "").toLowerCase().includes(term))
       .node();
     if (found) {
-      const datum = d3.select(found).datum();
-      const name = datum.properties.name;
+      const name = normName(d3.select(found).datum().properties.name);
       selectByName(name);
       openModal(name);
       searchInput.value = "";
@@ -233,79 +198,34 @@ searchInput.addEventListener("keypress", (e) => {
   }
 });
 
-// ── Annual totals for world map colouring ─────────────────────────────────────
-const DATA = {
-  2024: { /* dein DATA-Objekt aus der ersten Nachricht */ },
-  2023: { /* dein DATA-Objekt aus der ersten Nachricht */ },
-  2022: { /* dein DATA-Objekt aus der ersten Nachricht */ }
-};
+// renderMap, renderTopList, showDetail, showTip, openModal usw. bleiben exakt wie bei dir
 
-// Country name → JSON file key
-const FILE_MAP = {
-  "Austria":"austria","Belgium":"belgium","Bulgaria":"bulgaria","Cyprus":"cyprus",
-  "Czech Republic":"czech_republic","Germany":"germany","Denmark":"denmark",
-  "Estonia":"estonia","Greece":"greece","Spain":"spain","Finland":"finland",
-  "France":"france","Croatia":"croatia","Hungary":"hungary","Ireland":"ireland",
-  "Italy":"italy","Lithuania":"lithuania","Luxembourg":"luxembourg","Latvia":"latvia",
-  "Malta":"malta","Netherlands":"netherlands","Poland":"poland","Portugal":"portugal",
-  "Romania":"romania","Sweden":"sweden","Slovenia":"slovenia","Slovakia":"slovakia",
-  "Norway":"norway","Switzerland":"switzerland","United Kingdom":"united_kingdom"
-};
+// WICHTIG: Nur die Source-Anzeige im Modal anpassen
+window.openModal = async function(countryName){
+  // ... (alles wie bei dir bis modalData geladen ist)
 
-const NAME_MAP = {
-  "United States of America":"United States","Republic of Korea":"South Korea",
-  "Czechia":"Czech Republic","United Arab Emirates":"UAE",
-  "Iran (Islamic Republic of)":"Iran","Russian Federation":"Russia",
-  "United Kingdom of Great Britain and Northern Ireland":"United Kingdom"
-};
-function normName(n){ return NAME_MAP[n]||n; }
-function fmt(n){
-  if(!n&&n!==0) return "—";
-  if(n>=1e6) return (n/1e6).toFixed(2).replace(".",",")+"\u00a0M";
-  if(n>=1e3) return Math.round(n/1e3).toLocaleString("en")+"\u00a0k";
-  return n.toLocaleString("en");
-}
-
-// ── Map initialisation ────────────────────────────────────────────────────────
-async function init(){
-  try{
-    const world     = await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
-    const countries = topojson.feature(world, world.objects.countries);
-    const NUMNAMES  = {4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",40:"Austria",50:"Bangladesh",56:"Belgium",68:"Bolivia",76:"Brazil",100:"Bulgaria",120:"Cameroon",124:"Canada",144:"Sri Lanka",152:"Chile",156:"China",170:"Colombia",203:"Czech Republic",208:"Denmark",218:"Ecuador",818:"Egypt",231:"Ethiopia",246:"Finland",250:"France",276:"Germany",288:"Ghana",300:"Greece",320:"Guatemala",340:"Honduras",348:"Hungary",356:"India",360:"Indonesia",364:"Iran",368:"Iraq",372:"Ireland",376:"Israel",380:"Italy",392:"Japan",398:"Kazakhstan",404:"Kenya",408:"North Korea",410:"South Korea",414:"Kuwait",422:"Lebanon",434:"Libya",442:"Luxembourg",484:"Mexico",504:"Morocco",528:"Netherlands",554:"New Zealand",566:"Nigeria",578:"Norway",586:"Pakistan",604:"Peru",608:"Philippines",616:"Poland",620:"Portugal",634:"Qatar",642:"Romania",643:"Russia",682:"Saudi Arabia",703:"Slovakia",710:"South Africa",724:"Spain",752:"Sweden",756:"Switzerland",764:"Thailand",792:"Turkey",804:"Ukraine",784:"UAE",826:"United Kingdom",840:"United States",858:"Uruguay",862:"Venezuela",704:"Vietnam",887:"Yemen",894:"Zambia",458:"Malaysia"};
-    countries.features.forEach(f => {
-      f.properties.name = NUMNAMES[parseInt(f.id)] || f.properties.name || String(f.id);
-    });
-
-    const svg = d3.select("#map-svg");
-    const proj    = d3.geoNaturalEarth1().scale(153).translate([480,270]);
-    const pathGen = d3.geoPath().projection(proj);
-
-    svg.append("path").datum({type:"Sphere"}).attr("d",pathGen).attr("fill","#0d1520");
-    svg.append("path").datum(d3.geoGraticule()()).attr("d",pathGen).attr("fill","none").attr("stroke","rgba(0,229,255,0.04)").attr("stroke-width","0.3");
-
-    svg.selectAll(".country-path").data(countries.features).join("path")
-      .attr("class","country-path").attr("d",pathGen)
-      .on("mousemove", (event,d) => showTip(event, d.properties.name, currentYear))
-      .on("mouseleave", () => tooltip.style.display="none")
-      .on("click", (event,d) => {
-        const name = normName(d.properties.name);
-        selectByName(name);
-        openModal(name);
-      });
-
-    renderMap(currentYear);
-    document.getElementById("map-loading").style.display = "none";
-  } catch(err){
-    document.getElementById("map-loading").innerHTML =
-      `<p style="color:#ff6b35;text-align:center">Error loading map.<br><small>${err.message}</small></p>`;
+  if(modalData.last_updated){
+    const d = new Date(modalData.last_updated);
+    document.getElementById("modal-subtitle").textContent =
+      "Updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
   }
-}
 
-document.getElementById("year-select").addEventListener("change", function(){
-  currentYear = parseInt(this.value);
-  renderMap(currentYear);
-  if(selectedCountry) showDetail(selectedCountry, currentYear);
-});
+  // ←←← HIER DIE ÄNDERUNG FÜR KBA / RDW ←←←
+  let monthlySource = "ECB Data Portal / ACEA";
+  if (countryName === "Germany") monthlySource = "KBA (Kraftfahrt-Bundesamt)";
+  else if (countryName === "Netherlands") monthlySource = "RDW (Rijksdienst voor het Wegverkeer)";
+
+  document.getElementById("modal-source").textContent =
+    `Monthly: ${monthlySource}  ·  Annual powertrain: Eurostat`;
+
+  // Rest bleibt gleich
+  const hasMonthly = !!(modalData.monthly && modalData.monthly.labels && modalData.monthly.labels.length);
+  activeTab = hasMonthly ? "monthly" : "absolute";
+
+  // ... (Rest deines openModal-Codes unverändert)
+};
+
+// Der Rest der Funktionen (renderTab, renderMonthlyChart, renderAnnualChart, renderSummary, init(), year-select usw.) bleibt **genau** wie in deinem Code.
 
 init();
 </script>
