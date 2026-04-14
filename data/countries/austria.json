@@ -4,7 +4,7 @@
   "population_mio": 9.1,
   "source_monthly": "ECB Data Portal / ACEA (monthly country data available until Dec 2022)",
   "source_annual": "Eurostat road_eqr_carpda",
-  "last_updated": "2026-04-14T01:18:39.536972+00:00",
+  "last_updated": "2026-04-14T01:34:36.373972+00:00",
   "monthly": {
     "labels": [
       "2015-01",
