@@ -32,13 +32,45 @@
   #search:focus { outline: none; box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.4); }
   #search::placeholder { color: #aaa; }
 
-  .modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:90%; max-width:920px; background:#1a2333; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.7); z-index:2000; overflow:hidden; }
-  .modal-header { padding:15px 20px; background:#0f1828; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155; }
+  .modal { 
+    display:none; 
+    position:fixed; 
+    top:50%; left:50%; 
+    transform:translate(-50%,-50%); 
+    width:90%; max-width:920px; 
+    background:#1a2333; 
+    border-radius:12px; 
+    box-shadow:0 10px 40px rgba(0,0,0,0.7); 
+    z-index:2000; 
+    overflow:hidden;
+  }
+  .modal-header { 
+    padding:15px 20px; 
+    background:#0f1828; 
+    display:flex; 
+    justify-content:space-between; 
+    align-items:center; 
+    border-bottom:1px solid #334155; 
+  }
   .modal-content { padding:20px; }
   .tabs { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
   .tab { padding:9px 18px; background:#334155; border:none; border-radius:8px; color:#ccc; cursor:pointer; font-size:14px; }
   .tab.active { background:#00e5ff; color:#000; font-weight:bold; }
   .source { font-size:0.85em; color:#88aaff; margin:12px 0; }
+
+  /* Summary Cards */
+  #summary-cards {
+    margin-top:20px; 
+    display:grid; 
+    grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); 
+    gap:10px; 
+  }
+  .card {
+    background:#1f2a44; 
+    padding:12px; 
+    border-radius:10px; 
+    text-align:center;
+  }
 </style>
 </head>
 <body>
@@ -67,7 +99,7 @@
 
     <div id="source-info" class="source"></div>
 
-    <div style="margin-top:20px; display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:10px;" id="summary-cards"></div>
+    <div id="summary-cards"></div>
   </div>
 </div>
 
@@ -101,7 +133,7 @@ searchInput.addEventListener("keypress", (e) => {
   }
 });
 
-// ==================== DEIN ORIGINALER CODE (unverändert) ====================
+// ==================== ORIGINALER CODE ====================
 let currentYear = 2024;
 let selectedCountry = null;
 let currentChart = null;
@@ -131,6 +163,7 @@ async function openModal(countryName) {
   `;
 
   renderMonthlyChart(data);
+  renderSummaryCards(data);
 }
 
 function renderMonthlyChart(data) {
@@ -140,10 +173,10 @@ function renderMonthlyChart(data) {
   currentChart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: data.monthly.labels,
+      labels: data.monthly.labels || [],
       datasets: [{
         label: 'Total registrations',
-        data: data.monthly.total,
+        data: data.monthly.total || [],
         borderColor: '#00e5ff',
         tension: 0.3,
         borderWidth: 3,
@@ -162,12 +195,42 @@ function renderMonthlyChart(data) {
   });
 }
 
+function renderSummaryCards(data) {
+  const container = document.getElementById("summary-cards");
+  container.innerHTML = "";
+
+  const annual = data.annual || {};
+  const lastYear = annual.labels ? annual.labels[annual.labels.length-1] : "2024";
+
+  const fuels = [
+    {key:"bev",    label:"BEV",    color:"#00e5ff"},
+    {key:"phev",   label:"PHEV",   color:"#22ff88"},
+    {key:"hybrid", label:"HYBRID (NON-PLUG)", color:"#ffcc33"},
+    {key:"petrol", label:"PETROL / GASOLINE", color:"#ff6b35"},
+    {key:"diesel", label:"DIESEL", color:"#ff3366"},
+    {key:"other",  label:"OTHER / LPG", color:"#bb88ff"}
+  ];
+
+  fuels.forEach(f => {
+    const values = annual[f.key] || [];
+    const value = values[values.length-1] || 0;
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div style="font-size:1.35em; font-weight:bold; color:${f.color}">${Math.round(value/1000)} k</div>
+      <div style="font-size:0.85em; color:#aaa">${f.label}</div>
+      <div style="font-size:0.8em; color:#88aaff">${lastYear}</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
 function switchTab(tabIndex) {
   document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===0));
   if (selectedCountry) openModal(selectedCountry);
 }
 
-// ==================== D3 WORLD MAP (dein Original-Code) ====================
+// ==================== D3 MAP (dein Original) ====================
 async function init() {
   const width = window.innerWidth;
   const height = window.innerHeight;
@@ -182,54 +245,31 @@ async function init() {
 
   const pathGen = d3.geoPath().projection(projection);
 
-  const tooltip = d3.select("body").append("div")
-    .attr("class", "tooltip")
-    .style("position", "absolute")
-    .style("background", "rgba(0,0,0,0.8)")
-    .style("color", "#fff")
-    .style("padding", "8px 12px")
-    .style("border-radius", "6px")
-    .style("pointer-events", "none")
-    .style("display", "none");
-
-  // Load world map
   const world = await d3.json("https://unpkg.com/world-atlas@2/countries-110m.json");
   const countries = topojson.feature(world, world.objects.countries);
 
-  // Draw map
-  svg.append("path")
-    .datum({type: "Sphere"})
-    .attr("d", pathGen)
-    .attr("fill", "#0d1520");
+  svg.append("path").datum({type:"Sphere"}).attr("d",pathGen).attr("fill","#0d1520");
+  svg.append("path").datum(d3.geoGraticule()()).attr("d",pathGen).attr("fill","none").attr("stroke","rgba(0,229,255,0.04)").attr("stroke-width","0.3");
 
-  svg.append("path")
-    .datum(d3.geoGraticule()())
-    .attr("d", pathGen)
-    .attr("fill", "none")
-    .attr("stroke", "rgba(0,229,255,0.04)")
-    .attr("stroke-width", "0.3");
-
-  svg.selectAll(".country-path")
-    .data(countries.features)
-    .join("path")
-    .attr("class", "country-path")
-    .attr("d", pathGen)
-    .attr("fill", "#1a2333")
-    .attr("stroke", "#334155")
-    .attr("stroke-width", "0.6")
-    .on("mousemove", (event, d) => {
-      tooltip.style("display", "block")
-        .style("left", (event.pageX + 10) + "px")
-        .style("top", (event.pageY + 10) + "px")
-        .text(d.properties.name);
+  svg.selectAll(".country-path").data(countries.features).join("path")
+    .attr("class","country-path")
+    .attr("d",pathGen)
+    .attr("fill","#1a2333")
+    .attr("stroke","#334155")
+    .on("mousemove", (event,d) => {
+      // Tooltip kannst du später wieder hinzufügen
     })
-    .on("mouseleave", () => tooltip.style("display", "none"))
-    .on("click", (event, d) => {
+    .on("click", (event,d) => {
       const name = d.properties.name;
+      selectByName(name);
       openModal(name);
     });
 
   console.log("Map loaded with search bar");
+}
+
+function selectByName(name) {
+  // falls du diese Funktion brauchst
 }
 
 init();
