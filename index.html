@@ -495,7 +495,6 @@ window.openModal = async function(countryName){
         "Updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
     }
 
-    // Dynamische Quelle aus JSON (respektiert Overrides für BE, LU, DE etc.)
     const monthlySource = modalData.source_monthly || "ECB Data Portal / ACEA";
     document.getElementById("modal-source").textContent =
       `Monthly: ${monthlySource}  ·  Annual powertrain: Eurostat`;
