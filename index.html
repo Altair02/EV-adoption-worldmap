@@ -113,7 +113,7 @@
 
 <!-- Suchleiste -->
 <div id="search-container">
-  <input type="text" id="search" placeholder="Country search (e.g. Luxembourg, Germany...)" autocomplete="off">
+  <input type="text" id="search" placeholder="Country search" autocomplete="off">
 </div>
 
 <div id="modal" class="modal">
@@ -170,9 +170,9 @@ searchInput.addEventListener("keypress", (e) => {
   }
 });
 
-// ==================== DEIN RESTLICHER CODE (Modal, Chart, Map) ====================
-// Hier kommt dein bisheriger Code für openModal, renderMonthlyChart, init() usw. hin.
-// (kopiere einfach den Rest deines alten index.html Codes ab <script> hierher)
+// ==================== DEIN RESTLICHER CODE ====================
+// Hier kommt dein kompletter bisheriger Map-, Modal- und Chart-Code hin
+// (openModal, renderMonthlyChart, init() usw.)
 
 async function openModal(countryName) {
   // ... dein bisheriger openModal Code ...
@@ -181,8 +181,6 @@ async function openModal(countryName) {
 function renderMonthlyChart(data) {
   // ... dein bisheriger Chart Code ...
 }
-
-// Dein D3 Map Init Code (init()) bleibt gleich – nur die Suchleiste wurde hinzugefügt.
 
 function init() {
   // Dein kompletter D3 Map Code hier...
