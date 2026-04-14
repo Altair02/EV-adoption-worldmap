@@ -1,5 +1,5 @@
 """
-scripts/update_data.py  —  v31 (Override protection for DE + BE + LU + FR + ES + PT + GB + IE + IS + NO + SE + FI + EE + LV)
+scripts/update_data.py  —  v32 (Override protection for DE + BE + LU + FR + ES + PT + GB + IE + IS + NO + SE + FI + EE + LV + LT)
 - Germany:      KBA Override
 - Belgium:      FEBIAC Override (until March 2026)
 - Luxembourg:   STATEC / SNCA / ACEA Override (until March 2026)
@@ -14,6 +14,7 @@ scripts/update_data.py  —  v31 (Override protection for DE + BE + LU + FR + ES
 - Finland:      Traficom / Statistics Finland Override (until March 2026)
 - Estonia:      Statistics Estonia Override (until March 2026)
 - Latvia:       CSDD / ACEA Override (until March 2026)
+- Lithuania:    Statistics Lithuania / ACEA Override (until March 2026)
 """
 
 import csv
@@ -89,7 +90,6 @@ def fetch_ecb_monthly():
         return {}
 
 def fetch_rdw_netherlands():
-    # Hardcoded fallback for Netherlands
     return {
         "labels": [f"{y}-{m:02d}" for y in range(2015, 2027) for m in range(1,13)][:135],
         "total": [12000 + int(5000 * (i/50)) for i in range(135)]
@@ -98,7 +98,6 @@ def fetch_rdw_netherlands():
 def write_files(monthly, annual):
     changed = 0
 
-    # Load all overrides
     de_override = load_override("germany_monthly_override.json")
     be_override = load_override("belgium_monthly_override.json")
     lu_override = load_override("luxembourg_monthly_override.json")
@@ -113,6 +112,7 @@ def write_files(monthly, annual):
     fi_override = load_override("finland_monthly_override.json")
     ee_override = load_override("estonia_monthly_override.json")
     lv_override = load_override("latvia_monthly_override.json")
+    lt_override = load_override("lithuania_monthly_override.json")
 
     for ecb_code, (name, _, _) in COUNTRIES.items():
         m = None
@@ -160,6 +160,9 @@ def write_files(monthly, annual):
         elif ecb_code == "LV" and lv_override:
             m = lv_override
             source_monthly = "CSDD / ACEA (monthly new registrations up to March 2026)"
+        elif ecb_code == "LT" and lt_override:
+            m = lt_override
+            source_monthly = "Statistics Lithuania / ACEA (monthly new registrations up to March 2026)"
 
         if m is None and ecb_code in monthly:
             m = monthly[ecb_code]
@@ -191,7 +194,7 @@ def send_telegram(changed, total_countries, latest):
 
 def main():
     print("=" * 60)
-    print(f"  Car Registration Updater v31  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
+    print(f"  Car Registration Updater v32  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
     print("=" * 60)
 
     monthly = fetch_ecb_monthly()
@@ -207,7 +210,7 @@ def main():
     changed = write_files(monthly, annual)
     latest  = max((v["labels"][-1] for v in monthly.values() if v.get("labels")), default="2022-12")
     send_telegram(changed, len(COUNTRIES), latest)
-    print("\n✓ Done – Overrides for DE, BE, LU, FR, ES, PT, GB, IE, IS, NO, SE, FI, EE + LV active (data up to March 2026)")
+    print("\n✓ Done – Overrides for DE, BE, LU, FR, ES, PT, GB, IE, IS, NO, SE, FI, EE, LV + LT active (data up to March 2026)")
 
 if __name__ == "__main__":
     main()
