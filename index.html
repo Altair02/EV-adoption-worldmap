@@ -107,6 +107,18 @@
   .spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
   #map-loading p { font-size: 0.72rem; color: var(--muted); }
 
+  /* Search */
+  .search-wrap { position: relative; }
+  .search-input { width: 100%; padding: 8px 12px 8px 32px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.72rem; outline: none; transition: border-color .15s; }
+  .search-input::placeholder { color: var(--muted); }
+  .search-input:focus { border-color: var(--accent); background: rgba(0,229,255,0.04); }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 0.75rem; pointer-events: none; }
+  .search-results { margin-top: 6px; display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto; }
+  .search-result-item { padding: 7px 10px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; border: 1px solid transparent; display: flex; justify-content: space-between; align-items: center; transition: all .12s; }
+  .search-result-item:hover { background: rgba(0,229,255,0.06); border-color: var(--border); }
+  .search-result-item .sr-name { color: var(--text); }
+  .search-result-item .sr-share { color: var(--accent); font-size: 0.65rem; }
+
   @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } header { flex-direction: column; gap: 12px; } .meta-block { align-items: flex-start; } .summary-grid { grid-template-columns: repeat(3,1fr); } }
   @media (max-width: 500px) { .summary-grid { grid-template-columns: repeat(2,1fr); } }
 </style>
@@ -173,6 +185,14 @@
       <svg id="map-svg" viewBox="0 0 960 500"></svg>
     </div>
     <div class="sidebar">
+      <div class="panel">
+        <div class="panel-title">Search Country</div>
+        <div class="search-wrap">
+          <span class="search-icon">&#x1F50D;</span>
+          <input class="search-input" id="country-search" type="text" placeholder="e.g. Norway, Malta, Estonia&hellip;" autocomplete="off">
+        </div>
+        <div class="search-results" id="search-results"></div>
+      </div>
       <div class="panel">
         <div class="panel-title">BEV Market Share &middot; % of new registrations</div>
         <div class="legend-bar"></div>
@@ -646,6 +666,66 @@ function renderSummary(data){
 }
 
 // ── Map initialisation ────────────────────────────────────────────────────────
+// ── Country search ────────────────────────────────────────────────────────────
+(function(){
+  const input   = document.getElementById("country-search");
+  const results = document.getElementById("search-results");
+
+  // All country names: DATA + FILE_MAP combined
+  function allCountries(){
+    const set = new Set([
+      ...Object.keys(DATA[currentYear]),
+      ...Object.keys(FILE_MAP),
+    ]);
+    return Array.from(set).sort();
+  }
+
+  input.addEventListener("input", function(){
+    const q = this.value.trim().toLowerCase();
+    results.innerHTML = "";
+    if(!q) return;
+
+    const matches = allCountries().filter(n => n.toLowerCase().includes(q)).slice(0, 8);
+    if(!matches.length){
+      results.innerHTML = `<div style="font-size:.68rem;color:var(--muted);padding:6px 10px">No results</div>`;
+      return;
+    }
+
+    matches.forEach(name => {
+      const ev   = (EV_SHARE[currentYear]||{})[name];
+      const total= (DATA[currentYear][name]||[])[0];
+      const item = document.createElement("div");
+      item.className = "search-result-item";
+      item.innerHTML = `
+        <span class="sr-name">${name}</span>
+        <span class="sr-share">${ev != null ? ev.toFixed(1)+"% BEV" : total ? fmt(total) : ""}</span>`;
+      item.addEventListener("click", () => {
+        input.value = "";
+        results.innerHTML = "";
+        selectByName(name);
+        openModal(name);
+      });
+      results.appendChild(item);
+    });
+  });
+
+  // Hide results when clicking outside
+  document.addEventListener("click", function(e){
+    if(!e.target.closest(".search-wrap") && !e.target.closest(".search-results")){
+      results.innerHTML = "";
+    }
+  });
+
+  // Navigate with keyboard
+  input.addEventListener("keydown", function(e){
+    const items = results.querySelectorAll(".search-result-item");
+    if(!items.length) return;
+    if(e.key === "Enter"){
+      items[0].click();
+    }
+  });
+})();
+
 async function init(){
   try{
     const world     = await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
