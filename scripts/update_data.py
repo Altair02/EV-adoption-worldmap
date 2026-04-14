@@ -1,7 +1,8 @@
 """
-scripts/update_data.py  —  v21 (Override-Schutz für DE + BE + RDW NL)
+scripts/update_data.py  —  v22 (Override-Schutz für DE + BE + LU)
 - Deutschland: KBA Override
 - Belgien:     FEBIAC Override (bis März 2026)
+- Luxemburg:   STATEC / SNCA / ACEA Override (bis März 2026)
 - Niederlande: RDW
 """
 
@@ -51,7 +52,7 @@ FUEL_MAP_FALLBACK = {
 }
 
 def http_get(url, timeout=30):
-    req = urllib.request.Request(url, headers={"User-Agent": "EV-Map-Bot/21.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "EV-Map-Bot/22.0"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read()
 
@@ -208,6 +209,7 @@ def write_files(monthly, annual):
     changed = []
     de_override = load_override("germany_monthly_override.json")
     be_override = load_override("belgium_monthly_override.json")
+    lu_override = load_override("luxembourg_monthly_override.json")   # ← Luxemburg
 
     for ecb_code, (name, estat_code, pop) in COUNTRIES.items():
         m = monthly.get(ecb_code, {})
@@ -218,6 +220,9 @@ def write_files(monthly, annual):
         elif ecb_code == "BE" and be_override:
             m = be_override
             print("[Override] Belgien monatliche Daten geschützt")
+        elif ecb_code == "LU" and lu_override:                    # ← Luxemburg
+            m = lu_override
+            print("[Override] Luxemburg monatliche Daten geschützt")
 
         a = annual.get(ecb_code, {})
         years = sorted(a.keys()) if a else []
@@ -238,6 +243,8 @@ def write_files(monthly, annual):
             source_monthly = "RDW (monatliche Neuzulassungen ab Jan 2015 bis März 2026)"
         elif ecb_code == "BE":
             source_monthly = "FEBIAC / FPS Mobility (monatliche Neuzulassungen bis März 2026)"
+        elif ecb_code == "LU":                                      # ← Luxemburg
+            source_monthly = "STATEC / SNCA / ACEA (monatliche Neuzulassungen bis März 2026)"
         else:
             source_monthly = "ECB Data Portal / ACEA"
 
@@ -296,7 +303,7 @@ def send_telegram(changed, n_countries, latest_month):
 
 def main():
     print("=" * 60)
-    print(f"  Car Registration Updater v21  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
+    print(f"  Car Registration Updater v22  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
     print("=" * 60)
 
     monthly = fetch_ecb_monthly()
@@ -312,7 +319,7 @@ def main():
     changed = write_files(monthly, annual)
     latest  = max((v["labels"][-1] for v in monthly.values() if v.get("labels")), default="2022-12")
     send_telegram(changed, len(COUNTRIES), latest)
-    print("\n✓ Fertig – Belgien jetzt mit FEBIAC Quelle und Daten bis März 2026!")
+    print("\n✓ Fertig – Overrides für DE, BE + LU aktiv (Daten bis März 2026)")
 
 if __name__ == "__main__":
     main()
