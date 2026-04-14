@@ -218,8 +218,8 @@ const DATA = {
     "Portugal":[220000,10,"ACEA/ACAP"],"Czech Republic":[240000,11,"ACEA/SDA"],
     "UAE":[350000,10,"OICA"],"Pakistan":[200000,231,"PAMA"]
   },
-  2023: { /* Füge hier dein vollständiges 2023 DATA ein */ },
-  2022: { /* Füge hier dein vollständiges 2022 DATA ein */ }
+  2023: { /* dein vollständiges 2023 DATA hier einfügen */ },
+  2022: { /* dein vollständiges 2022 DATA hier einfügen */ }
 };
 
 const FILE_MAP = {
@@ -372,6 +372,7 @@ function resetWrap(){
   if(w) w.innerHTML = '<canvas id="main-chart"></canvas>';
 }
 
+// Deine angegebene openModal-Funktion (mit KBA/RDW)
 window.openModal = async function(countryName){
   const overlay = document.getElementById("modal-overlay");
   const content = document.getElementById("modal-content");
@@ -399,7 +400,7 @@ window.openModal = async function(countryName){
         "Updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
     }
 
-    // === KBA und RDW Quelle ===
+    // KBA / RDW Quelle
     let monthlySource = "ECB Data Portal / ACEA";
     if (countryName === "Germany") monthlySource = "KBA (Kraftfahrt-Bundesamt)";
     else if (countryName === "Netherlands") monthlySource = "RDW (Rijksdienst voor het Wegverkeer)";
