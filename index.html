@@ -8,19 +8,8 @@
 <script src="https://unpkg.com/topojson@3"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-  body { 
-    margin:0; 
-    font-family: system-ui, sans-serif; 
-    background:#0d1520; 
-    color:#eee; 
-    overflow:hidden; 
-  }
-  
-  #map { 
-    width:100vw; 
-    height:100vh; 
-    background:#0d1520; 
-  }
+  body { margin:0; font-family: system-ui, sans-serif; background:#0d1520; color:#eee; overflow:hidden; }
+  #map { width:100vw; height:100vh; background:#0d1520; }
 
   /* Suchleiste */
   #search-container {
@@ -30,7 +19,6 @@
     z-index: 1000;
     width: 320px;
   }
-  
   #search {
     width: 100%;
     padding: 12px 16px 12px 45px;
@@ -41,70 +29,16 @@
     font-size: 16px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.4);
   }
-  
-  #search:focus { 
-    outline: none; 
-    box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.4); 
-  }
-  
-  #search::placeholder { 
-    color: #aaa; 
-  }
+  #search:focus { outline: none; box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.4); }
+  #search::placeholder { color: #aaa; }
 
-  .modal { 
-    display:none; 
-    position:fixed; 
-    top:50%; 
-    left:50%; 
-    transform:translate(-50%,-50%); 
-    width:90%; 
-    max-width:920px; 
-    background:#1a2333; 
-    border-radius:12px; 
-    box-shadow:0 10px 40px rgba(0,0,0,0.7); 
-    z-index:2000; 
-    overflow:hidden;
-  }
-  
-  .modal-header { 
-    padding:15px 20px; 
-    background:#0f1828; 
-    display:flex; 
-    justify-content:space-between; 
-    align-items:center; 
-    border-bottom:1px solid #334155; 
-  }
-  
+  .modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:90%; max-width:920px; background:#1a2333; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.7); z-index:2000; overflow:hidden; }
+  .modal-header { padding:15px 20px; background:#0f1828; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155; }
   .modal-content { padding:20px; }
-  
-  .tabs { 
-    display:flex; 
-    gap:8px; 
-    margin-bottom:20px; 
-    flex-wrap:wrap; 
-  }
-  
-  .tab { 
-    padding:9px 18px; 
-    background:#334155; 
-    border:none; 
-    border-radius:8px; 
-    color:#ccc; 
-    cursor:pointer; 
-    font-size:14px;
-  }
-  
-  .tab.active { 
-    background:#00e5ff; 
-    color:#000; 
-    font-weight:bold; 
-  }
-  
-  .source { 
-    font-size:0.85em; 
-    color:#88aaff; 
-    margin:12px 0; 
-  }
+  .tabs { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+  .tab { padding:9px 18px; background:#334155; border:none; border-radius:8px; color:#ccc; cursor:pointer; font-size:14px; }
+  .tab.active { background:#00e5ff; color:#000; font-weight:bold; }
+  .source { font-size:0.85em; color:#88aaff; margin:12px 0; }
 </style>
 </head>
 <body>
@@ -154,11 +88,9 @@ searchInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter") {
     const term = searchInput.value.toLowerCase().trim();
     if (!term) return;
-
     const found = d3.selectAll(".country-path")
       .filter(d => (d.properties.name || "").toLowerCase().includes(term))
       .node();
-
     if (found) {
       const datum = d3.select(found).datum();
       const name = datum.properties.name;
@@ -169,18 +101,137 @@ searchInput.addEventListener("keypress", (e) => {
   }
 });
 
-// ==================== DEIN ALTER MAP-CODE ====================
-// Füge hier deinen kompletten bisherigen D3-Map-Code ein (alles ab "let svg = ..." bis "init();")
+// ==================== DEIN ORIGINALER CODE (unverändert) ====================
+let currentYear = 2024;
+let selectedCountry = null;
+let currentChart = null;
 
-// Beispiel-Platzhalter – ersetze das mit deinem echten Map-Code:
-function init() {
-  console.log("EV Adoption World Map mit Suchleiste gestartet");
-  
-  // Hier kommt dein voller D3-Code hin (TopoJSON laden, svg zeichnen, .country-path usw.)
-  // WICHTIG: Stelle sicher, dass die Pfade die Klasse "country-path" haben und .on("click", ...) openModal aufruft.
+async function loadCountryData(name) {
+  const fileKey = name.toLowerCase().replace(/ /g, "_");
+  try {
+    const res = await fetch(`data/countries/${fileKey}.json`);
+    return await res.json();
+  } catch(e) {
+    console.error("Failed to load", name);
+    return null;
+  }
 }
 
-// Starte die Karte
+async function openModal(countryName) {
+  const data = await loadCountryData(countryName);
+  if (!data) return;
+
+  selectedCountry = countryName;
+  document.getElementById("modal-title").textContent = data.name;
+  document.getElementById("modal").style.display = "block";
+
+  document.getElementById("source-info").innerHTML = `
+    <strong>Monthly:</strong> ${data.source_monthly}<br>
+    <strong>Annual powertrain:</strong> ${data.source_annual}
+  `;
+
+  renderMonthlyChart(data);
+}
+
+function renderMonthlyChart(data) {
+  const ctx = document.getElementById("chart");
+  if (currentChart) currentChart.destroy();
+
+  currentChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.monthly.labels,
+      datasets: [{
+        label: 'Total registrations',
+        data: data.monthly.total,
+        borderColor: '#00e5ff',
+        tension: 0.3,
+        borderWidth: 3,
+        pointRadius: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { grid: { color: '#334155' }, ticks: { color: '#aaa' } },
+        x: { grid: { color: '#334155' }, ticks: { color: '#aaa', maxTicksLimit: 12 } }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+function switchTab(tabIndex) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===0));
+  if (selectedCountry) openModal(selectedCountry);
+}
+
+// ==================== D3 WORLD MAP (dein Original-Code) ====================
+async function init() {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  const svg = d3.select("#map").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+  const projection = d3.geoNaturalEarth1()
+    .scale(180)
+    .translate([width/2, height/2 + 20]);
+
+  const pathGen = d3.geoPath().projection(projection);
+
+  const tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("position", "absolute")
+    .style("background", "rgba(0,0,0,0.8)")
+    .style("color", "#fff")
+    .style("padding", "8px 12px")
+    .style("border-radius", "6px")
+    .style("pointer-events", "none")
+    .style("display", "none");
+
+  // Load world map
+  const world = await d3.json("https://unpkg.com/world-atlas@2/countries-110m.json");
+  const countries = topojson.feature(world, world.objects.countries);
+
+  // Draw map
+  svg.append("path")
+    .datum({type: "Sphere"})
+    .attr("d", pathGen)
+    .attr("fill", "#0d1520");
+
+  svg.append("path")
+    .datum(d3.geoGraticule()())
+    .attr("d", pathGen)
+    .attr("fill", "none")
+    .attr("stroke", "rgba(0,229,255,0.04)")
+    .attr("stroke-width", "0.3");
+
+  svg.selectAll(".country-path")
+    .data(countries.features)
+    .join("path")
+    .attr("class", "country-path")
+    .attr("d", pathGen)
+    .attr("fill", "#1a2333")
+    .attr("stroke", "#334155")
+    .attr("stroke-width", "0.6")
+    .on("mousemove", (event, d) => {
+      tooltip.style("display", "block")
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY + 10) + "px")
+        .text(d.properties.name);
+    })
+    .on("mouseleave", () => tooltip.style("display", "none"))
+    .on("click", (event, d) => {
+      const name = d.properties.name;
+      openModal(name);
+    });
+
+  console.log("Map loaded with search bar");
+}
+
 init();
 </script>
 </body>
