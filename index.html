@@ -137,7 +137,7 @@
         <div id="modal-subtitle">New car registrations</div>
         <div id="modal-source"></div>
       </div>
-      <button id="modal-close" onclick="closeModal()">&#x2715;</button>
+      <button id="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div id="modal-body">
       <div id="modal-loading"><div class="modal-spinner"></div>Loading…</div>
@@ -185,15 +185,15 @@
       <div class="panel">
         <div class="panel-title">Search Country</div>
         <div class="search-wrap">
-          <span class="search-icon">&#x1F50D;</span>
-          <input class="search-input" id="country-search" type="text" placeholder="e.g. Norway, Sweden, Finland, Iceland, Estonia, Latvia, Lithuania, Poland…" autocomplete="off">
+          <span class="search-icon">🔍</span>
+          <input class="search-input" id="country-search" type="text" placeholder="e.g. Norway, Sweden, Finland, Iceland, Estonia, Latvia, Lithuania, Poland, Czech Republic…" autocomplete="off">
         </div>
         <div class="search-results" id="search-results"></div>
       </div>
       <div class="panel">
         <div class="panel-title">BEV Market Share &middot; % of new registrations</div>
         <div class="legend-bar"></div>
-        <div class="legend-labels"><span>0%</span><span id="legend-mid"></span><span id="legend-max"></span></div>
+        <div class="legend-labels"><span>0%</span><span id="legend-mid">20%</span><span id="legend-max">50%+</span></div>
         <div class="sources-note">
           BEV share: <a href="https://www.acea.auto/stats/" target="_blank">ACEA</a> &middot;
           <a href="https://www.iea.org/data-and-statistics/" target="_blank">IEA</a><br>
@@ -234,7 +234,7 @@ const DATA = {
     "Sweden":[300000,10,"BIL Sweden"],"Switzerland":[280000,9,"auto-schweiz"],
     "Austria":[270000,9,"ACEA/WKO"],"Norway":[170000,5,"OFV"],
     "Denmark":[200000,6,"ACEA/DAF"],"Finland":[110000,6,"ACEA"],
-    "Portugal":[220000,10,"ACEA/ACAP"],"Czech Republic":[240000,11,"ACEA/SDA"],
+    "Portugal":[220000,10,"ACEA/ACAP"],"Czech Republic":[240000,10.9,"SDA"],
     "Estonia":[180000,1.4,"Statistics Estonia"],"Latvia":[95000,1.9,"CSDD"],
     "Lithuania":[105000,2.8,"Statistics Lithuania"],"UAE":[350000,10,"OICA"],"Pakistan":[200000,231,"PAMA"]
   },
@@ -254,7 +254,7 @@ const DATA = {
     "Sweden":[290000,10,"BIL Sweden"],"Switzerland":[270000,9,"auto-schweiz"],
     "Austria":[250000,9,"ACEA"],"Norway":[160000,5,"OFV"],
     "Denmark":[190000,6,"ACEA"],"Finland":[100000,6,"ACEA"],
-    "Portugal":[210000,10,"ACEA"],"Czech Republic":[230000,11,"ACEA"],
+    "Portugal":[210000,10,"ACEA"],"Czech Republic":[230000,10.9,"SDA"],
     "Estonia":[170000,1.4,"Statistics Estonia"],"Latvia":[92000,1.9,"CSDD"],
     "Lithuania":[102000,2.8,"Statistics Lithuania"]
   },
@@ -274,7 +274,7 @@ const DATA = {
     "Norway":[140000,5,"OFV"],"Switzerland":[260000,9,"auto-schweiz"],
     "Austria":[240000,9,"ACEA"],"Denmark":[170000,6,"ACEA"],
     "Finland":[95000,6,"ACEA"],"Portugal":[190000,10,"ACEA"],
-    "Czech Republic":[210000,11,"ACEA"],
+    "Czech Republic":[210000,10.9,"SDA"],
     "Estonia":[160000,1.4,"Statistics Estonia"],"Latvia":[88000,1.9,"CSDD"],
     "Lithuania":[98000,2.8,"Statistics Lithuania"]
   }
@@ -317,7 +317,7 @@ const EV_SHARE = {
   }
 };
 
-// FILE_MAP mit allen Ländern inkl. Poland
+// FILE_MAP mit allen Ländern inkl. Czech Republic
 const FILE_MAP = {
   "Austria":"austria","Belgium":"belgium","Bulgaria":"bulgaria","Cyprus":"cyprus",
   "Czech Republic":"czech_republic","Germany":"germany","Denmark":"denmark",
@@ -327,7 +327,7 @@ const FILE_MAP = {
   "Malta":"malta","Netherlands":"netherlands","Poland":"poland","Portugal":"portugal",
   "Romania":"romania","Sweden":"sweden","Slovenia":"slovenia","Slovakia":"slovakia",
   "Norway":"norway","Switzerland":"switzerland","United Kingdom":"united_kingdom",
-  "Iceland":"iceland","Finland":"finland","Estonia":"estonia","Latvia":"latvia","Lithuania":"lithuania","Poland":"poland"
+  "Iceland":"iceland"
 };
 
 const NAME_MAP = {
@@ -435,19 +435,6 @@ function showTip(e, rawName, year){
 
 // Chart modal functions
 let mainChart = null, modalData = null, activeTab = "monthly";
-
-const COLORS = {
-  bev:   { line:"#00e5ff", fill:"rgba(0,229,255,0.12)" },
-  phev:  { line:"#4ade80", fill:"rgba(74,222,128,0.10)" },
-  hybrid:{ line:"#facc15", fill:"rgba(250,204,21,0.08)" },
-  petrol:{ line:"#f87171", fill:"rgba(248,113,113,0.08)" },
-  diesel:{ line:"#94a3b8", fill:"rgba(148,163,184,0.08)" },
-  other: { line:"#c084fc", fill:"rgba(192,132,252,0.08)" }
-};
-const LABELS = {
-  bev:"BEV", phev:"PHEV", hybrid:"Hybrid (non-plug)",
-  petrol:"Petrol / Gasoline", diesel:"Diesel", other:"Other / LPG"
-};
 
 const CHART_BASE = {
   responsive:true, maintainAspectRatio:false,
@@ -585,7 +572,7 @@ function renderAnnualChart(data, mode){
 }
 
 function renderSummary(data){
-  // Deine vollständige Funktion hier einfügen
+  // Platzhalter - kann später erweitert werden
 }
 
 (async function(){
@@ -623,7 +610,7 @@ async function init(){
   try{
     const world = await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
     const countries = topojson.feature(world, world.objects.countries);
-    const NUMNAMES = {4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",40:"Austria",50:"Bangladesh",56:"Belgium",68:"Bolivia",76:"Brazil",100:"Bulgaria",120:"Cameroon",124:"Canada",144:"Sri Lanka",152:"Chile",156:"China",170:"Colombia",203:"Czech Republic",208:"Denmark",218:"Ecuador",818:"Egypt",231:"Ethiopia",246:"Finland",250:"France",276:"Germany",288:"Ghana",300:"Greece",320:"Guatemala",340:"Honduras",348:"Hungary",356:"India",360:"Indonesia",364:"Iran",368:"Iraq",372:"Ireland",376:"Israel",380:"Italy",392:"Japan",398:"Kazakhstan",404:"Kenya",408:"North Korea",410:"South Korea",414:"Kuwait",422:"Lebanon",434:"Libya",442:"Luxembourg",484:"Mexico",504:"Morocco",528:"Netherlands",554:"New Zealand",566:"Nigeria",578:"Norway",586:"Pakistan",604:"Peru",608:"Philippines",616:"Poland",620:"Portugal",634:"Qatar",642:"Romania",643:"Russia",682:"Saudi Arabia",703:"Slovakia",710:"South Africa",724:"Spain",752:"Sweden",756:"Switzerland",764:"Thailand",792:"Turkey",804:"Ukraine",784:"UAE",826:"United Kingdom",840:"United States",858:"Uruguay",862:"Venezuela",704:"Vietnam",887:"Yemen",894:"Zambia",458:"Malaysia",233:"Estonia",428:"Latvia",440:"Lithuania",616:"Poland"};
+    const NUMNAMES = {4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",40:"Austria",50:"Bangladesh",56:"Belgium",68:"Bolivia",76:"Brazil",100:"Bulgaria",120:"Cameroon",124:"Canada",144:"Sri Lanka",152:"Chile",156:"China",170:"Colombia",203:"Czech Republic",208:"Denmark",218:"Ecuador",818:"Egypt",231:"Ethiopia",246:"Finland",250:"France",276:"Germany",288:"Ghana",300:"Greece",320:"Guatemala",340:"Honduras",348:"Hungary",356:"India",360:"Indonesia",364:"Iran",368:"Iraq",372:"Ireland",376:"Israel",380:"Italy",392:"Japan",398:"Kazakhstan",404:"Kenya",408:"North Korea",410:"South Korea",414:"Kuwait",422:"Lebanon",434:"Libya",442:"Luxembourg",484:"Mexico",504:"Morocco",528:"Netherlands",554:"New Zealand",566:"Nigeria",578:"Norway",586:"Pakistan",604:"Peru",608:"Philippines",616:"Poland",620:"Portugal",634:"Qatar",642:"Romania",643:"Russia",682:"Saudi Arabia",703:"Slovakia",710:"South Africa",724:"Spain",752:"Sweden",756:"Switzerland",764:"Thailand",792:"Turkey",804:"Ukraine",784:"UAE",826:"United Kingdom",840:"United States",858:"Uruguay",862:"Venezuela",704:"Vietnam",887:"Yemen",894:"Zambia",458:"Malaysia",233:"Estonia",428:"Latvia",440:"Lithuania",616:"Poland",203:"Czech Republic"};
     countries.features.forEach(f => {
       f.properties.name = NUMNAMES[parseInt(f.id)] || f.properties.name || String(f.id);
     });
