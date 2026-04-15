@@ -36,9 +36,7 @@
   .update-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.4; transform:scale(.7); } }
   .year-select { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 0.75rem; cursor: pointer; outline: none; }
-  .year-select:focus { border-color: var(--accent); }
-
-  .main-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
+  .year-select:focus { border-color: var(--accent); }  .main-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
   .map-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; position: relative; }
   .map-panel svg { width: 100%; height: auto; display: block; }
   .country-path { stroke: rgba(0,229,255,0.12); stroke-width: 0.4px; transition: all 0.15s; cursor: pointer; }
@@ -69,15 +67,11 @@
   .top-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(to right, #2196f3, #00e5ff); }
   .top-value { color: var(--accent); font-size: 0.68rem; white-space: nowrap; }
   .open-chart-btn { margin-top: 14px; width: 100%; padding: 9px; background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.4); color: var(--accent); border-radius: 8px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 0.72rem; transition: all .15s; }
-  .open-chart-btn:hover { background: rgba(0,229,255,0.15); }
-
-  /* Tooltip */
+  .open-chart-btn:hover { background: rgba(0,229,255,0.15); }  /* Tooltip */
   #tooltip { position: fixed; background: rgba(10,14,23,0.95); border: 1px solid var(--accent); border-radius: 8px; padding: 10px 14px; font-size: 0.72rem; pointer-events: none; z-index: 999; display: none; max-width: 220px; backdrop-filter: blur(8px); }
   #tooltip strong { font-family: 'Syne', sans-serif; font-size: 0.85rem; display: block; margin-bottom: 4px; color: #fff; }
   .tt-row { display: flex; justify-content: space-between; gap: 16px; color: var(--muted); margin-top: 3px; }
-  .tt-val { color: var(--accent); }
-
-  /* Modal */
+  .tt-val { color: var(--accent); }  /* Modal — NOTE: all CSS variables use -- (two hyphens), never a single dash or en-dash */
   #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(6px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
   #modal-overlay.open { display: flex; }
   #modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 860px; max-height: 92vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 80px rgba(0,229,255,0.1); animation: modalIn .2s ease; }
@@ -103,13 +97,9 @@
   .sc-val { font-family: 'Syne', sans-serif; font-size: 0.88rem; font-weight: 700; margin-bottom: 3px; }
   .sc-label { font-size: 0.55rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
   .sc-pct { font-size: 0.58rem; color: var(--muted); margin-top: 2px; }
-  .no-data-msg { text-align: center; padding: 50px 0; color: var(--muted); font-size: 0.8rem; line-height: 2; }
-
-  #map-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--surface); flex-direction: column; gap: 12px; z-index: 10; }
+  .no-data-msg { text-align: center; padding: 50px 0; color: var(--muted); font-size: 0.8rem; line-height: 2; }  #map-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--surface); flex-direction: column; gap: 12px; z-index: 10; }
   .spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
-  #map-loading p { font-size: 0.72rem; color: var(--muted); }
-
-  /* Search */
+  #map-loading p { font-size: 0.72rem; color: var(--muted); }  /* Search */
   .search-wrap { position: relative; }
   .search-input { width: 100%; padding: 8px 12px 8px 32px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.72rem; outline: none; transition: border-color .15s; }
   .search-input::placeholder { color: var(--muted); }
@@ -119,13 +109,9 @@
   .search-result-item { padding: 7px 10px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; border: 1px solid transparent; display: flex; justify-content: space-between; align-items: center; transition: all .12s; }
   .search-result-item:hover { background: rgba(0,229,255,0.06); border-color: var(--border); }
   .search-result-item .sr-name { color: var(--text); }
-  .search-result-item .sr-share { color: var(--accent); font-size: 0.65rem; }
-
-  @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } header { flex-direction: column; gap: 12px; } .meta-block { align-items: flex-start; } .summary-grid { grid-template-columns: repeat(3,1fr); } }
+  .search-result-item .sr-share { color: var(--accent); font-size: 0.65rem; }  @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } header { flex-direction: column; gap: 12px; } .meta-block { align-items: flex-start; } .summary-grid { grid-template-columns: repeat(3,1fr); } }
   @media (max-width: 500px) { .summary-grid { grid-template-columns: repeat(2,1fr); } }
-</style>
-</head>
-<body>
+</style></head><body>
 
 <div id="tooltip">
   <strong id="tt-name"></strong>
@@ -148,7 +134,7 @@
       <div id="modal-loading"><div class="modal-spinner"></div>Loading&#x2026;</div>
       <div id="modal-content" style="display:none">
         <div class="chart-tabs" id="main-tabs">
-          <button class="chart-tab active" onclick="switchTab('monthly',this)">&#x1F4C5; Monthly total</button>
+          <button class="chart-tab active" id="monthly-tab" onclick="switchTab('monthly',this)">Monthly total</button>
           <button class="chart-tab" onclick="switchTab('absolute',this)">Powertrain absolute</button>
           <button class="chart-tab" onclick="switchTab('share',this)">Market share %</button>
           <button class="chart-tab" onclick="switchTab('stacked',this)">Stacked</button>
@@ -169,7 +155,7 @@
   <header>
     <div class="title-block">
       <h1>Global Car<br>Registrations</h1>
-      <div class="subtitle">BEV market share &middot; Colour = % electric &middot; Click for monthly &amp; powertrain detail</div>
+      <div class="subtitle">BEV market share &middot; Colour = % electric &middot; Click for monthly & powertrain detail</div>
     </div>
     <div class="meta-block">
       <div class="update-badge"><span class="dot"></span><span id="last-update">Loading&hellip;</span></div>
@@ -191,7 +177,7 @@
         <div class="panel-title">Search Country</div>
         <div class="search-wrap">
           <span class="search-icon">&#x1F50D;</span>
-          <input class="search-input" id="country-search" type="text" placeholder="e.g. Cyprus, Romania, Denmark, Austria..." autocomplete="off">
+          <input class="search-input" id="country-search" type="text" placeholder="e.g. Norway, Malta, Estonia&hellip;" autocomplete="off">
         </div>
         <div class="search-results" id="search-results"></div>
       </div>
@@ -221,6 +207,7 @@
 
 <script>
 // ── Annual totals for world map colouring ─────────────────────────────────────
+// Source: OICA, ACEA, IEA — Last updated: April 2026
 const DATA = {
   2024: {
     "China":[30090000,1412,"OICA/CAAM"],"United States":[15900000,334,"OICA/Wards"],
@@ -280,7 +267,7 @@ const DATA = {
   }
 };
 
-// BEV market share % by country
+// BEV market share % by country — Source: ACEA, IEA, national authorities
 const EV_SHARE = {
   2024: {
     "Norway":90.0,"Iceland":54.0,"Sweden":35.0,"Denmark":40.0,"Finland":25.0,
@@ -319,48 +306,23 @@ const EV_SHARE = {
   }
 };
 
-// ── FILE_MAP mit allen neuen Ländern (das ist der einzige Teil, den ich geändert habe) ──
 const FILE_MAP = {
-  "Austria": "austria",
-  "Belgium": "belgium",
-  "Bulgaria": "bulgaria",
-  "Croatia": "croatia",
-  "Cyprus": "cyprus",
-  "Czech Republic": "czech_republic",
-  "Denmark": "denmark",
-  "Estonia": "estonia",
-  "Finland": "finland",
-  "France": "france",
-  "Germany": "germany",
-  "Greece": "greece",
-  "Hungary": "hungary",
-  "Ireland": "ireland",
-  "Italy": "italy",
-  "Latvia": "latvia",
-  "Lithuania": "lithuania",
-  "Luxembourg": "luxembourg",
-  "Netherlands": "netherlands",
-  "Norway": "norway",
-  "Poland": "poland",
-  "Portugal": "portugal",
-  "Romania": "romania",
-  "Slovakia": "slovakia",
-  "Slovenia": "slovenia",
-  "Spain": "spain",
-  "Sweden": "sweden",
-  "United Kingdom": "united_kingdom"
+  "Austria":"austria","Belgium":"belgium","Bulgaria":"bulgaria","Cyprus":"cyprus",
+  "Czech Republic":"czech_republic","Germany":"germany","Denmark":"denmark",
+  "Estonia":"estonia","Greece":"greece","Spain":"spain","Finland":"finland",
+  "France":"france","Croatia":"croatia","Hungary":"hungary","Ireland":"ireland",
+  "Italy":"italy","Lithuania":"lithuania","Luxembourg":"luxembourg","Latvia":"latvia",
+  "Malta":"malta","Netherlands":"netherlands","Poland":"poland","Portugal":"portugal",
+  "Romania":"romania","Sweden":"sweden","Slovenia":"slovenia","Slovakia":"slovakia",
+  "Norway":"norway","Switzerland":"switzerland","United Kingdom":"united_kingdom"
 };
 
 const NAME_MAP = {
-  "United States of America":"United States",
-  "Republic of Korea":"South Korea",
-  "Czechia":"Czech Republic",
-  "United Arab Emirates":"UAE",
-  "Iran (Islamic Republic of)":"Iran",
-  "Russian Federation":"Russia",
+  "United States of America":"United States","Republic of Korea":"South Korea",
+  "Czechia":"Czech Republic","United Arab Emirates":"UAE",
+  "Iran (Islamic Republic of)":"Iran","Russian Federation":"Russia",
   "United Kingdom of Great Britain and Northern Ireland":"United Kingdom"
 };
-
 function normName(n){ return NAME_MAP[n]||n; }
 function fmt(n){
   if(!n&&n!==0) return "—";
@@ -369,7 +331,7 @@ function fmt(n){
   return n.toLocaleString("en");
 }
 
-// ── Der Rest deines Codes bleibt exakt wie in deiner alten Datei ──
+// ── Map ───────────────────────────────────────────────────────────────────────
 let currentYear=2024, selectedCountry=null, colorScale;
 const svg     = d3.select("#map-svg");
 const proj    = d3.geoNaturalEarth1().scale(153).translate([480,270]);
@@ -457,7 +419,7 @@ function showTip(e, rawName, year){
   tooltip.style.top  = Math.max(e.clientY-44, 0)+"px";
 }
 
-// Chart modal (unverändert)
+// ── Chart modal ───────────────────────────────────────────────────────────────
 let mainChart = null, modalData = null, activeTab = "monthly";
 
 const COLORS = {
@@ -507,7 +469,11 @@ window.openModal = async function(countryName){
   destroyChart();
 
   const fileKey = FILE_MAP[countryName];
-  if(!fileKey){ loading.style.display="none"; nodata.style.display="block"; return; }
+  if(!fileKey){ 
+    loading.style.display="none"; 
+    nodata.style.display="block"; 
+    return; 
+  }
 
   try{
     const resp = await fetch("data/countries/"+fileKey+".json?v="+Date.now());
@@ -523,6 +489,15 @@ window.openModal = async function(countryName){
       "Monthly: ECB/ACEA  \u00b7  Annual powertrain: Eurostat";
 
     const hasMonthly = !!(modalData.monthly && modalData.monthly.labels && modalData.monthly.labels.length);
+
+    // ── NEUE LOGIK: Button-Text ändern bei jährlichen Daten ──
+    const monthlyTabBtn = document.getElementById("monthly-tab");
+    if (hasMonthly && modalData.monthly.labels[0] && modalData.monthly.labels[0].includes("-")) {
+      monthlyTabBtn.textContent = "Monthly total";
+    } else {
+      monthlyTabBtn.textContent = "Yearly total";
+    }
+
     activeTab = hasMonthly ? "monthly" : "absolute";
 
     document.querySelectorAll("#main-tabs .chart-tab").forEach(b => {
@@ -690,7 +665,7 @@ function renderSummary(data){
   }).join("");
 }
 
-// ── Map initialisation & Search (unverändert aus deiner alten Datei) ───────
+// ── Map initialisation ────────────────────────────────────────────────────────
 (async function(){
   const input   = document.getElementById("country-search");
   const results = document.getElementById("search-results");
