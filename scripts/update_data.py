@@ -1,5 +1,6 @@
 """
-scripts/update_data.py  —  v41 (Override protection + all Balkan countries added)
+scripts/update_data.py  —  v42
+Override protection for many European countries
 """
 
 import csv
@@ -88,6 +89,7 @@ def fetch_rdw_netherlands():
 def write_files(monthly):
     changed = 0
 
+    # All overrides
     overrides = {
         "DE": load_override("germany_monthly_override.json"),
         "BE": load_override("belgium_monthly_override.json"),
@@ -113,6 +115,9 @@ def write_files(monthly):
         "RO": load_override("romania_monthly_override.json"),
         "BG": load_override("bulgaria_monthly_override.json"),
         "EL": load_override("greece_monthly_override.json"),
+        "AT": load_override("austria_monthly_override.json"),
+        "DK": load_override("denmark_monthly_override.json"),
+        "CY": load_override("cyprus_monthly_override.json"),
     }
 
     for ecb_code, (name, _, _) in COUNTRIES.items():
@@ -128,7 +133,7 @@ def write_files(monthly):
             if src_override:
                 source_monthly = src_override
 
-            # Source-Texte
+            # Source names
             if ecb_code == "DE": source_monthly = "KBA (monthly new registrations up to March 2026)"
             elif ecb_code == "BE": source_monthly = "FEBIAC (monthly new registrations up to March 2026)"
             elif ecb_code == "LU": source_monthly = "STATEC / SNCA / ACEA (monthly new registrations up to March 2026)"
@@ -145,13 +150,16 @@ def write_files(monthly):
             elif ecb_code == "LV": source_monthly = "CSDD / ACEA (monthly new registrations up to March 2026)"
             elif ecb_code == "LT": source_monthly = "Statistics Lithuania / ACEA (monthly new registrations up to March 2026)"
             elif ecb_code == "PL": source_monthly = "PZPM / ACEA (monthly new registrations up to February 2026)"
-            elif ecb_code == "CZ" or ecb_code == "SK": source_monthly = "SDA / ACEA (monthly new registrations up to March 2026)"
+            elif ecb_code in ["CZ", "SK"]: source_monthly = "SDA / ACEA (monthly new registrations up to March 2026)"
             elif ecb_code == "HU": source_monthly = "MGE / ACEA (monthly new registrations up to March 2026)"
             elif ecb_code == "SI": source_monthly = "ZAP / ACEA (monthly new registrations up to March 2026)"
             elif ecb_code == "HR": source_monthly = "Croatian Bureau of Statistics / ACEA (monthly new registrations up to March 2026)"
             elif ecb_code == "RO": source_monthly = "ACAROM / ACEA (monthly new registrations up to March 2026)"
             elif ecb_code == "BG": source_monthly = "ACEA / Bulgarian Association (monthly new registrations up to March 2026)"
             elif ecb_code == "EL": source_monthly = "Hellenic Statistical Authority / ACEA (monthly new registrations up to March 2026)"
+            elif ecb_code == "AT": source_monthly = "Statistik Austria (monthly new registrations up to March 2026)"
+            elif ecb_code == "DK": source_monthly = "Danmarks Statistik / ACEA (monthly new registrations up to March 2026)"
+            elif ecb_code == "CY": source_monthly = "Cyprus Statistical Service (Cystat) / ACEA (monthly new registrations up to March 2026)"
 
         elif ecb_code in monthly:
             m = monthly[ecb_code]
@@ -177,7 +185,7 @@ def send_telegram(changed, total_countries, latest):
     if not TELEGRAM_TOKEN or not TELEGRAM_CHAT:
         return
     try:
-        msg = f"✅ Car Registration Update\n\nUpdated {changed} countries\nLatest data: {latest}\nTotal countries: {total_countries}\n\nOverride protection active until March 2026"
+        msg = f"✅ Car Registration Update\n\nUpdated {changed} countries\nLatest data: {latest}\nTotal countries: {total_countries}\n\nOverride protection active"
         url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage?chat_id={TELEGRAM_CHAT}&text={urllib.parse.quote(msg)}"
         urllib.request.urlopen(url, timeout=10)
     except:
@@ -185,7 +193,7 @@ def send_telegram(changed, total_countries, latest):
 
 def main():
     print("=" * 60)
-    print(f"  Car Registration Updater v41  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
+    print(f"  Car Registration Updater v42  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
     print("=" * 60)
 
     monthly = fetch_ecb_monthly()
@@ -200,7 +208,7 @@ def main():
     changed = write_files(monthly)
     latest  = max((v["labels"][-1] for v in monthly.values() if v.get("labels")), default="2022-12")
     send_telegram(changed, len(COUNTRIES), latest)
-    print("\n✓ Done – All Balkan overrides active (BG, EL, HR, HU, RO, SI, SK + others)")
+    print("\n✓ Done – Overrides active for many countries including all requested Balkan + AT, DK, CY")
 
 if __name__ == "__main__":
     main()
