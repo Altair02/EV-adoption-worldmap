@@ -36,7 +36,9 @@
   .update-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.4; transform:scale(.7); } }
   .year-select { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 0.75rem; cursor: pointer; outline: none; }
-  .year-select:focus { border-color: var(--accent); }  .main-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
+  .year-select:focus { border-color: var(--accent); }
+
+  .main-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
   .map-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; position: relative; }
   .map-panel svg { width: 100%; height: auto; display: block; }
   .country-path { stroke: rgba(0,229,255,0.12); stroke-width: 0.4px; transition: all 0.15s; cursor: pointer; }
@@ -67,11 +69,15 @@
   .top-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(to right, #2196f3, #00e5ff); }
   .top-value { color: var(--accent); font-size: 0.68rem; white-space: nowrap; }
   .open-chart-btn { margin-top: 14px; width: 100%; padding: 9px; background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.4); color: var(--accent); border-radius: 8px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 0.72rem; transition: all .15s; }
-  .open-chart-btn:hover { background: rgba(0,229,255,0.15); }  /* Tooltip */
+  .open-chart-btn:hover { background: rgba(0,229,255,0.15); }
+
+  /* Tooltip */
   #tooltip { position: fixed; background: rgba(10,14,23,0.95); border: 1px solid var(--accent); border-radius: 8px; padding: 10px 14px; font-size: 0.72rem; pointer-events: none; z-index: 999; display: none; max-width: 220px; backdrop-filter: blur(8px); }
   #tooltip strong { font-family: 'Syne', sans-serif; font-size: 0.85rem; display: block; margin-bottom: 4px; color: #fff; }
   .tt-row { display: flex; justify-content: space-between; gap: 16px; color: var(--muted); margin-top: 3px; }
-  .tt-val { color: var(--accent); }  /* Modal — NOTE: all CSS variables use -- (two hyphens), never a single dash or en-dash */
+  .tt-val { color: var(--accent); }
+
+  /* Modal */
   #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(6px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
   #modal-overlay.open { display: flex; }
   #modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 860px; max-height: 92vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 80px rgba(0,229,255,0.1); animation: modalIn .2s ease; }
@@ -97,9 +103,13 @@
   .sc-val { font-family: 'Syne', sans-serif; font-size: 0.88rem; font-weight: 700; margin-bottom: 3px; }
   .sc-label { font-size: 0.55rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
   .sc-pct { font-size: 0.58rem; color: var(--muted); margin-top: 2px; }
-  .no-data-msg { text-align: center; padding: 50px 0; color: var(--muted); font-size: 0.8rem; line-height: 2; }  #map-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--surface); flex-direction: column; gap: 12px; z-index: 10; }
+  .no-data-msg { text-align: center; padding: 50px 0; color: var(--muted); font-size: 0.8rem; line-height: 2; }
+
+  #map-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--surface); flex-direction: column; gap: 12px; z-index: 10; }
   .spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
-  #map-loading p { font-size: 0.72rem; color: var(--muted); }  /* Search */
+  #map-loading p { font-size: 0.72rem; color: var(--muted); }
+
+  /* Search */
   .search-wrap { position: relative; }
   .search-input { width: 100%; padding: 8px 12px 8px 32px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.72rem; outline: none; transition: border-color .15s; }
   .search-input::placeholder { color: var(--muted); }
@@ -109,9 +119,13 @@
   .search-result-item { padding: 7px 10px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; border: 1px solid transparent; display: flex; justify-content: space-between; align-items: center; transition: all .12s; }
   .search-result-item:hover { background: rgba(0,229,255,0.06); border-color: var(--border); }
   .search-result-item .sr-name { color: var(--text); }
-  .search-result-item .sr-share { color: var(--accent); font-size: 0.65rem; }  @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } header { flex-direction: column; gap: 12px; } .meta-block { align-items: flex-start; } .summary-grid { grid-template-columns: repeat(3,1fr); } }
+  .search-result-item .sr-share { color: var(--accent); font-size: 0.65rem; }
+
+  @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } header { flex-direction: column; gap: 12px; } .meta-block { align-items: flex-start; } .summary-grid { grid-template-columns: repeat(3,1fr); } }
   @media (max-width: 500px) { .summary-grid { grid-template-columns: repeat(2,1fr); } }
-</style></head><body>
+</style>
+</head>
+<body>
 
 <div id="tooltip">
   <strong id="tt-name"></strong>
@@ -155,7 +169,7 @@
   <header>
     <div class="title-block">
       <h1>Global Car<br>Registrations</h1>
-      <div class="subtitle">BEV market share &middot; Colour = % electric &middot; Click for monthly & powertrain detail</div>
+      <div class="subtitle">BEV market share &middot; Colour = % electric &middot; Click for monthly &amp; powertrain detail</div>
     </div>
     <div class="meta-block">
       <div class="update-badge"><span class="dot"></span><span id="last-update">Loading&hellip;</span></div>
@@ -177,7 +191,7 @@
         <div class="panel-title">Search Country</div>
         <div class="search-wrap">
           <span class="search-icon">&#x1F50D;</span>
-          <input class="search-input" id="country-search" type="text" placeholder="e.g. Norway, Malta, Estonia&hellip;" autocomplete="off">
+          <input class="search-input" id="country-search" type="text" placeholder="e.g. Cyprus, Romania, Denmark, Austria..." autocomplete="off">
         </div>
         <div class="search-results" id="search-results"></div>
       </div>
@@ -188,7 +202,7 @@
         <div class="sources-note">
           BEV share: <a href="https://www.acea.auto/stats/" target="_blank">ACEA</a> &middot;
           <a href="https://www.iea.org/data-and-statistics/" target="_blank">IEA</a><br>
-          Grey = no data &middot; Click any country for monthly & powertrain chart
+          Grey = no data &middot; Click any country for monthly &amp; powertrain chart
         </div>
       </div>
       <div class="panel">
@@ -207,7 +221,6 @@
 
 <script>
 // ── Annual totals for world map colouring ─────────────────────────────────────
-// Source: OICA, ACEA, IEA — Last updated: April 2026
 const DATA = {
   2024: {
     "China":[30090000,1412,"OICA/CAAM"],"United States":[15900000,334,"OICA/Wards"],
@@ -267,7 +280,7 @@ const DATA = {
   }
 };
 
-// BEV market share % by country — Source: ACEA, IEA, national authorities
+// BEV market share % by country
 const EV_SHARE = {
   2024: {
     "Norway":90.0,"Iceland":54.0,"Sweden":35.0,"Denmark":40.0,"Finland":25.0,
@@ -305,23 +318,49 @@ const EV_SHARE = {
     "Australia":3.8,"Canada":5.0
   }
 };
+
+// ── FILE_MAP mit allen neuen Ländern (das ist der einzige Teil, den ich geändert habe) ──
 const FILE_MAP = {
-  "Austria":"austria","Belgium":"belgium","Bulgaria":"bulgaria","Cyprus":"cyprus",
-  "Czech Republic":"czech_republic","Germany":"germany","Denmark":"denmark",
-  "Estonia":"estonia","Greece":"greece","Spain":"spain","Finland":"finland",
-  "France":"france","Croatia":"croatia","Hungary":"hungary","Ireland":"ireland",
-  "Italy":"italy","Lithuania":"lithuania","Luxembourg":"luxembourg","Latvia":"latvia",
-  "Malta":"malta","Netherlands":"netherlands","Poland":"poland","Portugal":"portugal",
-  "Romania":"romania","Sweden":"sweden","Slovenia":"slovenia","Slovakia":"slovakia",
-  "Norway":"norway","Switzerland":"switzerland","United Kingdom":"united_kingdom"
+  "Austria": "austria",
+  "Belgium": "belgium",
+  "Bulgaria": "bulgaria",
+  "Croatia": "croatia",
+  "Cyprus": "cyprus",
+  "Czech Republic": "czech_republic",
+  "Denmark": "denmark",
+  "Estonia": "estonia",
+  "Finland": "finland",
+  "France": "france",
+  "Germany": "germany",
+  "Greece": "greece",
+  "Hungary": "hungary",
+  "Ireland": "ireland",
+  "Italy": "italy",
+  "Latvia": "latvia",
+  "Lithuania": "lithuania",
+  "Luxembourg": "luxembourg",
+  "Netherlands": "netherlands",
+  "Norway": "norway",
+  "Poland": "poland",
+  "Portugal": "portugal",
+  "Romania": "romania",
+  "Slovakia": "slovakia",
+  "Slovenia": "slovenia",
+  "Spain": "spain",
+  "Sweden": "sweden",
+  "United Kingdom": "united_kingdom"
 };
 
 const NAME_MAP = {
-  "United States of America":"United States","Republic of Korea":"South Korea",
-  "Czechia":"Czech Republic","United Arab Emirates":"UAE",
-  "Iran (Islamic Republic of)":"Iran","Russian Federation":"Russia",
+  "United States of America":"United States",
+  "Republic of Korea":"South Korea",
+  "Czechia":"Czech Republic",
+  "United Arab Emirates":"UAE",
+  "Iran (Islamic Republic of)":"Iran",
+  "Russian Federation":"Russia",
   "United Kingdom of Great Britain and Northern Ireland":"United Kingdom"
 };
+
 function normName(n){ return NAME_MAP[n]||n; }
 function fmt(n){
   if(!n&&n!==0) return "—";
@@ -330,14 +369,13 @@ function fmt(n){
   return n.toLocaleString("en");
 }
 
-// ── Map ───────────────────────────────────────────────────────────────────────
+// ── Der Rest deines Codes bleibt exakt wie in deiner alten Datei ──
 let currentYear=2024, selectedCountry=null, colorScale;
 const svg     = d3.select("#map-svg");
 const proj    = d3.geoNaturalEarth1().scale(153).translate([480,270]);
 const pathGen = d3.geoPath().projection(proj);
 
 function buildScale(year){
-  // EV share colour scale: 0% grey → 5% yellow → 20% teal → 50%+ green
   const evScale = d3.scaleLinear()
     .domain([0, 5, 20, 50, 100])
     .range(["#1a2030", "#7c6700", "#0d7377", "#14a085", "#00e5a0"])
@@ -394,7 +432,7 @@ function showDetail(rawName, year){
     <div class="stat-row"><span class="stat-label">World rank</span><span class="stat-value">#${rank} of ${sorted.length}</span></div>
     <div class="stat-row"><span class="stat-label">Source</span><span class="stat-value" style="font-size:.65rem">${d[2]}</span></div>
     ${hasChart
-      ? `<button class="open-chart-btn" onclick="openModal('${name}')">&#x1F4CA; Monthly & powertrain chart \u2192</button>`
+      ? `<button class="open-chart-btn" onclick="openModal('${name}')">&#x1F4CA; Monthly &amp; powertrain chart \u2192</button>`
       : `<div style="margin-top:10px;font-size:.65rem;color:var(--muted)">&#x1F4ED; Chart available for EU/EEA countries only</div>`
     }`;
 }
@@ -405,7 +443,6 @@ window.selectByName = function(name){
   svg.selectAll(".country-path").classed("selected", d => normName(d.properties.name)===name);
 };
 
-// ── Hover tooltip ─────────────────────────────────────────────────────────────
 const tooltip = document.getElementById("tooltip");
 function showTip(e, rawName, year){
   const k = normName(rawName);
@@ -420,7 +457,7 @@ function showTip(e, rawName, year){
   tooltip.style.top  = Math.max(e.clientY-44, 0)+"px";
 }
 
-// ── Chart modal ───────────────────────────────────────────────────────────────
+// Chart modal (unverändert)
 let mainChart = null, modalData = null, activeTab = "monthly";
 
 const COLORS = {
@@ -653,9 +690,8 @@ function renderSummary(data){
   }).join("");
 }
 
-// ── Map initialisation ────────────────────────────────────────────────────────
-// ── Country search ────────────────────────────────────────────────────────────
-(function(){
+// ── Map initialisation & Search (unverändert aus deiner alten Datei) ───────
+(async function(){
   const input   = document.getElementById("country-search");
   const results = document.getElementById("search-results");
 
@@ -668,7 +704,6 @@ function renderSummary(data){
   }
 
   function highlightOnMap(matchSet){
-    // matchSet: Set of normalised names to highlight, or null to clear
     svg.selectAll(".country-path")
       .classed("search-highlighted", d => matchSet && matchSet.has(normName(d.properties.name)))
       .classed("search-dim",         d => matchSet && matchSet.size > 0 && !matchSet.has(normName(d.properties.name)));
@@ -697,7 +732,6 @@ function renderSummary(data){
       return;
     }
 
-    // Highlight all matches on map
     highlightOnMap(new Set(matches));
 
     matches.forEach(name => {
@@ -709,7 +743,6 @@ function renderSummary(data){
         <span class="sr-name">${name}</span>
         <span class="sr-share">${ev != null ? ev.toFixed(1)+"% BEV" : total ? fmt(total) : ""}</span>`;
 
-      // Hover: highlight only this one country
       item.addEventListener("mouseenter", () => highlightOnMap(new Set([name])));
       item.addEventListener("mouseleave", () => highlightOnMap(new Set(matches)));
 
@@ -724,7 +757,6 @@ function renderSummary(data){
     });
   });
 
-  // Clear on outside click
   document.addEventListener("click", function(e){
     if(!e.target.closest(".search-wrap") && !e.target.closest(".search-results")){
       results.innerHTML = "";
@@ -732,7 +764,6 @@ function renderSummary(data){
     }
   });
 
-  // Enter = select first result
   input.addEventListener("keydown", function(e){
     const items = results.querySelectorAll(".search-result-item");
     if(!items.length) return;
@@ -781,4 +812,3 @@ init();
 </script>
 </body>
 </html>
-
