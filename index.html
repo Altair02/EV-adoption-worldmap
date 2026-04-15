@@ -155,7 +155,7 @@
   <header>
     <div class="title-block">
       <h1>Global Car<br>Registrations</h1>
-      <div class="subtitle">BEV market share &middot; Colour = % electric &middot; Click for monthly & powertrain detail</div>
+      <div class="subtitle">BEV market share &middot; Colour = % electric &middot; Click for monthly &amp; powertrain detail</div>
     </div>
     <div class="meta-block">
       <div class="update-badge"><span class="dot"></span><span id="last-update">Loading&hellip;</span></div>
@@ -485,8 +485,6 @@ window.openModal = async function(countryName){
       document.getElementById("modal-subtitle").textContent =
         "Updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
     }
-    document.getElementById("modal-source").textContent =
-      "Monthly: ECB/ACEA  \u00b7  Annual powertrain: Eurostat";
 
     const hasMonthly = !!(modalData.monthly && modalData.monthly.labels && modalData.monthly.labels.length);
 
@@ -494,8 +492,10 @@ window.openModal = async function(countryName){
     const monthlyTabBtn = document.getElementById("monthly-tab");
     if (hasMonthly && modalData.monthly.labels[0] && modalData.monthly.labels[0].includes("-")) {
       monthlyTabBtn.textContent = "Monthly total";
+      document.getElementById("modal-source").textContent = "Monthly: ECB/ACEA  \u00b7  Annual powertrain: Eurostat";
     } else {
       monthlyTabBtn.textContent = "Yearly total";
+      document.getElementById("modal-source").textContent = "Yearly: National statistics  \u00b7  Annual powertrain: Eurostat";
     }
 
     activeTab = hasMonthly ? "monthly" : "absolute";
