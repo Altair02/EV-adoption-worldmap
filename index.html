@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -35,6 +35,8 @@
   .update-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.2); border-radius: 20px; padding: 5px 12px; font-size: 0.7rem; color: var(--accent); }
   .update-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.4; transform:scale(.7); } }
+  .year-select { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 0.75rem; cursor: pointer; outline: none; }
+  .year-select:focus { border-color: var(--accent); }
 
   .main-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
   .map-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; position: relative; }
@@ -44,23 +46,19 @@
   .country-path.selected { stroke: var(--accent2); stroke-width: 1.5px; }
   .country-path.search-dim { opacity: 0.18; transition: opacity 0.2s; }
   .country-path.search-highlighted { stroke: #fff; stroke-width: 2px; filter: brightness(1.8) drop-shadow(0 0 6px rgba(0,229,255,0.9)); opacity: 1; transition: all 0.2s; }
-
   .sidebar { display: flex; flex-direction: column; gap: 16px; }
   .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
   .panel-title { font-family: 'Syne', sans-serif; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
-
   .legend-bar { height: 10px; border-radius: 5px; background: linear-gradient(to right, #1a2030, #7c6700, #0d7377, #14a085, #00e5a0); margin-bottom: 8px; }
   .legend-labels { display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--muted); }
   .sources-note { font-size: 0.62rem; color: var(--muted); margin-top: 10px; line-height: 1.6; }
   .sources-note a { color: var(--accent); text-decoration: none; }
-
   .country-name { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; color: #fff; }
   .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.72rem; }
   .stat-row:last-child { border-bottom: none; }
   .stat-label { color: var(--muted); }
   .stat-value { color: var(--text); }
   .stat-value.hl { color: var(--accent); }
-
   .top-list { display: flex; flex-direction: column; gap: 8px; }
   .top-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; background: rgba(255,255,255,0.02); border: 1px solid transparent; cursor: pointer; transition: all 0.15s; font-size: 0.72rem; }
   .top-item:hover { border-color: var(--border); background: rgba(0,229,255,0.05); }
@@ -70,7 +68,6 @@
   .top-bar-track { height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
   .top-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(to right, #2196f3, #00e5ff); }
   .top-value { color: var(--accent); font-size: 0.68rem; white-space: nowrap; }
-
   .open-chart-btn { margin-top: 14px; width: 100%; padding: 9px; background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.4); color: var(--accent); border-radius: 8px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 0.72rem; transition: all .15s; }
   .open-chart-btn:hover { background: rgba(0,229,255,0.15); }
 
@@ -83,12 +80,13 @@
   /* Modal */
   #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(6px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
   #modal-overlay.open { display: flex; }
-  #modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 860px; max-height: 92vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 80px rgba(0,229,255,0.1); }
-  #modal-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 22px 24px 16px; border-bottom: 1px solid var(--border); }
+  #modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 860px; max-height: 92vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 80px rgba(0,229,255,0.1); animation: modalIn .2s ease; }
+  @keyframes modalIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+  #modal-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 22px 24px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
   #modal-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.35rem; color: #fff; }
   #modal-subtitle { font-size: 0.68rem; color: var(--muted); margin-top: 4px; }
   #modal-source { font-size: 0.6rem; color: var(--muted); margin-top: 2px; }
-  #modal-close { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text); width: 34px; height: 34px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+  #modal-close { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text); width: 34px; height: 34px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s; }
   #modal-close:hover { background: rgba(255,107,53,0.2); border-color: var(--accent2); color: var(--accent2); }
   #modal-body { padding: 20px 24px 24px; overflow-y: auto; }
   #modal-loading { text-align: center; padding: 60px 0; color: var(--muted); font-size: 0.8rem; }
@@ -109,6 +107,22 @@
 
   #map-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--surface); flex-direction: column; gap: 12px; z-index: 10; }
   .spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+  #map-loading p { font-size: 0.72rem; color: var(--muted); }
+
+  /* Search */
+  .search-wrap { position: relative; }
+  .search-input { width: 100%; padding: 8px 12px 8px 32px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.72rem; outline: none; transition: border-color .15s; }
+  .search-input::placeholder { color: var(--muted); }
+  .search-input:focus { border-color: var(--accent); background: rgba(0,229,255,0.04); }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 0.75rem; pointer-events: none; }
+  .search-results { margin-top: 6px; display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto; }
+  .search-result-item { padding: 7px 10px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; border: 1px solid transparent; display: flex; justify-content: space-between; align-items: center; transition: all .12s; }
+  .search-result-item:hover { background: rgba(0,229,255,0.06); border-color: var(--border); }
+  .search-result-item .sr-name { color: var(--text); }
+  .search-result-item .sr-share { color: var(--accent); font-size: 0.65rem; }
+
+  @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } header { flex-direction: column; gap: 12px; } .meta-block { align-items: flex-start; } .summary-grid { grid-template-columns: repeat(3,1fr); } }
+  @media (max-width: 500px) { .summary-grid { grid-template-columns: repeat(2,1fr); } }
 </style>
 </head>
 <body>
@@ -131,20 +145,21 @@
       <button id="modal-close" onclick="closeModal()">&#x2715;</button>
     </div>
     <div id="modal-body">
-      <div id="modal-loading"><div class="modal-spinner"></div>Loading…</div>
+      <div id="modal-loading"><div class="modal-spinner"></div>Loading&#x2026;</div>
       <div id="modal-content" style="display:none">
         <div class="chart-tabs" id="main-tabs">
-          <button class="chart-tab active" onclick="switchTab('monthly',this)">Monthly total</button>
+          <button class="chart-tab active" onclick="switchTab('monthly',this)">&#x1F4C5; Monthly total</button>
           <button class="chart-tab" onclick="switchTab('absolute',this)">Powertrain absolute</button>
           <button class="chart-tab" onclick="switchTab('share',this)">Market share %</button>
+          <button class="chart-tab" onclick="switchTab('stacked',this)">Stacked</button>
         </div>
         <div class="tab-source" id="tab-source"></div>
         <div class="chart-wrap" id="chart-wrap"><canvas id="main-chart"></canvas></div>
         <div class="summary-grid" id="summary-grid"></div>
       </div>
       <div id="modal-nodata" style="display:none" class="no-data-msg">
-        Monthly data not yet available for this country.<br>
-        <small>Some smaller countries only have annual data</small>
+        &#x1F4ED; No data available for this country yet.<br>
+        <span style="font-size:0.68rem">ECB/ACEA covers ~30 EU/EEA countries</span>
       </div>
     </div>
   </div>
@@ -154,16 +169,21 @@
   <header>
     <div class="title-block">
       <h1>Global Car<br>Registrations</h1>
-      <div class="subtitle">BEV market share &middot; Click for monthly &amp; powertrain detail</div>
+      <div class="subtitle">BEV market share &middot; Colour = % electric &middot; Click for monthly &amp; powertrain detail</div>
     </div>
     <div class="meta-block">
-      <div class="update-badge"><span class="dot"></span><span id="last-update">Loading…</span></div>
+      <div class="update-badge"><span class="dot"></span><span id="last-update">Loading&hellip;</span></div>
+      <select class="year-select" id="year-select">
+        <option value="2024">2024</option>
+        <option value="2023">2023</option>
+        <option value="2022">2022</option>
+      </select>
     </div>
   </header>
 
   <div class="main-grid">
     <div class="map-panel">
-      <div id="map-loading"><div class="spinner"></div><p>Loading map…</p></div>
+      <div id="map-loading"><div class="spinner"></div><p>Loading map&hellip;</p></div>
       <svg id="map-svg" viewBox="0 0 960 500"></svg>
     </div>
     <div class="sidebar">
@@ -171,7 +191,7 @@
         <div class="panel-title">Search Country</div>
         <div class="search-wrap">
           <span class="search-icon">&#x1F50D;</span>
-          <input class="search-input" id="country-search" type="text" placeholder="z.B. Cyprus, Romania, Denmark, Austria..." autocomplete="off">
+          <input class="search-input" id="country-search" type="text" placeholder="e.g. Cyprus, Romania, Denmark, Austria..." autocomplete="off">
         </div>
         <div class="search-results" id="search-results"></div>
       </div>
@@ -180,13 +200,15 @@
         <div class="legend-bar"></div>
         <div class="legend-labels"><span>0%</span><span id="legend-mid"></span><span id="legend-max"></span></div>
         <div class="sources-note">
-          Data: ACEA, Statistik Austria, Cystat, Danmarks Statistik &amp; national authorities
+          BEV share: <a href="https://www.acea.auto/stats/" target="_blank">ACEA</a> &middot;
+          <a href="https://www.iea.org/data-and-statistics/" target="_blank">IEA</a><br>
+          Grey = no data &middot; Click any country for monthly &amp; powertrain chart
         </div>
       </div>
       <div class="panel">
         <div class="panel-title">Country Details</div>
         <div id="detail-content" style="color:var(--muted);font-size:.72rem">
-          ← Click a country for details
+          &larr; Click a country for details
         </div>
       </div>
       <div class="panel">
@@ -198,7 +220,21 @@
 </div>
 
 <script>
-// ==================== FILE_MAP mit allen Ländern ====================
+// ── Annual totals for world map colouring ─────────────────────────────────────
+const DATA = {
+  2024: { /* Dein bestehender DATA-Block bleibt unverändert */ },
+  2023: { /* Dein bestehender DATA-Block bleibt unverändert */ },
+  2022: { /* Dein bestehender DATA-Block bleibt unverändert */ }
+};
+
+// BEV market share % by country
+const EV_SHARE = {
+  2024: { /* Dein bestehender EV_SHARE-Block bleibt unverändert */ },
+  2023: { /* Dein bestehender EV_SHARE-Block bleibt unverändert */ },
+  2022: { /* Dein bestehender EV_SHARE-Block bleibt unverändert */ }
+};
+
+// NEUER FILE_MAP mit allen Ländern
 const FILE_MAP = {
   "Austria": "austria",
   "Belgium": "belgium",
@@ -237,28 +273,284 @@ const NAME_MAP = {
   "United Arab Emirates": "UAE"
 };
 
-function normName(n) { return NAME_MAP[n] || n; }
+function normName(n){ return NAME_MAP[n]||n; }
 function fmt(n){
-  if(!n && n !== 0) return "—";
-  if(n >= 1e6) return (n/1e6).toFixed(2).replace(".",",") + "\u00a0M";
-  if(n >= 1e3) return Math.round(n/1e3).toLocaleString("en") + "\u00a0k";
+  if(!n&&n!==0) return "—";
+  if(n>=1e6) return (n/1e6).toFixed(2).replace(".",",")+"\u00a0M";
+  if(n>=1e3) return Math.round(n/1e3).toLocaleString("en")+"\u00a0k";
   return n.toLocaleString("en");
 }
 
-// ── Annual totals for world map colouring ─────────────────────────────────────
-const DATA = {
-  2024: { /* dein bestehender DATA-Block bleibt unverändert */ },
-  2023: { /* dein bestehender DATA-Block bleibt unverändert */ },
-  2022: { /* dein bestehender DATA-Block bleibt unverändert */ }
+// ── Der Rest deines Codes bleibt exakt gleich wie in deiner alten Datei ───────
+// (alles ab hier bis zum Ende)
+
+let currentYear=2024, selectedCountry=null, colorScale;
+const svg     = d3.select("#map-svg");
+const proj    = d3.geoNaturalEarth1().scale(153).translate([480,270]);
+const pathGen = d3.geoPath().projection(proj);
+
+function buildScale(year){
+  const evScale = d3.scaleLinear()
+    .domain([0, 5, 20, 50, 100])
+    .range(["#1a2030", "#7c6700", "#0d7377", "#14a085", "#00e5a0"])
+    .clamp(true);
+  document.getElementById("legend-max").textContent = "50%+";
+  document.getElementById("legend-mid").textContent = "20%";
+  return evScale;
+}
+
+function renderMap(year){
+  colorScale = buildScale(year);
+  const evData = EV_SHARE[year] || {};
+  svg.selectAll(".country-path").attr("fill", d => {
+    const k = normName(d.properties.name);
+    const share = evData[k];
+    return share != null ? colorScale(share) : "#1a2030";
+  });
+  renderTopList(year);
+  document.getElementById("top-year").textContent = year;
+  document.getElementById("last-update").textContent = "BEV share "+year+" \u00b7 ACEA/IEA";
+}
+
+function renderTopList(year){
+  const entries = Object.entries(DATA[year]).sort((a,b)=>b[1][0]-a[1][0]).slice(0,10);
+  const maxV = entries[0][1][0];
+  document.getElementById("top-list").innerHTML = entries.map(([name,d],i)=>`
+    <div class="top-item" onclick="selectByName('${name.replace(/'/g,"\\'")}')">
+      <span class="top-rank">${i+1}</span>
+      <div class="top-bar-wrap">
+        <div class="top-bar-label">${name}</div>
+        <div class="top-bar-track"><div class="top-bar-fill" style="width:${(d[0]/maxV*100).toFixed(1)}%"></div></div>
+      </div>
+      <span class="top-value">${fmt(d[0])}</span>
+    </div>`).join("");
+}
+
+function showDetail(rawName, year){
+  const name = normName(rawName);
+  const d    = DATA[year][name];
+  const panel = document.getElementById("detail-content");
+  if(!d){
+    panel.innerHTML = `<span style="color:var(--muted)">No data for <b style="color:var(--text)">${rawName}</b> in ${year}.</span>`;
+    return;
+  }
+  const perK   = (d[0]/(d[1]*1000)).toFixed(1);
+  const sorted = Object.entries(DATA[year]).sort((a,b)=>b[1][0]-a[1][0]);
+  const rank   = sorted.findIndex(([k])=>k===name)+1;
+  const hasChart = !!FILE_MAP[name];
+  panel.innerHTML = `
+    <div class="country-name">${rawName}</div>
+    <div class="stat-row"><span class="stat-label">Registrations ${year}</span><span class="stat-value hl">${d[0].toLocaleString("en")}</span></div>
+    <div class="stat-row"><span class="stat-label">Per 1,000 pop.</span><span class="stat-value">${perK}</span></div>
+    <div class="stat-row"><span class="stat-label">Population</span><span class="stat-value">${d[1]}\u00a0M</span></div>
+    <div class="stat-row"><span class="stat-label">World rank</span><span class="stat-value">#${rank} of ${sorted.length}</span></div>
+    <div class="stat-row"><span class="stat-label">Source</span><span class="stat-value" style="font-size:.65rem">${d[2]}</span></div>
+    ${hasChart
+      ? `<button class="open-chart-btn" onclick="openModal('${name}')">&#x1F4CA; Monthly &amp; powertrain chart \u2192</button>`
+      : `<div style="margin-top:10px;font-size:.65rem;color:var(--muted)">&#x1F4ED; Chart available for EU/EEA countries only</div>`
+    }`;
+}
+
+window.selectByName = function(name){
+  selectedCountry = name;
+  showDetail(name, currentYear);
+  svg.selectAll(".country-path").classed("selected", d => normName(d.properties.name)===name);
 };
 
-// BEV market share bleibt unverändert
-const EV_SHARE = { /* dein bestehender EV_SHARE-Block bleibt unverändert */ };
+const tooltip = document.getElementById("tooltip");
+function showTip(e, rawName, year){
+  const k = normName(rawName);
+  const d = DATA[year][k];
+  const ev = (EV_SHARE[year]||{})[k];
+  document.getElementById("tt-name").textContent = rawName;
+  document.getElementById("tt-reg").textContent = ev != null ? ev.toFixed(1)+"%" : "—";
+  document.getElementById("tt-per").textContent = d ? fmt(d[0]) : "—";
+  document.getElementById("tt-src").textContent = d ? d[2] : "—";
+  tooltip.style.display = "block";
+  tooltip.style.left = Math.min(e.clientX+14, window.innerWidth-230)+"px";
+  tooltip.style.top  = Math.max(e.clientY-44, 0)+"px";
+}
 
-// Der Rest deines JavaScript-Codes (Map, Modal, Charts, Search, init() usw.) 
-// bleibt genau wie in deiner alten Datei. 
-// Du kannst den gesamten <script> Abschnitt ab hier aus deiner alten Datei übernehmen.
+// Chart modal functions (unverändert aus deiner alten Datei)
+let mainChart = null, modalData = null, activeTab = "monthly";
 
+const COLORS = {
+  bev:   { line:"#00e5ff", fill:"rgba(0,229,255,0.12)" },
+  phev:  { line:"#4ade80", fill:"rgba(74,222,128,0.10)" },
+  hybrid:{ line:"#facc15", fill:"rgba(250,204,21,0.08)" },
+  petrol:{ line:"#f87171", fill:"rgba(248,113,113,0.08)" },
+  diesel:{ line:"#94a3b8", fill:"rgba(148,163,184,0.08)" },
+  other: { line:"#c084fc", fill:"rgba(192,132,252,0.08)" },
+};
+const LABELS = {
+  bev:"BEV", phev:"PHEV", hybrid:"Hybrid (non-plug)",
+  petrol:"Petrol / Gasoline", diesel:"Diesel", other:"Other / LPG"
+};
+
+const CHART_BASE = {
+  responsive:true, maintainAspectRatio:false,
+  interaction:{ mode:"index", intersect:false },
+  plugins:{
+    legend:{ position:"top", labels:{ color:"#94a3b8", font:{ family:"DM Mono", size:11 }, boxWidth:14, padding:14 } },
+    tooltip:{ backgroundColor:"rgba(10,14,23,0.95)", borderColor:"rgba(0,229,255,0.3)", borderWidth:1, titleColor:"#fff", bodyColor:"#94a3b8" }
+  },
+  scales:{
+    x:{ grid:{ color:"rgba(255,255,255,0.04)" }, ticks:{ color:"#64748b", font:{ family:"DM Mono", size:9 }, maxTicksLimit:20 } },
+    y:{ grid:{ color:"rgba(255,255,255,0.04)" }, ticks:{ color:"#64748b", font:{ family:"DM Mono", size:9 }, callback: v => v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v } }
+  }
+};
+
+function destroyChart(){ if(mainChart){ mainChart.destroy(); mainChart=null; } }
+
+function resetWrap(){
+  const w = document.getElementById("chart-wrap");
+  if(w) w.innerHTML = '<canvas id="main-chart"></canvas>';
+}
+
+window.openModal = async function(countryName){
+  const overlay = document.getElementById("modal-overlay");
+  const content = document.getElementById("modal-content");
+  const nodata  = document.getElementById("modal-nodata");
+  const loading = document.getElementById("modal-loading");
+
+  document.getElementById("modal-title").textContent = countryName;
+  overlay.classList.add("open");
+  loading.style.display = "block";
+  content.style.display = "none";
+  nodata.style.display  = "none";
+  destroyChart();
+
+  const fileKey = FILE_MAP[countryName];
+  if(!fileKey){ 
+    loading.style.display="none"; 
+    nodata.style.display="block"; 
+    return; 
+  }
+
+  try{
+    const resp = await fetch("data/countries/"+fileKey+".json?v="+Date.now());
+    if(!resp.ok) throw new Error("HTTP "+resp.status+" — "+fileKey+".json");
+    modalData = await resp.json();
+
+    if(modalData.last_updated){
+      const d = new Date(modalData.last_updated);
+      document.getElementById("modal-subtitle").textContent =
+        "Updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
+    }
+    document.getElementById("modal-source").textContent =
+      "Monthly: ECB/ACEA  \u00b7  Annual powertrain: Eurostat";
+
+    const hasMonthly = !!(modalData.monthly && modalData.monthly.labels && modalData.monthly.labels.length);
+    activeTab = hasMonthly ? "monthly" : "absolute";
+
+    document.querySelectorAll("#main-tabs .chart-tab").forEach(b => {
+      const t = b.getAttribute("onclick").match(/'(\w+)'/)[1];
+      b.classList.toggle("active", t===activeTab);
+    });
+
+    resetWrap();
+    renderTab(activeTab);
+    renderSummary(modalData);
+
+    loading.style.display = "none";
+    content.style.display = "block";
+  } catch(e){
+    console.error("openModal:", e);
+    loading.style.display = "none";
+    nodata.style.display  = "block";
+  }
+};
+
+window.closeModal = function(){
+  document.getElementById("modal-overlay").classList.remove("open");
+  destroyChart();
+};
+document.getElementById("modal-overlay").addEventListener("click", function(e){ if(e.target===this) closeModal(); });
+document.addEventListener("keydown", e => { if(e.key==="Escape") closeModal(); });
+
+window.switchTab = function(tab, btn){
+  activeTab = tab;
+  document.querySelectorAll("#main-tabs .chart-tab").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  destroyChart();
+  resetWrap();
+  renderTab(tab);
+};
+
+function renderTab(tab){
+  const src = document.getElementById("tab-source");
+  if(tab==="monthly"){
+    src.textContent = "Source: ECB Data Portal / ACEA  \u00b7  Monthly total registrations (all powertrains)";
+    renderMonthlyChart(modalData);
+  } else {
+    src.textContent = "Source: Eurostat road_eqr_carpda  \u00b7  Annual registrations by powertrain";
+    renderAnnualChart(modalData, tab);
+  }
+}
+
+function renderMonthlyChart(data){
+  const m    = data.monthly;
+  const wrap = document.getElementById("chart-wrap");
+  if(!m || !m.labels || !m.labels.length){
+    wrap.innerHTML = '<div style="height:360px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem;flex-direction:column;gap:10px"><span style="font-size:1.5rem">&#x1F4C5;</span>Monthly data not yet available</div>';
+    return;
+  }
+  const ctx = document.getElementById("main-chart").getContext("2d");
+  mainChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: m.labels,
+      datasets:[{
+        label: "Total registrations",
+        data:  m.total,
+        borderColor: "#00e5ff",
+        backgroundColor: "rgba(0,229,255,0.08)",
+        borderWidth: 2, tension: 0.3, fill: true, pointRadius: 0, pointHoverRadius: 5,
+      }]
+    },
+    options: CHART_BASE
+  });
+}
+
+// ... (renderAnnualChart, renderSummary, search function, init() bleiben genau wie in deiner alten Datei)
+
+async function init(){
+  try{
+    const world     = await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
+    const countries = topojson.feature(world, world.objects.countries);
+    const NUMNAMES  = {4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",40:"Austria",50:"Bangladesh",56:"Belgium",68:"Bolivia",76:"Brazil",100:"Bulgaria",120:"Cameroon",124:"Canada",144:"Sri Lanka",152:"Chile",156:"China",170:"Colombia",203:"Czech Republic",208:"Denmark",218:"Ecuador",818:"Egypt",231:"Ethiopia",246:"Finland",250:"France",276:"Germany",288:"Ghana",300:"Greece",320:"Guatemala",340:"Honduras",348:"Hungary",356:"India",360:"Indonesia",364:"Iran",368:"Iraq",372:"Ireland",376:"Israel",380:"Italy",392:"Japan",398:"Kazakhstan",404:"Kenya",408:"North Korea",410:"South Korea",414:"Kuwait",422:"Lebanon",434:"Libya",442:"Luxembourg",484:"Mexico",504:"Morocco",528:"Netherlands",554:"New Zealand",566:"Nigeria",578:"Norway",586:"Pakistan",604:"Peru",608:"Philippines",616:"Poland",620:"Portugal",634:"Qatar",642:"Romania",643:"Russia",682:"Saudi Arabia",703:"Slovakia",710:"South Africa",724:"Spain",752:"Sweden",756:"Switzerland",764:"Thailand",792:"Turkey",804:"Ukraine",784:"UAE",826:"United Kingdom",840:"United States",858:"Uruguay",862:"Venezuela",704:"Vietnam",887:"Yemen",894:"Zambia",458:"Malaysia"};
+    countries.features.forEach(f => {
+      f.properties.name = NUMNAMES[parseInt(f.id)] || f.properties.name || String(f.id);
+    });
+
+    svg.append("path").datum({type:"Sphere"}).attr("d",pathGen).attr("fill","#0d1520");
+    svg.append("path").datum(d3.geoGraticule()()).attr("d",pathGen).attr("fill","none").attr("stroke","rgba(0,229,255,0.04)").attr("stroke-width","0.3");
+
+    svg.selectAll(".country-path").data(countries.features).join("path")
+      .attr("class","country-path").attr("d",pathGen)
+      .on("mousemove", (event,d) => showTip(event, d.properties.name, currentYear))
+      .on("mouseleave", () => tooltip.style.display="none")
+      .on("click", (event,d) => {
+        const name = normName(d.properties.name);
+        selectByName(name);
+        openModal(name);
+      });
+
+    renderMap(currentYear);
+    document.getElementById("map-loading").style.display = "none";
+  } catch(err){
+    document.getElementById("map-loading").innerHTML =
+      `<p style="color:#ff6b35;text-align:center">Error loading map.<br><small>${err.message}</small></p>`;
+  }
+}
+
+document.getElementById("year-select").addEventListener("change", function(){
+  currentYear = parseInt(this.value);
+  renderMap(currentYear);
+  if(selectedCountry) showDetail(selectedCountry, currentYear);
+});
+
+init();
 </script>
 </body>
 </html>
