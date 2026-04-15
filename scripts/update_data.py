@@ -1,5 +1,5 @@
 """
-scripts/update_data.py  —  v33 (Override protection for DE + BE + LU + FR + ES + PT + GB + IE + IS + NO + SE + FI + EE + LV + LT + PL)
+scripts/update_data.py  —  v34 (Override protection for DE + BE + LU + FR + ES + PT + GB + IE + IS + NO + SE + FI + EE + LV + LT + PL + CZ)
 - Germany:      KBA Override
 - Belgium:      FEBIAC Override (until March 2026)
 - Luxembourg:   STATEC / SNCA / ACEA Override (until March 2026)
@@ -16,6 +16,7 @@ scripts/update_data.py  —  v33 (Override protection for DE + BE + LU + FR + ES
 - Latvia:       CSDD / ACEA Override (until March 2026)
 - Lithuania:    Statistics Lithuania / ACEA Override (until March 2026)
 - Poland:       PZPM / ACEA Override (until March 2026)
+- Czech Republic: SDA / ACEA Override (until March 2026)
 """
 
 import csv
@@ -115,6 +116,7 @@ def write_files(monthly, annual):
     lv_override = load_override("latvia_monthly_override.json")
     lt_override = load_override("lithuania_monthly_override.json")
     pl_override = load_override("poland_monthly_override.json")
+    cz_override = load_override("czech_republic_monthly_override.json")
 
     for ecb_code, (name, _, _) in COUNTRIES.items():
         m = None
@@ -168,6 +170,9 @@ def write_files(monthly, annual):
         elif ecb_code == "PL" and pl_override:
             m = pl_override
             source_monthly = "PZPM / ACEA (monthly new registrations up to March 2026)"
+        elif ecb_code == "CZ" and cz_override:
+            m = cz_override
+            source_monthly = "SDA / ACEA (monthly new registrations up to March 2026)"
 
         if m is None and ecb_code in monthly:
             m = monthly[ecb_code]
@@ -199,7 +204,7 @@ def send_telegram(changed, total_countries, latest):
 
 def main():
     print("=" * 60)
-    print(f"  Car Registration Updater v33  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
+    print(f"  Car Registration Updater v34  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
     print("=" * 60)
 
     monthly = fetch_ecb_monthly()
@@ -215,7 +220,7 @@ def main():
     changed = write_files(monthly, annual)
     latest  = max((v["labels"][-1] for v in monthly.values() if v.get("labels")), default="2022-12")
     send_telegram(changed, len(COUNTRIES), latest)
-    print("\n✓ Done – Overrides for DE, BE, LU, FR, ES, PT, GB, IE, IS, NO, SE, FI, EE, LV, LT + PL active (data up to March 2026)")
+    print("\n✓ Done – Overrides for DE, BE, LU, FR, ES, PT, GB, IE, IS, NO, SE, FI, EE, LV, LT, PL + CZ active (data up to March 2026)")
 
 if __name__ == "__main__":
     main()
