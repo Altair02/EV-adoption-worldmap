@@ -1,9 +1,5 @@
 """
-scripts/update_data.py  —  v35 (Override protection improved + Poland fix)
-- Germany:      KBA Override
-- Belgium:      FEBIAC Override (until March 2026)
-- ... (alle anderen)
-- Poland:       PZPM / ACEA Override (until March 2026)  ← fixed
+scripts/update_data.py  —  v41 (Override protection + all Balkan countries added)
 """
 
 import csv
@@ -44,12 +40,13 @@ def load_override(filename):
         try:
             with open(path, encoding="utf-8") as f:
                 data = json.load(f)
-            print(f"[Override loaded] {filename}")
             monthly = data.get("monthly")
             if monthly and len(monthly.get("labels", [])) == len(monthly.get("total", [])):
+                print(f"[Override loaded] {filename} — {len(monthly['labels'])} months")
                 return monthly, data.get("last_updated"), data.get("source_monthly")
             else:
-                print(f"[Warning] Override {filename} has mismatched label/total length")
+                print(f"[Warning] Override {filename} has mismatched lengths")
+                return None, None, None
         except Exception as e:
             print(f"[Warning] Could not load override {filename}: {e}")
     return None, None, None
@@ -91,7 +88,6 @@ def fetch_rdw_netherlands():
 def write_files(monthly):
     changed = 0
 
-    # Load all overrides
     overrides = {
         "DE": load_override("germany_monthly_override.json"),
         "BE": load_override("belgium_monthly_override.json"),
@@ -110,6 +106,13 @@ def write_files(monthly):
         "LT": load_override("lithuania_monthly_override.json"),
         "PL": load_override("poland_monthly_override.json"),
         "CZ": load_override("czech_republic_monthly_override.json"),
+        "SK": load_override("slovakia_monthly_override.json"),
+        "HU": load_override("hungary_monthly_override.json"),
+        "SI": load_override("slovenia_monthly_override.json"),
+        "HR": load_override("croatia_monthly_override.json"),
+        "RO": load_override("romania_monthly_override.json"),
+        "BG": load_override("bulgaria_monthly_override.json"),
+        "EL": load_override("greece_monthly_override.json"),
     }
 
     for ecb_code, (name, _, _) in COUNTRIES.items():
@@ -118,13 +121,14 @@ def write_files(monthly):
         source_monthly = "ECB Data Portal / ACEA"
 
         ov = overrides.get(ecb_code)
-        if ov and ov[0]:  # (monthly_data, last_updated_override, source_override)
+        if ov and ov[0]:
             m, lu_override, src_override = ov
             if lu_override:
                 last_updated = lu_override
             if src_override:
                 source_monthly = src_override
 
+            # Source-Texte
             if ecb_code == "DE": source_monthly = "KBA (monthly new registrations up to March 2026)"
             elif ecb_code == "BE": source_monthly = "FEBIAC (monthly new registrations up to March 2026)"
             elif ecb_code == "LU": source_monthly = "STATEC / SNCA / ACEA (monthly new registrations up to March 2026)"
@@ -140,8 +144,14 @@ def write_files(monthly):
             elif ecb_code == "EE": source_monthly = "Statistics Estonia (monthly new registrations up to March 2026)"
             elif ecb_code == "LV": source_monthly = "CSDD / ACEA (monthly new registrations up to March 2026)"
             elif ecb_code == "LT": source_monthly = "Statistics Lithuania / ACEA (monthly new registrations up to March 2026)"
-            elif ecb_code == "PL": source_monthly = "PZPM / ACEA (monthly new registrations up to March 2026)"
-            elif ecb_code == "CZ": source_monthly = "SDA / ACEA (monthly new registrations up to March 2026)"
+            elif ecb_code == "PL": source_monthly = "PZPM / ACEA (monthly new registrations up to February 2026)"
+            elif ecb_code == "CZ" or ecb_code == "SK": source_monthly = "SDA / ACEA (monthly new registrations up to March 2026)"
+            elif ecb_code == "HU": source_monthly = "MGE / ACEA (monthly new registrations up to March 2026)"
+            elif ecb_code == "SI": source_monthly = "ZAP / ACEA (monthly new registrations up to March 2026)"
+            elif ecb_code == "HR": source_monthly = "Croatian Bureau of Statistics / ACEA (monthly new registrations up to March 2026)"
+            elif ecb_code == "RO": source_monthly = "ACAROM / ACEA (monthly new registrations up to March 2026)"
+            elif ecb_code == "BG": source_monthly = "ACEA / Bulgarian Association (monthly new registrations up to March 2026)"
+            elif ecb_code == "EL": source_monthly = "Hellenic Statistical Authority / ACEA (monthly new registrations up to March 2026)"
 
         elif ecb_code in monthly:
             m = monthly[ecb_code]
@@ -159,7 +169,7 @@ def write_files(monthly):
             changed += 1
             print(f"✓ Written {name} ({len(m['labels'])} months) — {source_monthly}")
         else:
-            print(f"[Skip] {name} — no valid data")
+            print(f"[Skip] {name} — no valid data or length mismatch")
 
     return changed
 
@@ -175,11 +185,10 @@ def send_telegram(changed, total_countries, latest):
 
 def main():
     print("=" * 60)
-    print(f"  Car Registration Updater v35  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
+    print(f"  Car Registration Updater v41  —  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
     print("=" * 60)
 
     monthly = fetch_ecb_monthly()
-    annual  = {}
 
     rdw_nl = fetch_rdw_netherlands()
     if "NL" in monthly:
@@ -191,7 +200,7 @@ def main():
     changed = write_files(monthly)
     latest  = max((v["labels"][-1] for v in monthly.values() if v.get("labels")), default="2022-12")
     send_telegram(changed, len(COUNTRIES), latest)
-    print("\n✓ Done – Overrides for DE, BE, LU, FR, ES, PT, GB, IE, IS, NO, SE, FI, EE, LV, LT, PL + CZ active (data up to March 2026)")
+    print("\n✓ Done – All Balkan overrides active (BG, EL, HR, HU, RO, SI, SK + others)")
 
 if __name__ == "__main__":
     main()
