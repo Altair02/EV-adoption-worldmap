@@ -241,10 +241,8 @@ const DATA = {
   2022: { /* dein Original bleibt unverändert */ }
 };
 
-// BEV + PHEV + Hybrid + Petrol + Diesel + Other Market Share % (2024)
 const EV_SHARE = {
   2024: {
-    // Europa
     "Norway": 90.0, "Iceland": 54.0, "Sweden": 35.0, "Denmark": 40.0, "Finland": 25.0,
     "Netherlands": 35.0, "Belgium": 25.0, "Germany": 13.5, "United Kingdom": 19.6,
     "France": 17.2, "Austria": 12.0, "Switzerland": 20.4, "Luxembourg": 24.0,
@@ -253,89 +251,36 @@ const EV_SHARE = {
     "Slovenia": 5.5, "Croatia": 3.2, "Bulgaria": 2.1, "Latvia": 6.0,
     "Lithuania": 5.2, "Estonia": 8.0, "Greece": 5.0, "Ireland": 14.5,
     "Malta": 4.0, "Cyprus": 3.5,
-
-    // Asien & Pazifik
     "China": 35.0, "India": 2.5, "Thailand": 3.5, "Malaysia": 1.4,
     "Indonesia": 0.8, "Australia": 7.2, "New Zealand": 12.0,
     "Japan": 3.4, "South Korea": 9.0,
-
-    // Nordamerika
     "Canada": 9.5, "United States": 8.1,
-
-    // Neue Länder (realistische 2024/2025 Werte)
-    "Brazil": 6.2,          // stark wachsend durch Flex-Fuels + erste EVs
-    "Russia": 4.8,          // Hybrid + wenige BEV
-    "Turkey": 17.0,         // starkes Hybrid-Wachstum
-    "Mexico": 3.1,
-    "Argentina": 2.8,
-    "Chile": 8.5,
-    "Iran": 1.2,
-    "Saudi Arabia": 2.5,
+    "Brazil": 6.2, "Russia": 4.8, "Turkey": 17.0, "Mexico": 3.1,
+    "Argentina": 2.8, "Chile": 8.5, "Iran": 1.2, "Saudi Arabia": 2.5,
     "South Africa": 1.9
   },
   2023: { /* dein Original bleibt unverändert */ },
   2022: { /* dein Original bleibt unverändert */ }
 };
 
-// ── ERWEITERTER FILE_MAP ─────────────────────────────────────────────────────
 const FILE_MAP = {
-  "Germany": "germany",
-  "France": "france",
-  "Italy": "italy",
-  "Spain": "spain",
-  "Netherlands": "netherlands",
-  "Belgium": "belgium",
-  "Austria": "austria",
-  "Switzerland": "switzerland",
-  "Poland": "poland",
-  "Czech Republic": "czech_republic",
-  "Slovakia": "slovakia",
-  "Hungary": "hungary",
-  "Romania": "romania",
-  "Bulgaria": "bulgaria",
-  "Croatia": "croatia",
-  "Slovenia": "slovenia",
-  "Greece": "greece",
-  "Portugal": "portugal",
-  "Ireland": "ireland",
-  "Luxembourg": "luxembourg",
-  "Finland": "finland",
-  "Sweden": "sweden",
-  "Denmark": "denmark",
-  "Norway": "norway",
-  "Malta": "malta",
-  "Cyprus": "cyprus",
-  "Estonia": "estonia",
-  "Latvia": "latvia",
-  "Lithuania": "lithuania",
-  "Iceland": "iceland",
-  "United Kingdom": "united_kingdom",
-
-  // Asien & Pazifik
-  "India": "india",
-  "Thailand": "thailand",
-  "Malaysia": "malaysia",
-  "Indonesia": "indonesia",
-  "Australia": "australia",
-  "New Zealand": "new_zealand",
-  "Japan": "japan",
-  "South Korea": "south_korea",
-  "China": "china",
-
-  // Nordamerika
-  "Canada": "canada",
-  "United States": "united_states",
-
-  // Neue Länder
-  "Brazil": "brazil",
-  "Russia": "russia",
-  "Turkey": "turkey",
-  "Mexico": "mexico",
-  "Argentina": "argentina",
-  "Chile": "chile",
-  "Iran": "iran",
-  "Saudi Arabia": "saudi_arabia",
-  "South Africa": "south_africa"
+  "Germany": "germany", "France": "france", "Italy": "italy", "Spain": "spain",
+  "Netherlands": "netherlands", "Belgium": "belgium", "Austria": "austria",
+  "Switzerland": "switzerland", "Poland": "poland", "Czech Republic": "czech_republic",
+  "Slovakia": "slovakia", "Hungary": "hungary", "Romania": "romania",
+  "Bulgaria": "bulgaria", "Croatia": "croatia", "Slovenia": "slovenia",
+  "Greece": "greece", "Portugal": "portugal", "Ireland": "ireland",
+  "Luxembourg": "luxembourg", "Finland": "finland", "Sweden": "sweden",
+  "Denmark": "denmark", "Norway": "norway", "Malta": "malta", "Cyprus": "cyprus",
+  "Estonia": "estonia", "Latvia": "latvia", "Lithuania": "lithuania",
+  "Iceland": "iceland", "United Kingdom": "united_kingdom",
+  "India": "india", "Thailand": "thailand", "Malaysia": "malaysia",
+  "Indonesia": "indonesia", "Australia": "australia", "New Zealand": "new_zealand",
+  "Japan": "japan", "South Korea": "south_korea", "China": "china",
+  "Canada": "canada", "United States": "united_states",
+  "Brazil": "brazil", "Russia": "russia", "Turkey": "turkey",
+  "Mexico": "mexico", "Argentina": "argentina", "Chile": "chile",
+  "Iran": "iran", "Saudi Arabia": "saudi_arabia", "South Africa": "south_africa"
 };
 
 const NAME_MAP = {
@@ -359,7 +304,7 @@ function fmt(n){
   return n.toLocaleString("en");
 }
 
-// ── Der Rest deines Codes bleibt unverändert ab hier ─────────────────────
+// ── Hauptfunktionen ─────────────────────────────────────────────────────
 let currentYear=2024, selectedCountry=null, colorScale;
 const svg     = d3.select("#map-svg");
 const proj    = d3.geoNaturalEarth1().scale(153).translate([480,270]);
@@ -385,12 +330,15 @@ function renderMap(year){
   });
   renderTopList(year);
   document.getElementById("top-year").textContent = year;
-  document.getElementById("last-update").textContent = "BEV share "+year+" \u00b7 ACEA/IEA";
+  document.getElementById("last-update").textContent = "BEV share "+year+" · ACEA/IEA";
 }
 
 function renderTopList(year){
-  const entries = Object.entries(DATA[year]).sort((a,b)=>b[1][0]-a[1][0]).slice(0,10);
-  const maxV = entries[0][1][0];
+  const entries = Object.entries(DATA[year] || {}).sort((a,b)=>b[1][0]-a[1][0]).slice(0,10);
+  const maxV = entries[0] ? entries[0][1][0] : 0;
+  
+  document.getElementById("top-year").textContent = year;   // Nur das reine Jahr
+
   document.getElementById("top-list").innerHTML = entries.map(([name,d],i)=>`
     <div class="top-item" onclick="selectByName('${name.replace(/'/g,"\\'")}')">
       <span class="top-rank">${i+1}</span>
@@ -404,16 +352,19 @@ function renderTopList(year){
 
 function showDetail(rawName, year){
   const name = normName(rawName);
-  const d    = DATA[year][name];
+  const d    = DATA[year] ? DATA[year][name] : null;
   const panel = document.getElementById("detail-content");
+  
   if(!d){
     panel.innerHTML = `<span style="color:var(--muted)">No data for <b style="color:var(--text)">${rawName}</b> in ${year}.</span>`;
     return;
   }
+
   const perK   = (d[0]/(d[1]*1000)).toFixed(1);
-  const sorted = Object.entries(DATA[year]).sort((a,b)=>b[1][0]-a[1][0]);
+  const sorted = Object.entries(DATA[year] || {}).sort((a,b)=>b[1][0]-a[1][0]);
   const rank   = sorted.findIndex(([k])=>k===name)+1;
   const hasChart = !!FILE_MAP[name];
+
   panel.innerHTML = `
     <div class="country-name">${rawName}</div>
     <div class="stat-row"><span class="stat-label">Registrations ${year}</span><span class="stat-value hl">${d[0].toLocaleString("en")}</span></div>
@@ -436,7 +387,7 @@ window.selectByName = function(name){
 const tooltip = document.getElementById("tooltip");
 function showTip(e, rawName, year){
   const k = normName(rawName);
-  const d = DATA[year][k];
+  const d = DATA[year] ? DATA[year][k] : null;
   const ev = (EV_SHARE[year]||{})[k];
   document.getElementById("tt-name").textContent = rawName;
   document.getElementById("tt-reg").textContent = ev != null ? ev.toFixed(1)+"%" : "—";
@@ -447,7 +398,7 @@ function showTip(e, rawName, year){
   tooltip.style.top  = Math.max(e.clientY-44, 0)+"px";
 }
 
-// Chart modal
+// Chart modal (unverändert)
 let mainChart = null, modalData = null, activeTab = "monthly";
 
 const COLORS = {
@@ -477,7 +428,6 @@ const CHART_BASE = {
 };
 
 function destroyChart(){ if(mainChart){ mainChart.destroy(); mainChart=null; } }
-
 function resetWrap(){
   const w = document.getElementById("chart-wrap");
   if(w) w.innerHTML = '<canvas id="main-chart"></canvas>';
@@ -519,10 +469,10 @@ window.openModal = async function(countryName){
     const monthlyTabBtn = document.getElementById("monthly-tab");
     if (hasMonthly && modalData.monthly.labels[0] && modalData.monthly.labels[0].includes("-")) {
       monthlyTabBtn.textContent = "Monthly total";
-      document.getElementById("modal-source").textContent = "Monthly: ECB/ACEA  \u00b7  Annual powertrain: Eurostat";
+      document.getElementById("modal-source").textContent = "Monthly: ECB/ACEA  ·  Annual powertrain: Eurostat";
     } else {
       monthlyTabBtn.textContent = "Yearly total";
-      document.getElementById("modal-source").textContent = "Yearly: National statistics  \u00b7  Annual powertrain: Eurostat";
+      document.getElementById("modal-source").textContent = "Yearly: National statistics  ·  Annual powertrain: Eurostat";
     }
 
     activeTab = hasMonthly ? "monthly" : "absolute";
@@ -564,10 +514,10 @@ window.switchTab = function(tab, btn){
 function renderTab(tab){
   const src = document.getElementById("tab-source");
   if(tab==="monthly"){
-    src.textContent = "Source: ECB Data Portal / ACEA  \u00b7  Monthly total registrations (all powertrains)";
+    src.textContent = "Source: ECB Data Portal / ACEA  ·  Monthly total registrations (all powertrains)";
     renderMonthlyChart(modalData);
   } else {
-    src.textContent = "Source: Eurostat road_eqr_carpda  \u00b7  Annual registrations by powertrain";
+    src.textContent = "Source: Eurostat road_eqr_carpda  ·  Annual registrations by powertrain";
     renderAnnualChart(modalData, tab);
   }
 }
@@ -662,7 +612,7 @@ function renderSummary(data){
   if(!a || !a.labels || !a.labels.length){ grid.innerHTML=""; return; }
   const keys     = ["bev","phev","hybrid","petrol","diesel","other"];
   const last     = a.labels.length-1;
-  const lastYear = a.labels[last];
+  const lastYear = a.labels[last].slice(0,4);   // Nur das Jahr nehmen (2022 statt 2022-12)
   const total    = keys.reduce((s,k) => s+((a[k]&&a[k][last])||0), 0);
   grid.innerHTML = keys.map(k => {
     const v   = (a[k]&&a[k][last])||0;
@@ -682,7 +632,7 @@ function renderSummary(data){
 
   function allCountries(){
     const set = new Set([
-      ...Object.keys(DATA[currentYear]),
+      ...Object.keys(DATA[currentYear] || {}),
       ...Object.keys(FILE_MAP),
     ]);
     return Array.from(set).sort();
@@ -721,7 +671,7 @@ function renderSummary(data){
 
     matches.forEach(name => {
       const ev    = (EV_SHARE[currentYear]||{})[name];
-      const total = (DATA[currentYear][name]||[])[0];
+      const total = (DATA[currentYear]||{})[name] ? (DATA[currentYear][name])[0] : null;
       const item  = document.createElement("div");
       item.className = "search-result-item";
       item.innerHTML = `
