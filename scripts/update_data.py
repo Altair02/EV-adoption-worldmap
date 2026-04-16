@@ -1,5 +1,5 @@
 # scripts/update_data.py
-# Version: v55.1 - April 2026 - Täglich + Telegram mit Charts + 4 neue Länder
+# Version: v55.2 - April 2026 - Verbesserte Erkennung für neue Länder
 
 import json
 import os
@@ -61,7 +61,6 @@ TE_SLUGS = {
     "EG": "egypt",
 }
 
-# Telegram Konfiguration
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
@@ -81,7 +80,7 @@ def create_chart(country_name, labels, total, highlight_label=None):
     fig, ax = plt.subplots(figsize=(10, 5.5), facecolor='#0a0e17')
     ax.set_facecolor('#111827')
     
-    ax.plot(labels[-72:], total[-72:], color='#00e5ff', linewidth=2.8)  # letzte 72 Monate für bessere Historie
+    ax.plot(labels[-72:], total[-72:], color='#00e5ff', linewidth=2.8)
     
     if highlight_label and highlight_label in labels:
         idx = labels.index(highlight_label)
@@ -111,17 +110,24 @@ def fetch_latest_te(country_code, slug):
         soup = BeautifulSoup(resp.text, "html.parser")
         text = soup.get_text()
 
-        match = re.search(r'Car Registrations .*?to ([\d,]+)(?:[\s]*Thousand)?[\s]*Units? in (\w+)', 
-                         text, re.IGNORECASE)
+        # Verbesserte Regex (mehr Varianten)
+        match = re.search(r'Car Registrations.*?to ([\d,]+)(?:[\s]*Thousand)?[\s]*Units? in (\w+)', 
+                         text, re.IGNORECASE | re.DOTALL)
+        
         if match:
-            value = int(match.group(1).replace(",", ""))
+            value_str = match.group(1).replace(",", "")
+            value = int(value_str)
+            
+            # Thousand prüfen
             if "Thousand" in text[match.start():match.end() + 300]:
                 value *= 1000
 
             month_name = match.group(2).lower()
             month_map = {"january":"01","february":"02","march":"03","april":"04","may":"05","june":"06",
                          "july":"07","august":"08","september":"09","october":"10","november":"11","december":"12"}
+            
             if month_name not in month_map:
+                print(f"  → {display_name}: Monatsname '{month_name}' nicht erkannt")
                 return None, None
 
             year = datetime.now().year
@@ -129,12 +135,16 @@ def fetch_latest_te(country_code, slug):
 
             current_month = datetime.now(timezone.utc).strftime("%Y-%m")
             if date_label > current_month:
+                print(f"  → {display_name}: Zukünftiger Monat {date_label} ignoriert")
                 return None, None
 
             print(f"  → {display_name} Auto-Fetch: {date_label} = {value:,} Einheiten")
             return date_label, value
+        else:
+            print(f"  → {display_name}: Kein 'Car Registrations' Wert auf der Seite gefunden")
     except Exception as e:
         print(f"  Warnung: {display_name} Auto-Fetch fehlgeschlagen: {e}")
+    
     return None, None
 
 def load_override(filename):
@@ -167,9 +177,10 @@ def write_country_json(country_code):
             else:
                 print(f"  → {display_name}: {new_label} bereits aktuell")
         else:
-            # Neue Datei mit erstem Eintrag
             monthly_override = {"labels": [new_label], "total": [new_value]}
             changed = True
+    else:
+        print(f"  → {display_name}: Keine neuen Daten gefunden")
 
     if monthly_override and monthly_override.get("labels") and monthly_override.get("total"):
         labels = monthly_override["labels"]
@@ -196,7 +207,6 @@ def write_country_json(country_code):
 
     print(f"  ✓ Geschrieben: {filename} ({len(labels)} Monate)")
 
-    # Telegram mit Chart senden, wenn neuer Monat hinzugefügt wurde
     if changed and new_label and new_value is not None:
         try:
             img = create_chart(display_name, labels, total, new_label)
