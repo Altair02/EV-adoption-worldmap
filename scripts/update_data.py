@@ -1,11 +1,11 @@
 # scripts/update_data.py
-# Version: v52.1 - April 2026 - VOLLAUTOMATISCH + Bugfix
+# Version: v52.2 - April 2026 - VOLLAUTOMATISCH + datetime-Fix
 
 import csv
 import json
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from urllib.request import urlopen, Request
 import requests
 from bs4 import BeautifulSoup
@@ -18,63 +18,31 @@ ECB_BASE_URL = "https://data.ecb.europa.eu/api/v2.1/data/STS.M.CAR.REG.{country}
 # Länder-Mapping: ECB-Code → (Dateiname, Anzeigename)
 COUNTRIES = {
     # Europa
-    "DE": ("germany", "Germany"),
-    "FR": ("france", "France"),
-    "IT": ("italy", "Italy"),
-    "ES": ("spain", "Spain"),
-    "NL": ("netherlands", "Netherlands"),
-    "BE": ("belgium", "Belgium"),
-    "AT": ("austria", "Austria"),
-    "CH": ("switzerland", "Switzerland"),
-    "PL": ("poland", "Poland"),
-    "CZ": ("czech_republic", "Czech Republic"),
-    "SK": ("slovakia", "Slovakia"),
-    "HU": ("hungary", "Hungary"),
-    "RO": ("romania", "Romania"),
-    "BG": ("bulgaria", "Bulgaria"),
-    "HR": ("croatia", "Croatia"),
-    "SI": ("slovenia", "Slovenia"),
-    "GR": ("greece", "Greece"),
-    "PT": ("portugal", "Portugal"),
-    "IE": ("ireland", "Ireland"),
-    "LU": ("luxembourg", "Luxembourg"),
-    "FI": ("finland", "Finland"),
-    "SE": ("sweden", "Sweden"),
-    "DK": ("denmark", "Denmark"),
-    "NO": ("norway", "Norway"),
-    "MT": ("malta", "Malta"),
-    "CY": ("cyprus", "Cyprus"),
-    "EE": ("estonia", "Estonia"),
-    "LV": ("latvia", "Latvia"),
-    "LT": ("lithuania", "Lithuania"),
-    "IS": ("iceland", "Iceland"),
-    "GB": ("united_kingdom", "United Kingdom"),
+    "DE": ("germany", "Germany"), "FR": ("france", "France"), "IT": ("italy", "Italy"),
+    "ES": ("spain", "Spain"), "NL": ("netherlands", "Netherlands"), "BE": ("belgium", "Belgium"),
+    "AT": ("austria", "Austria"), "CH": ("switzerland", "Switzerland"), "PL": ("poland", "Poland"),
+    "CZ": ("czech_republic", "Czech Republic"), "SK": ("slovakia", "Slovakia"),
+    "HU": ("hungary", "Hungary"), "RO": ("romania", "Romania"), "BG": ("bulgaria", "Bulgaria"),
+    "HR": ("croatia", "Croatia"), "SI": ("slovenia", "Slovenia"), "GR": ("greece", "Greece"),
+    "PT": ("portugal", "Portugal"), "IE": ("ireland", "Ireland"), "LU": ("luxembourg", "Luxembourg"),
+    "FI": ("finland", "Finland"), "SE": ("sweden", "Sweden"), "DK": ("denmark", "Denmark"),
+    "NO": ("norway", "Norway"), "MT": ("malta", "Malta"), "CY": ("cyprus", "Cyprus"),
+    "EE": ("estonia", "Estonia"), "LV": ("latvia", "Latvia"), "LT": ("lithuania", "Lithuania"),
+    "IS": ("iceland", "Iceland"), "GB": ("united_kingdom", "United Kingdom"),
 
     # Asien & Pazifik
-    "IN": ("india", "India"),
-    "TH": ("thailand", "Thailand"),
-    "MY": ("malaysia", "Malaysia"),
-    "ID": ("indonesia", "Indonesia"),
-    "AU": ("australia", "Australia"),
-    "NZ": ("new_zealand", "New Zealand"),
-    "JP": ("japan", "Japan"),
-    "KR": ("south_korea", "South Korea"),
-    "CN": ("china", "China"),
+    "IN": ("india", "India"), "TH": ("thailand", "Thailand"), "MY": ("malaysia", "Malaysia"),
+    "ID": ("indonesia", "Indonesia"), "AU": ("australia", "Australia"),
+    "NZ": ("new_zealand", "New Zealand"), "JP": ("japan", "Japan"),
+    "KR": ("south_korea", "South Korea"), "CN": ("china", "China"),
 
     # Nordamerika
-    "CA": ("canada", "Canada"),
-    "US": ("united_states", "United States"),
+    "CA": ("canada", "Canada"), "US": ("united_states", "United States"),
 
-    # Neue Länder (v51)
-    "BR": ("brazil", "Brazil"),
-    "RU": ("russia", "Russia"),
-    "TR": ("turkey", "Turkey"),
-    "MX": ("mexico", "Mexico"),
-    "AR": ("argentina", "Argentina"),
-    "CL": ("chile", "Chile"),
-    "IR": ("iran", "Iran"),
-    "SA": ("saudi_arabia", "Saudi Arabia"),
-    "ZA": ("south_africa", "South Africa"),
+    # Neue Länder
+    "BR": ("brazil", "Brazil"), "RU": ("russia", "Russia"), "TR": ("turkey", "Turkey"),
+    "MX": ("mexico", "Mexico"), "AR": ("argentina", "Argentina"), "CL": ("chile", "Chile"),
+    "IR": ("iran", "Iran"), "SA": ("saudi_arabia", "Saudi Arabia"), "ZA": ("south_africa", "South Africa"),
 }
 
 # ====================== OVERRIDES ======================
@@ -85,15 +53,13 @@ def load_override(filename):
     try:
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        monthly = data.get("monthly")
-        last_updated = data.get("last_updated")
-        source = data.get("source_monthly")
-        return monthly, last_updated, source
+        return data.get("monthly"), data.get("last_updated"), data.get("source_monthly")
     except Exception as e:
         print(f"  Warnung: Konnte Override {filename} nicht laden: {e}")
         return None, None, None
 
 overrides = {
+    # (genau wie vorher – alle Länder)
     "DE": load_override("germany_monthly_override.json"),
     "FR": load_override("france_monthly_override.json"),
     "IT": load_override("italy_monthly_override.json"),
@@ -175,7 +141,6 @@ def fetch_ecb_monthly(ecb_code):
 
 # ====================== AUTO-FETCHER (Argentinien) ======================
 def fetch_latest_argentina():
-    """Holt den neuesten Monat automatisch von Trading Economics / ADEFA"""
     url = "https://tradingeconomics.com/argentina/car-registrations"
     headers = {"User-Agent": "Mozilla/5.0 (compatible; GitHub-Actions EV-Map)"}
     try:
@@ -184,21 +149,16 @@ def fetch_latest_argentina():
         soup = BeautifulSoup(resp.text, "html.parser")
         text = soup.get_text()
 
-        # Verbesserte Suche nach aktuellem Monat + Zahl
-        match = re.search(r'Car Registrations.*?increased to ([\d,]+) Units in (\w+)', text, re.IGNORECASE)
-        if not match:
-            match = re.search(r'([\d,]+).*?in (\w+)', text, re.IGNORECASE)
-
+        # Verbesserte Regex (funktioniert aktuell besser)
+        match = re.search(r'Car Registrations.*?([\d,]+).*?in (\w+)', text, re.IGNORECASE)
         if match:
             value = int(match.group(1).replace(",", ""))
             month_name = match.group(2)
-            month_map = {"january": "01", "february": "02", "march": "03", "april": "04",
-                         "may": "05", "june": "06", "july": "07", "august": "08",
-                         "september": "09", "october": "10", "november": "11", "december": "12"}
+            month_map = {"january":"01","february":"02","march":"03","april":"04","may":"05","june":"06",
+                         "july":"07","august":"08","september":"09","october":"10","november":"11","december":"12"}
             year = datetime.now().year
             month_num = month_map.get(month_name.lower(), "01")
             date_label = f"{year}-{month_num}"
-
             print(f"  → Argentina Auto-Fetch: {date_label} = {value} Einheiten")
             return date_label, value
     except Exception as e:
@@ -210,7 +170,7 @@ def write_country_json(country_code, ecb_data):
     monthly_override, last_upd_override, source_override = overrides.get(country_code, (None, None, None))
     display_name = COUNTRIES[country_code][1]
 
-    # === Auto-Update für Argentinien ===
+    # Auto-Update nur für Argentinien
     if country_code == "AR":
         new_label, new_value = fetch_latest_argentina()
         if new_label and new_value is not None:
@@ -228,16 +188,15 @@ def write_country_json(country_code, ecb_data):
     if monthly_override and monthly_override.get("labels") and monthly_override.get("total"):
         labels = monthly_override["labels"]
         total = monthly_override["total"]
-        last_updated = last_upd_override or datetime.now(datetime.UTC).isoformat().replace("+00:00", "Z")
+        last_updated = last_upd_override or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         source_monthly = source_override or "National statistics + Auto-Fetch (ADEFA)"
         print(f"  → Override (ggf. auto-updated) verwendet für {display_name}")
     else:
         labels = [date for date, _ in ecb_data]
         total = [val for _, val in ecb_data]
-        last_updated = datetime.now(datetime.UTC).isoformat().replace("+00:00", "Z")
+        last_updated = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         source_monthly = "ECB Data Portal / ACEA"
 
-    # Längen synchronisieren
     min_len = min(len(labels), len(total))
     labels = labels[:min_len]
     total = total[:min_len]
@@ -258,13 +217,13 @@ def write_country_json(country_code, ecb_data):
 
 # ====================== MAIN ======================
 def main():
-    print("=== Car Registration Data Update gestartet (v52.1) ===")
-    print(f"Zeit: {datetime.now(datetime.UTC).isoformat().replace('+00:00', 'Z')}\n")
+    print("=== Car Registration Data Update gestartet (v52.2) ===")
+    print(f"Zeit: {datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')}\n")
 
     for ecb_code, (filename, display_name) in COUNTRIES.items():
         print(f"Verarbeite {display_name} ({ecb_code}) ...")
         
-        if ecb_code in ["IN", "TH", "MY", "ID", "AU", "NZ", "JP", "KR", "CN", "CA", "US", 
+        if ecb_code in ["IN", "TH", "MY", "ID", "AU", "NZ", "JP", "KR", "CN", "CA", "US",
                         "BR", "RU", "TR", "MX", "AR", "CL", "IR", "SA", "ZA"]:
             ecb_data = []
         else:
