@@ -1,5 +1,5 @@
 # scripts/update_data.py
-# Version: v54.4 - April 2026 - Täglich + Telegram mit Charts bei Veränderungen
+# Version: v54.5 - April 2026 - Täglich + Telegram mit Charts bei neuen Monaten
 
 import json
 import os
@@ -12,7 +12,6 @@ import io
 
 DATA_DIR = "data/countries"
 
-# Alle Länder
 COUNTRIES = {
     "DE": ("germany", "Germany"), "FR": ("france", "France"), "IT": ("italy", "Italy"),
     "ES": ("spain", "Spain"), "NL": ("netherlands", "Netherlands"), "BE": ("belgium", "Belgium"),
@@ -68,11 +67,11 @@ def create_chart(country_name, labels, total, highlight_label=None):
     fig, ax = plt.subplots(figsize=(10, 5.5), facecolor='#0a0e17')
     ax.set_facecolor('#111827')
     
-    ax.plot(labels[-48:], total[-48:], color='#00e5ff', linewidth=2.5)  # letzte 4 Jahre
+    ax.plot(labels[-60:], total[-60:], color='#00e5ff', linewidth=2.8)
     
     if highlight_label and highlight_label in labels:
         idx = labels.index(highlight_label)
-        ax.plot(labels[idx], total[idx], 'o', color='#ff6b35', markersize=9)
+        ax.plot(labels[idx], total[idx], 'o', color='#ff6b35', markersize=10)
     
     ax.set_title(f"{country_name} – New Car Registrations", color='white', fontsize=14, pad=15)
     ax.grid(True, alpha=0.2)
@@ -141,26 +140,21 @@ def write_country_json(country_code):
     monthly_override, last_upd_override, source_override = overrides.get(country_code, (None, None, None))
     display_name = COUNTRIES[country_code][1]
 
-    new_label, new_value = fetch_latest_te(country_code, TE_SLUGS.get(country_code, country_code.lower()))
+    new_label, new_value = fetch_latest_te(country_code, TE_SLUGS.get(country_code))
 
+    changed = False
     if new_label and new_value is not None:
         if monthly_override and monthly_override.get("labels"):
             if new_label not in monthly_override["labels"]:
                 monthly_override["labels"].append(new_label)
                 monthly_override["total"].append(new_value)
                 print(f"  → {display_name}: Neuer Monat {new_label} automatisch hinzugefügt")
-                
-                # Chart erzeugen und Telegram senden
-                try:
-                    img = create_chart(display_name, monthly_override["labels"], monthly_override["total"], new_label)
-                    caption = f"✅ <b>{display_name}</b>\nNeuer Monat: <b>{new_label}</b>\nZulassungen: <b>{new_value:,}</b>"
-                    send_telegram("Neue Zulassungszahlen", img, caption)
-                except Exception as e:
-                    print(f"  Warnung: Chart für {display_name} konnte nicht gesendet werden: {e}")
+                changed = True
             else:
                 print(f"  → {display_name}: {new_label} bereits aktuell")
         else:
             monthly_override = {"labels": [new_label], "total": [new_value]}
+            changed = True
 
     if monthly_override and monthly_override.get("labels") and monthly_override.get("total"):
         labels = monthly_override["labels"]
@@ -187,8 +181,18 @@ def write_country_json(country_code):
 
     print(f"  ✓ Geschrieben: {filename} ({len(labels)} Monate)")
 
+    # Telegram mit Chart senden, wenn neuer Monat hinzugefügt wurde
+    if changed and new_label and new_value is not None:
+        try:
+            img = create_chart(display_name, labels, total, new_label)
+            caption = f"✅ <b>{display_name}</b>\nNeuer Monat: <b>{new_label}</b>\nZulassungen: <b>{new_value:,}</b>"
+            send_telegram("Neue Zulassungszahlen", img, caption)
+            print(f"  → Telegram mit Chart für {display_name} gesendet")
+        except Exception as e:
+            print(f"  Warnung: Chart für {display_name} konnte nicht gesendet werden: {e}")
+
 def main():
-    print("=== Car Registration Data Update gestartet (v54.4) ===")
+    print("=== Car Registration Data Update gestartet (v54.5) ===")
     print(f"Zeit: {datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')}\n")
 
     for ecb_code in COUNTRIES:
