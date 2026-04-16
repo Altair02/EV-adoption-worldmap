@@ -215,7 +215,7 @@
 </div>
 
 <script>
-// ── Annual totals for world map colouring ─────────────────────────────────────
+// ── Data ─────────────────────────────────────
 const DATA = {
   2024: {
     "China":[30090000,1412,"OICA/CAAM"],"United States":[15900000,334,"OICA/Wards"],
@@ -337,7 +337,7 @@ function renderTopList(year){
   const entries = Object.entries(DATA[year] || {}).sort((a,b)=>b[1][0]-a[1][0]).slice(0,10);
   const maxV = entries[0] ? entries[0][1][0] : 0;
   
-  document.getElementById("top-year").textContent = year;   // Nur das reine Jahr
+  document.getElementById("top-year").textContent = year;
 
   document.getElementById("top-list").innerHTML = entries.map(([name,d],i)=>`
     <div class="top-item" onclick="selectByName('${name.replace(/'/g,"\\'")}')">
@@ -398,7 +398,7 @@ function showTip(e, rawName, year){
   tooltip.style.top  = Math.max(e.clientY-44, 0)+"px";
 }
 
-// Chart modal (unverändert)
+// Chart modal
 let mainChart = null, modalData = null, activeTab = "monthly";
 
 const COLORS = {
@@ -522,6 +522,7 @@ function renderTab(tab){
   }
 }
 
+// ========== WICHTIG: Nur hier geändert ==========
 function renderMonthlyChart(data){
   const m    = data.monthly;
   const wrap = document.getElementById("chart-wrap");
@@ -529,20 +530,47 @@ function renderMonthlyChart(data){
     wrap.innerHTML = '<div style="height:360px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem;flex-direction:column;gap:10px"><span style="font-size:1.5rem">&#x1F4C5;</span>Monthly data not yet available</div>';
     return;
   }
+
+  // Labels für die Anzeige auf reines Jahr kürzen
+  const displayLabels = m.labels.map(label => {
+    if (label.includes('-')) {
+      return label.split('-')[0];        // "2023-12" → "2023"
+    }
+    return label;
+  });
+
   const ctx = document.getElementById("main-chart").getContext("2d");
   mainChart = new Chart(ctx, {
     type: "line",
     data: {
-      labels: m.labels,
+      labels: displayLabels,
       datasets:[{
         label: "Total registrations",
         data:  m.total,
         borderColor: "#00e5ff",
         backgroundColor: "rgba(0,229,255,0.08)",
-        borderWidth: 2, tension: 0.3, fill: true, pointRadius: 0, pointHoverRadius: 5,
+        borderWidth: 2, 
+        tension: 0.3, 
+        fill: true, 
+        pointRadius: 0, 
+        pointHoverRadius: 5,
       }]
     },
-    options: CHART_BASE
+    options: {
+      ...CHART_BASE,
+      scales: {
+        ...CHART_BASE.scales,
+        x: {
+          ...CHART_BASE.scales.x,
+          ticks: {
+            ...CHART_BASE.scales.x.ticks,
+            callback: function(value, index) {
+              return displayLabels[index];
+            }
+          }
+        }
+      }
+    }
   });
 }
 
@@ -612,7 +640,7 @@ function renderSummary(data){
   if(!a || !a.labels || !a.labels.length){ grid.innerHTML=""; return; }
   const keys     = ["bev","phev","hybrid","petrol","diesel","other"];
   const last     = a.labels.length-1;
-  const lastYear = a.labels[last].slice(0,4);   // Nur das Jahr nehmen (2022 statt 2022-12)
+  const lastYear = a.labels[last].slice(0,4);   // Nur das Jahr (2023 statt 2023-12)
   const total    = keys.reduce((s,k) => s+((a[k]&&a[k][last])||0), 0);
   grid.innerHTML = keys.map(k => {
     const v   = (a[k]&&a[k][last])||0;
