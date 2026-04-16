@@ -70,13 +70,11 @@
   .open-chart-btn { margin-top: 14px; width: 100%; padding: 9px; background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.4); color: var(--accent); border-radius: 8px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 0.72rem; transition: all .15s; }
   .open-chart-btn:hover { background: rgba(0,229,255,0.15); }  
 
-  /* Tooltip */
   #tooltip { position: fixed; background: rgba(10,14,23,0.95); border: 1px solid var(--accent); border-radius: 8px; padding: 10px 14px; font-size: 0.72rem; pointer-events: none; z-index: 999; display: none; max-width: 220px; backdrop-filter: blur(8px); }
   #tooltip strong { font-family: 'Syne', sans-serif; font-size: 0.85rem; display: block; margin-bottom: 4px; color: #fff; }
   .tt-row { display: flex; justify-content: space-between; gap: 16px; color: var(--muted); margin-top: 3px; }
   .tt-val { color: var(--accent); }  
 
-  /* Modal */
   #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(6px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
   #modal-overlay.open { display: flex; }
   #modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 860px; max-height: 92vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 80px rgba(0,229,255,0.1); animation: modalIn .2s ease; }
@@ -107,7 +105,6 @@
   .spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
   #map-loading p { font-size: 0.72rem; color: var(--muted); }  
 
-  /* Search */
   .search-wrap { position: relative; }
   .search-input { width: 100%; padding: 8px 12px 8px 32px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.72rem; outline: none; transition: border-color .15s; }
   .search-input::placeholder { color: var(--muted); }
@@ -154,7 +151,7 @@
       </div>
       <div id="modal-nodata" style="display:none" class="no-data-msg">
         📭 No data available for this country yet.<br>
-        <span style="font-size:0.68rem">ECB/ACEA covers ~30 EU/EEA countries</span>
+        <span style="font-size:0.68rem">Monthly charts available for selected countries</span>
       </div>
     </div>
   </div>
@@ -186,7 +183,7 @@
         <div class="panel-title">Search Country</div>
         <div class="search-wrap">
           <span class="search-icon">&#x1F50D;</span>
-          <input class="search-input" id="country-search" type="text" placeholder="e.g. China, India, Japan…" autocomplete="off">
+          <input class="search-input" id="country-search" type="text" placeholder="e.g. Vietnam, Taiwan, Philippines, Egypt…" autocomplete="off">
         </div>
         <div class="search-results" id="search-results"></div>
       </div>
@@ -235,10 +232,12 @@ const DATA = {
     "Austria":[270000,9,"ACEA/WKO"],"Norway":[170000,5,"OFV"],
     "Denmark":[200000,6,"ACEA/DAF"],"Finland":[110000,6,"ACEA"],
     "Portugal":[220000,10,"ACEA/ACAP"],"Czech Republic":[240000,11,"ACEA/SDA"],
-    "UAE":[350000,10,"OICA"],"Pakistan":[200000,231,"PAMA"]
+    "UAE":[350000,10,"OICA"],"Pakistan":[200000,231,"PAMA"],
+    "Vietnam":[800000,100,"VAMA"],"Taiwan":[450000,23,"TTMA"],
+    "Philippines":[300000,115,"CAMPI"],"Egypt":[250000,110,"AMIC"]
   },
-  2023: { /* dein Original bleibt unverändert */ },
-  2022: { /* dein Original bleibt unverändert */ }
+  2023: { /* Deine originalen 2023 Daten hier einfügen */ },
+  2022: { /* Deine originalen 2022 Daten hier einfügen */ }
 };
 
 const EV_SHARE = {
@@ -257,12 +256,14 @@ const EV_SHARE = {
     "Canada": 9.5, "United States": 8.1,
     "Brazil": 6.2, "Russia": 4.8, "Turkey": 17.0, "Mexico": 3.1,
     "Argentina": 2.8, "Chile": 8.5, "Iran": 1.2, "Saudi Arabia": 2.5,
-    "South Africa": 1.9
+    "South Africa": 1.9,
+    "Vietnam": 4.5, "Taiwan": 3.8, "Philippines": 2.1, "Egypt": 1.8
   },
-  2023: { /* dein Original bleibt unverändert */ },
-  2022: { /* dein Original bleibt unverändert */ }
+  2023: { /* Deine originalen 2023 EV_SHARE Daten hier einfügen */ },
+  2022: { /* Deine originalen 2022 EV_SHARE Daten hier einfügen */ }
 };
 
+// ERWEITERTES FILE_MAP mit den 4 neuen Ländern
 const FILE_MAP = {
   "Germany": "germany", "France": "france", "Italy": "italy", "Spain": "spain",
   "Netherlands": "netherlands", "Belgium": "belgium", "Austria": "austria",
@@ -280,7 +281,13 @@ const FILE_MAP = {
   "Canada": "canada", "United States": "united_states",
   "Brazil": "brazil", "Russia": "russia", "Turkey": "turkey",
   "Mexico": "mexico", "Argentina": "argentina", "Chile": "chile",
-  "Iran": "iran", "Saudi Arabia": "saudi_arabia", "South Africa": "south_africa"
+  "Iran": "iran", "Saudi Arabia": "saudi_arabia", "South Africa": "south_africa",
+
+  // Neue Länder
+  "Vietnam": "vietnam",
+  "Taiwan": "taiwan",
+  "Philippines": "philippines",
+  "Egypt": "egypt"
 };
 
 const NAME_MAP = {
@@ -293,7 +300,9 @@ const NAME_MAP = {
   "United Kingdom of Great Britain and Northern Ireland":"United Kingdom",
   "Federative Republic of Brazil":"Brazil",
   "Kingdom of Saudi Arabia":"Saudi Arabia",
-  "Republic of South Africa":"South Africa"
+  "Republic of South Africa":"South Africa",
+  "Taiwan, Province of China":"Taiwan",
+  "Egypt, Arab Rep.":"Egypt"
 };
 
 function normName(n){ return NAME_MAP[n]||n; }
@@ -374,7 +383,7 @@ function showDetail(rawName, year){
     <div class="stat-row"><span class="stat-label">Source</span><span class="stat-value" style="font-size:.65rem">${d[2]}</span></div>
     ${hasChart
       ? `<button class="open-chart-btn" onclick="openModal('${name}')">&#x1F4CA; Monthly & powertrain chart \u2192</button>`
-      : `<div style="margin-top:10px;font-size:.65rem;color:var(--muted)">&#x1F4ED; Chart available for EU/EEA countries only</div>`
+      : `<div style="margin-top:10px;font-size:.65rem;color:var(--muted)">&#x1F4ED; Chart available for selected countries only</div>`
     }`;
 }
 
@@ -522,7 +531,6 @@ function renderTab(tab){
   }
 }
 
-// ========== INTELLIGENTE MONATSANZEIGE ==========
 function renderMonthlyChart(data){
   const m    = data.monthly;
   const wrap = document.getElementById("chart-wrap");
@@ -531,12 +539,10 @@ function renderMonthlyChart(data){
     return;
   }
 
-  // Prüfen, ob es echte Monatsdaten sind (Format "YYYY-MM")
   const isMonthlyData = m.labels[0] && m.labels[0].includes('-') && m.labels[0].split('-').length === 2;
 
   let displayLabels = m.labels;
   if (!isMonthlyData) {
-    // Falls es nur Jahresdaten sind → nur das Jahr anzeigen
     displayLabels = m.labels.map(label => label.toString().slice(0,4));
   }
 
