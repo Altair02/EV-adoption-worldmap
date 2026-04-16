@@ -1,5 +1,5 @@
 # scripts/update_data.py
-# Version: v55.2 - April 2026 - Verbesserte Erkennung für neue Länder
+# Version: v56 - April 2026 - Monatlich + Jährlicher Fallback für schwierige Länder
 
 import json
 import os
@@ -61,6 +61,9 @@ TE_SLUGS = {
     "EG": "egypt",
 }
 
+# Länder, bei denen wir primär jährliche Daten erwarten
+YEARLY_ONLY = {"EG", "PH", "TW"}   # Egypt, Philippines, Taiwan
+
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
@@ -110,15 +113,11 @@ def fetch_latest_te(country_code, slug):
         soup = BeautifulSoup(resp.text, "html.parser")
         text = soup.get_text()
 
-        # Verbesserte Regex (mehr Varianten)
         match = re.search(r'Car Registrations.*?to ([\d,]+)(?:[\s]*Thousand)?[\s]*Units? in (\w+)', 
                          text, re.IGNORECASE | re.DOTALL)
         
         if match:
-            value_str = match.group(1).replace(",", "")
-            value = int(value_str)
-            
-            # Thousand prüfen
+            value = int(match.group(1).replace(",", ""))
             if "Thousand" in text[match.start():match.end() + 300]:
                 value *= 1000
 
@@ -141,7 +140,7 @@ def fetch_latest_te(country_code, slug):
             print(f"  → {display_name} Auto-Fetch: {date_label} = {value:,} Einheiten")
             return date_label, value
         else:
-            print(f"  → {display_name}: Kein 'Car Registrations' Wert auf der Seite gefunden")
+            print(f"  → {display_name}: Kein monatlicher Wert gefunden")
     except Exception as e:
         print(f"  Warnung: {display_name} Auto-Fetch fehlgeschlagen: {e}")
     
@@ -163,6 +162,7 @@ overrides = {k: load_override(f"{v[0]}_monthly_override.json") for k, v in COUNT
 def write_country_json(country_code):
     monthly_override, last_upd_override, source_override = overrides.get(country_code, (None, None, None))
     display_name = COUNTRIES[country_code][1]
+    is_yearly_only = country_code in {"EG", "PH", "TW"}
 
     new_label, new_value = fetch_latest_te(country_code, TE_SLUGS.get(country_code))
 
@@ -180,13 +180,16 @@ def write_country_json(country_code):
             monthly_override = {"labels": [new_label], "total": [new_value]}
             changed = True
     else:
-        print(f"  → {display_name}: Keine neuen Daten gefunden")
+        if is_yearly_only:
+            print(f"  → {display_name}: Keine monatlichen Daten verfügbar → bleibt auf jährlichem Modus")
+        else:
+            print(f"  → {display_name}: Keine neuen Daten gefunden")
 
     if monthly_override and monthly_override.get("labels") and monthly_override.get("total"):
         labels = monthly_override["labels"]
         total = monthly_override["total"]
         last_updated = last_upd_override or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-        source_monthly = source_override or "Auto-Fetch (Trading Economics)"
+        source_monthly = source_override or ("Auto-Fetch (Trading Economics)" if not is_yearly_only else "Yearly data")
     else:
         labels = total = []
         last_updated = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -217,7 +220,7 @@ def write_country_json(country_code):
             print(f"  Warnung: Chart für {display_name} konnte nicht gesendet werden: {e}")
 
 def main():
-    print("=== Car Registration Data Update gestartet (v55.1) ===")
+    print("=== Car Registration Data Update gestartet (v56) ===")
     print(f"Zeit: {datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')}\n")
 
     for ecb_code in COUNTRIES:
