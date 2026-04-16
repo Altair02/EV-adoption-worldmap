@@ -1,5 +1,5 @@
 # scripts/update_data.py
-# Version: v54.5 - April 2026 - Täglich + Telegram mit Charts bei neuen Monaten
+# Version: v55 - April 2026 - Täglich + Telegram mit Charts + 4 neue Länder
 
 import json
 import os
@@ -12,6 +12,7 @@ import io
 
 DATA_DIR = "data/countries"
 
+# ==================== COUNTRIES DICTIONARY ====================
 COUNTRIES = {
     "DE": ("germany", "Germany"), "FR": ("france", "France"), "IT": ("italy", "Italy"),
     "ES": ("spain", "Spain"), "NL": ("netherlands", "Netherlands"), "BE": ("belgium", "Belgium"),
@@ -32,8 +33,15 @@ COUNTRIES = {
     "BR": ("brazil", "Brazil"), "RU": ("russia", "Russia"), "TR": ("turkey", "Turkey"),
     "MX": ("mexico", "Mexico"), "AR": ("argentina", "Argentina"), "CL": ("chile", "Chile"),
     "IR": ("iran", "Iran"), "SA": ("saudi_arabia", "Saudi Arabia"), "ZA": ("south_africa", "South Africa"),
+
+    # === NEUE LÄNDER ===
+    "VN": ("vietnam", "Vietnam"),
+    "TW": ("taiwan", "Taiwan"),
+    "PH": ("philippines", "Philippines"),
+    "EG": ("egypt", "Egypt"),
 }
 
+# ==================== TRADING ECONOMICS SLUGS ====================
 TE_SLUGS = {
     "AR": "argentina", "AU": "australia", "BR": "brazil", "CA": "canada", "CH": "switzerland",
     "CL": "chile", "CN": "china", "CZ": "czech-republic", "DE": "germany", "DK": "denmark",
@@ -45,6 +53,12 @@ TE_SLUGS = {
     "RU": "russia", "SA": "saudi-arabia", "SE": "sweden", "SI": "slovenia", "SK": "slovakia",
     "TH": "thailand", "TR": "turkey", "US": "united-states", "ZA": "south-africa", "AT": "austria",
     "BE": "belgium", "BG": "bulgaria", "CY": "cyprus", "EE": "estonia", "HR": "croatia", "MT": "malta",
+
+    # === NEUE LÄNDER ===
+    "VN": "vietnam",
+    "TW": "taiwan",
+    "PH": "philippines",
+    "EG": "egypt",
 }
 
 # Telegram
@@ -97,7 +111,7 @@ def fetch_latest_te(country_code, slug):
         soup = BeautifulSoup(resp.text, "html.parser")
         text = soup.get_text()
 
-        match = re.search(r'Car Registrations .*?(increased|decreased) to ([\d,]+)(?:[\s]*Thousand)?[\s]*Units? in (\w+)', 
+        match = re.search(r'Car Registrations .*?(increased|decreased|was) to ([\d,]+)(?:[\s]*Thousand)?[\s]*Units? in (\w+)', 
                          text, re.IGNORECASE)
         if match:
             value = int(match.group(2).replace(",", ""))
@@ -192,7 +206,7 @@ def write_country_json(country_code):
             print(f"  Warnung: Chart für {display_name} konnte nicht gesendet werden: {e}")
 
 def main():
-    print("=== Car Registration Data Update gestartet (v54.5) ===")
+    print("=== Car Registration Data Update gestartet (v55) ===")
     print(f"Zeit: {datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')}\n")
 
     for ecb_code in COUNTRIES:
