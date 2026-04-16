@@ -1,5 +1,5 @@
 # scripts/update_data.py
-# Version: v55 - April 2026 - Täglich + Telegram mit Charts + 4 neue Länder
+# Version: v55.1 - April 2026 - Täglich + Telegram mit Charts + 4 neue Länder
 
 import json
 import os
@@ -34,7 +34,7 @@ COUNTRIES = {
     "MX": ("mexico", "Mexico"), "AR": ("argentina", "Argentina"), "CL": ("chile", "Chile"),
     "IR": ("iran", "Iran"), "SA": ("saudi_arabia", "Saudi Arabia"), "ZA": ("south_africa", "South Africa"),
 
-    # === NEUE LÄNDER ===
+    # Neue Länder
     "VN": ("vietnam", "Vietnam"),
     "TW": ("taiwan", "Taiwan"),
     "PH": ("philippines", "Philippines"),
@@ -54,14 +54,14 @@ TE_SLUGS = {
     "TH": "thailand", "TR": "turkey", "US": "united-states", "ZA": "south-africa", "AT": "austria",
     "BE": "belgium", "BG": "bulgaria", "CY": "cyprus", "EE": "estonia", "HR": "croatia", "MT": "malta",
 
-    # === NEUE LÄNDER ===
+    # Neue Länder
     "VN": "vietnam",
     "TW": "taiwan",
     "PH": "philippines",
     "EG": "egypt",
 }
 
-# Telegram
+# Telegram Konfiguration
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
@@ -81,7 +81,7 @@ def create_chart(country_name, labels, total, highlight_label=None):
     fig, ax = plt.subplots(figsize=(10, 5.5), facecolor='#0a0e17')
     ax.set_facecolor('#111827')
     
-    ax.plot(labels[-60:], total[-60:], color='#00e5ff', linewidth=2.8)
+    ax.plot(labels[-72:], total[-72:], color='#00e5ff', linewidth=2.8)  # letzte 72 Monate für bessere Historie
     
     if highlight_label and highlight_label in labels:
         idx = labels.index(highlight_label)
@@ -106,19 +106,19 @@ def fetch_latest_te(country_code, slug):
     display_name = COUNTRIES[country_code][1]
     
     try:
-        resp = requests.get(url, headers=headers, timeout=20)
+        resp = requests.get(url, headers=headers, timeout=25)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
         text = soup.get_text()
 
-        match = re.search(r'Car Registrations .*?(increased|decreased|was) to ([\d,]+)(?:[\s]*Thousand)?[\s]*Units? in (\w+)', 
+        match = re.search(r'Car Registrations .*?to ([\d,]+)(?:[\s]*Thousand)?[\s]*Units? in (\w+)', 
                          text, re.IGNORECASE)
         if match:
-            value = int(match.group(2).replace(",", ""))
-            if "Thousand" in text[match.start():match.end() + 200]:
+            value = int(match.group(1).replace(",", ""))
+            if "Thousand" in text[match.start():match.end() + 300]:
                 value *= 1000
 
-            month_name = match.group(3).lower()
+            month_name = match.group(2).lower()
             month_map = {"january":"01","february":"02","march":"03","april":"04","may":"05","june":"06",
                          "july":"07","august":"08","september":"09","october":"10","november":"11","december":"12"}
             if month_name not in month_map:
@@ -167,6 +167,7 @@ def write_country_json(country_code):
             else:
                 print(f"  → {display_name}: {new_label} bereits aktuell")
         else:
+            # Neue Datei mit erstem Eintrag
             monthly_override = {"labels": [new_label], "total": [new_value]}
             changed = True
 
@@ -206,7 +207,7 @@ def write_country_json(country_code):
             print(f"  Warnung: Chart für {display_name} konnte nicht gesendet werden: {e}")
 
 def main():
-    print("=== Car Registration Data Update gestartet (v55) ===")
+    print("=== Car Registration Data Update gestartet (v55.1) ===")
     print(f"Zeit: {datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')}\n")
 
     for ecb_code in COUNTRIES:
