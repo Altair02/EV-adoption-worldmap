@@ -1,5 +1,5 @@
 # scripts/update_data.py
-# Version: v54.1 - April 2026 - 100% AUTOMATISCH über Trading Economics
+# Version: v54.2 - April 2026 - 100% AUTOMATISCH über Trading Economics (final)
 
 import json
 import os
@@ -33,7 +33,7 @@ COUNTRIES = {
     "IR": ("iran", "Iran"), "SA": ("saudi_arabia", "Saudi Arabia"), "ZA": ("south_africa", "South Africa"),
 }
 
-# Trading Economics URL-Slugs
+# Trading Economics Slugs
 TE_SLUGS = {
     "AR": "argentina", "AU": "australia", "BR": "brazil", "CA": "canada", "CH": "switzerland",
     "CL": "chile", "CN": "china", "CZ": "czech-republic", "DE": "germany", "DK": "denmark",
@@ -58,15 +58,15 @@ def fetch_latest_te(country_code, slug):
         soup = BeautifulSoup(resp.text, "html.parser")
         text = soup.get_text()
 
-        # Verbesserte Regex
-        match = re.search(r'Car Registrations.*?to ([\d,]+)(?:[\s]*Thousand)?[\s]*Units? in (\w+)', 
+        # Verbesserte Regex (increased + decreased + Thousand)
+        match = re.search(r'Car Registrations .*?(increased|decreased) to ([\d,]+)(?:[\s]*Thousand)?[\s]*Units? in (\w+)', 
                          text, re.IGNORECASE)
         if match:
-            value = int(match.group(1).replace(",", ""))
+            value = int(match.group(2).replace(",", ""))
             if "Thousand" in text[match.start():match.end() + 200]:
                 value *= 1000
 
-            month_name = match.group(2).lower()
+            month_name = match.group(3).lower()
             month_map = {"january":"01","february":"02","march":"03","april":"04","may":"05","june":"06",
                          "july":"07","august":"08","september":"09","october":"10","november":"11","december":"12"}
             if month_name not in month_map:
@@ -74,11 +74,6 @@ def fetch_latest_te(country_code, slug):
 
             year = datetime.now().year
             date_label = f"{year}-{month_map[month_name]}"
-
-            # Keine Zukunft-Monaten akzeptieren (max. aktueller Monat)
-            current_month = datetime.now(timezone.utc).strftime("%Y-%m")
-            if date_label > current_month:
-                return None, None
 
             print(f"  → {display_name} Auto-Fetch: {date_label} = {value:,} Einheiten")
             return date_label, value
@@ -141,7 +136,7 @@ def write_country_json(country_code):
     print(f"  ✓ Geschrieben: {filename} ({len(labels)} Monate)")
 
 def main():
-    print("=== Car Registration Data Update gestartet (v54.1) ===")
+    print("=== Car Registration Data Update gestartet (v54.2) ===")
     print(f"Zeit: {datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')}\n")
 
     for ecb_code in COUNTRIES:
