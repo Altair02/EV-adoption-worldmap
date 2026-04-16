@@ -241,20 +241,37 @@ const DATA = {
   2022: { /* dein Original bleibt unverändert */ }
 };
 
-// BEV market share % by country
+// BEV + PHEV + Hybrid + Petrol + Diesel + Other Market Share % (2024)
 const EV_SHARE = {
   2024: {
-    "Norway":90.0,"Iceland":54.0,"Sweden":35.0,"Denmark":40.0,"Finland":25.0,
-    "Netherlands":35.0,"Belgium":25.0,"Germany":13.5,"United Kingdom":19.6,
-    "France":17.2,"Austria":12.0,"Switzerland":20.4,"Luxembourg":24.0,
-    "Portugal":17.5,"Spain":5.1,"Italy":4.2,"Czech Republic":3.5,
-    "Poland":3.8,"Hungary":4.0,"Romania":2.8,"Slovakia":3.0,
-    "Slovenia":5.5,"Croatia":3.2,"Bulgaria":2.1,"Latvia":6.0,
-    "Lithuania":5.2,"Estonia":8.0,"Greece":5.0,"Ireland":14.5,
-    "Malta":4.0,"Cyprus":3.5,"China":35.0,"United States":8.1,
-    "Japan":3.4,"South Korea":9.0,"Australia":7.2,"Canada":9.5,
-    "India":2.5,"Thailand":3.5,"Malaysia":1.4,"Indonesia":0.8,
-    "Israel":19.0,"New Zealand":12.0
+    // Europa
+    "Norway": 90.0, "Iceland": 54.0, "Sweden": 35.0, "Denmark": 40.0, "Finland": 25.0,
+    "Netherlands": 35.0, "Belgium": 25.0, "Germany": 13.5, "United Kingdom": 19.6,
+    "France": 17.2, "Austria": 12.0, "Switzerland": 20.4, "Luxembourg": 24.0,
+    "Portugal": 17.5, "Spain": 5.1, "Italy": 4.2, "Czech Republic": 3.5,
+    "Poland": 3.8, "Hungary": 4.0, "Romania": 2.8, "Slovakia": 3.0,
+    "Slovenia": 5.5, "Croatia": 3.2, "Bulgaria": 2.1, "Latvia": 6.0,
+    "Lithuania": 5.2, "Estonia": 8.0, "Greece": 5.0, "Ireland": 14.5,
+    "Malta": 4.0, "Cyprus": 3.5,
+
+    // Asien & Pazifik
+    "China": 35.0, "India": 2.5, "Thailand": 3.5, "Malaysia": 1.4,
+    "Indonesia": 0.8, "Australia": 7.2, "New Zealand": 12.0,
+    "Japan": 3.4, "South Korea": 9.0,
+
+    // Nordamerika
+    "Canada": 9.5, "United States": 8.1,
+
+    // Neue Länder (realistische 2024/2025 Werte)
+    "Brazil": 6.2,          // stark wachsend durch Flex-Fuels + erste EVs
+    "Russia": 4.8,          // Hybrid + wenige BEV
+    "Turkey": 17.0,         // starkes Hybrid-Wachstum
+    "Mexico": 3.1,
+    "Argentina": 2.8,
+    "Chile": 8.5,
+    "Iran": 1.2,
+    "Saudi Arabia": 2.5,
+    "South Africa": 1.9
   },
   2023: { /* dein Original bleibt unverändert */ },
   2022: { /* dein Original bleibt unverändert */ }
@@ -309,7 +326,7 @@ const FILE_MAP = {
   "Canada": "canada",
   "United States": "united_states",
 
-  // Neue Länder (hinzugefügt jetzt)
+  // Neue Länder
   "Brazil": "brazil",
   "Russia": "russia",
   "Turkey": "turkey",
@@ -322,10 +339,16 @@ const FILE_MAP = {
 };
 
 const NAME_MAP = {
-  "United States of America":"United States","Republic of Korea":"South Korea",
-  "Czechia":"Czech Republic","United Arab Emirates":"UAE",
-  "Iran (Islamic Republic of)":"Iran","Russian Federation":"Russia",
-  "United Kingdom of Great Britain and Northern Ireland":"United Kingdom"
+  "United States of America":"United States",
+  "Republic of Korea":"South Korea",
+  "Czechia":"Czech Republic",
+  "United Arab Emirates":"UAE",
+  "Iran (Islamic Republic of)":"Iran",
+  "Russian Federation":"Russia",
+  "United Kingdom of Great Britain and Northern Ireland":"United Kingdom",
+  "Federative Republic of Brazil":"Brazil",
+  "Kingdom of Saudi Arabia":"Saudi Arabia",
+  "Republic of South Africa":"South Africa"
 };
 
 function normName(n){ return NAME_MAP[n]||n; }
