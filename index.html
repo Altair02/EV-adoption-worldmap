@@ -522,7 +522,7 @@ function renderTab(tab){
   }
 }
 
-// ========== WICHTIG: Nur hier geändert ==========
+// ========== INTELLIGENTE MONATSANZEIGE ==========
 function renderMonthlyChart(data){
   const m    = data.monthly;
   const wrap = document.getElementById("chart-wrap");
@@ -531,13 +531,14 @@ function renderMonthlyChart(data){
     return;
   }
 
-  // Labels für die Anzeige auf reines Jahr kürzen
-  const displayLabels = m.labels.map(label => {
-    if (label.includes('-')) {
-      return label.split('-')[0];        // "2023-12" → "2023"
-    }
-    return label;
-  });
+  // Prüfen, ob es echte Monatsdaten sind (Format "YYYY-MM")
+  const isMonthlyData = m.labels[0] && m.labels[0].includes('-') && m.labels[0].split('-').length === 2;
+
+  let displayLabels = m.labels;
+  if (!isMonthlyData) {
+    // Falls es nur Jahresdaten sind → nur das Jahr anzeigen
+    displayLabels = m.labels.map(label => label.toString().slice(0,4));
+  }
 
   const ctx = document.getElementById("main-chart").getContext("2d");
   mainChart = new Chart(ctx, {
@@ -640,7 +641,7 @@ function renderSummary(data){
   if(!a || !a.labels || !a.labels.length){ grid.innerHTML=""; return; }
   const keys     = ["bev","phev","hybrid","petrol","diesel","other"];
   const last     = a.labels.length-1;
-  const lastYear = a.labels[last].slice(0,4);   // Nur das Jahr (2023 statt 2023-12)
+  const lastYear = a.labels[last].toString().slice(0,4);
   const total    = keys.reduce((s,k) => s+((a[k]&&a[k][last])||0), 0);
   grid.innerHTML = keys.map(k => {
     const v   = (a[k]&&a[k][last])||0;
