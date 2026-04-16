@@ -212,7 +212,7 @@
 </div>
 
 <script>
-// ── Data ─────────────────────────────────────
+// ── Data (bitte deine originalen 2023/2022 Blöcke hier einfügen) ─────────────────────────────────────
 const DATA = {
   2024: {
     "China":[30090000,1412,"OICA/CAAM"],"United States":[15900000,334,"OICA/Wards"],
@@ -470,6 +470,7 @@ window.openModal = async function(countryName){
     const hasMonthly = !!(modalData.monthly && modalData.monthly.labels && modalData.monthly.labels.length > 0);
 
     const monthlyTabBtn = document.getElementById("monthly-tab");
+
     if (hasMonthly) {
       monthlyTabBtn.textContent = "Monthly total";
       document.getElementById("modal-source").textContent = "Monthly: ECB/ACEA  ·  Annual powertrain: Eurostat";
@@ -480,9 +481,10 @@ window.openModal = async function(countryName){
       activeTab = "absolute";
     }
 
+    // Tabs aktivieren
     document.querySelectorAll("#main-tabs .chart-tab").forEach(b => {
       const t = b.getAttribute("onclick").match(/'(\w+)'/)[1];
-      b.classList.toggle("active", t===activeTab);
+      b.classList.toggle("active", t === activeTab);
     });
 
     resetWrap();
@@ -591,7 +593,7 @@ function renderMonthlyChart(data){
 // ==================== ENDE NEUE FUNKTION ====================
 
 function renderAnnualChart(data, mode){
-  const a    = data.annual || data.monthly; // Fallback falls annual nicht existiert
+  const a    = data.annual || data.monthly;
   const wrap = document.getElementById("chart-wrap");
   if(!a || !a.labels || !a.labels.length){
     wrap.innerHTML = '<div style="height:360px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem">No annual data available</div>';
