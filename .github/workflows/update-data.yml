@@ -3,7 +3,7 @@ name: Update Car Registration Data
 
 on:
   schedule:
-    - cron: "0 14 * * *"      # Täglich um 14:00 Uhr UTC
+    - cron: "0 14 * * *"      # täglich um 14:00 Uhr UTC
   workflow_dispatch:
 
 permissions:
@@ -22,7 +22,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install requests beautifulsoup4 lxml
+        run: pip install requests beautifulsoup4 lxml matplotlib
 
       - name: Run update script
         env:
