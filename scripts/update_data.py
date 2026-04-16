@@ -1,7 +1,6 @@
 # scripts/update_data.py
-# Version: v47 - April 2026
+# Version: v48 - April 2026
 # Unterstützt alle EU/EEA + Asien/Pazifik Länder mit monatlichen Overrides
-# Verwendet nur Standard-Bibliotheken (kein 'requests')
 
 import csv
 import json
@@ -50,8 +49,8 @@ COUNTRIES = {
     "IS": ("iceland", "Iceland"),
     "GB": ("united_kingdom", "United Kingdom"),
 
-    # Asien & Pazifik (neu)
-    "IN": ("india", "India"),           # Indien (nicht ECB, nur Override)
+    # Asien & Pazifik
+    "IN": ("india", "India"),
     "TH": ("thailand", "Thailand"),
     "MY": ("malaysia", "Malaysia"),
     "ID": ("indonesia", "Indonesia"),
@@ -59,6 +58,7 @@ COUNTRIES = {
     "NZ": ("new_zealand", "New Zealand"),
     "JP": ("japan", "Japan"),
     "KR": ("south_korea", "South Korea"),
+    "CN": ("china", "China"),          # ← Neu hinzugefügt
 }
 
 # ====================== OVERRIDES ======================
@@ -120,9 +120,10 @@ overrides = {
     "NZ": load_override("new_zealand_monthly_override.json"),
     "JP": load_override("japan_monthly_override.json"),
     "KR": load_override("south_korea_monthly_override.json"),
+    "CN": load_override("china_monthly_override.json"),   # ← WICHTIG: China hinzugefügt
 }
 
-# ====================== ECB FETCH (mit urllib) ======================
+# ====================== ECB FETCH ======================
 def fetch_ecb_monthly(ecb_code):
     url = ECB_BASE_URL.format(country=ecb_code)
     headers = {"User-Agent": "Mozilla/5.0 (compatible; GitHub-Actions EV-Map)"}
@@ -143,11 +144,8 @@ def fetch_ecb_monthly(ecb_code):
                     continue
         result.sort(key=lambda x: x[0])
         return result
-    except (HTTPError, URLError) as e:
-        print(f"  Fehler beim Laden von ECB {ecb_code}: {e}")
-        return []
     except Exception as e:
-        print(f"  Unerwarteter Fehler bei {ecb_code}: {e}")
+        print(f"  Fehler beim Laden von ECB {ecb_code}: {e}")
         return []
 
 # ====================== WRITE JSON ======================
@@ -159,7 +157,7 @@ def write_country_json(country_code, ecb_data):
         labels = monthly_override["labels"]
         total = monthly_override["total"]
         last_updated = last_upd_override or datetime.utcnow().isoformat() + "Z"
-        source_monthly = source_override or f"National statistics / ACEA (monthly up to March 2026)"
+        source_monthly = source_override or f"National statistics (monthly up to March 2026)"
         print(f"  → Override verwendet für {display_name}")
     else:
         labels = [date for date, _ in ecb_data]
@@ -167,16 +165,12 @@ def write_country_json(country_code, ecb_data):
         last_updated = datetime.utcnow().isoformat() + "Z"
         source_monthly = "ECB Data Portal / ACEA"
 
-    # Längen synchronisieren
     min_len = min(len(labels), len(total))
     labels = labels[:min_len]
     total = total[:min_len]
 
     output = {
-        "monthly": {
-            "labels": labels,
-            "total": total
-        },
+        "monthly": {"labels": labels, "total": total},
         "last_updated": last_updated,
         "source_monthly": source_monthly
     }
@@ -197,8 +191,8 @@ def main():
     for ecb_code, (filename, display_name) in COUNTRIES.items():
         print(f"Verarbeite {display_name} ({ecb_code}) ...")
         
-        # Für Länder ohne ECB-Daten (z.B. Indien, Thailand, etc.) nur Override verwenden
-        if ecb_code in ["IN", "TH", "MY", "ID", "AU", "NZ", "JP", "KR"]:
+        # Länder ohne ECB-Daten nur per Override
+        if ecb_code in ["IN", "TH", "MY", "ID", "AU", "NZ", "JP", "KR", "CN"]:
             ecb_data = []
         else:
             ecb_data = fetch_ecb_monthly(ecb_code)
