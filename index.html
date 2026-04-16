@@ -236,8 +236,8 @@ const DATA = {
     "Vietnam":[800000,100,"VAMA"],"Taiwan":[450000,23,"TTMA"],
     "Philippines":[300000,115,"CAMPI"],"Egypt":[250000,110,"AMIC"]
   },
-  2023: { /* Deine originalen 2023 Daten hier einfügen */ },
-  2022: { /* Deine originalen 2022 Daten hier einfügen */ }
+  2023: { /* Hier deine originalen 2023 Daten einfügen */ },
+  2022: { /* Hier deine originalen 2022 Daten einfügen */ }
 };
 
 const EV_SHARE = {
@@ -259,11 +259,10 @@ const EV_SHARE = {
     "South Africa": 1.9,
     "Vietnam": 4.5, "Taiwan": 3.8, "Philippines": 2.1, "Egypt": 1.8
   },
-  2023: { /* Deine originalen 2023 EV_SHARE Daten hier einfügen */ },
-  2022: { /* Deine originalen 2022 EV_SHARE Daten hier einfügen */ }
+  2023: { /* Hier deine originalen 2023 EV_SHARE Daten einfügen */ },
+  2022: { /* Hier deine originalen 2022 EV_SHARE Daten einfügen */ }
 };
 
-// ERWEITERTES FILE_MAP mit den 4 neuen Ländern
 const FILE_MAP = {
   "Germany": "germany", "France": "france", "Italy": "italy", "Spain": "spain",
   "Netherlands": "netherlands", "Belgium": "belgium", "Austria": "austria",
@@ -282,12 +281,7 @@ const FILE_MAP = {
   "Brazil": "brazil", "Russia": "russia", "Turkey": "turkey",
   "Mexico": "mexico", "Argentina": "argentina", "Chile": "chile",
   "Iran": "iran", "Saudi Arabia": "saudi_arabia", "South Africa": "south_africa",
-
-  // Neue Länder
-  "Vietnam": "vietnam",
-  "Taiwan": "taiwan",
-  "Philippines": "philippines",
-  "Egypt": "egypt"
+  "Vietnam": "vietnam", "Taiwan": "taiwan", "Philippines": "philippines", "Egypt": "egypt"
 };
 
 const NAME_MAP = {
@@ -531,6 +525,7 @@ function renderTab(tab){
   }
 }
 
+// ==================== DEINE NEUE renderMonthlyChart FUNKTION ====================
 function renderMonthlyChart(data){
   const m    = data.monthly;
   const wrap = document.getElementById("chart-wrap");
@@ -539,11 +534,24 @@ function renderMonthlyChart(data){
     return;
   }
 
-  const isMonthlyData = m.labels[0] && m.labels[0].includes('-') && m.labels[0].split('-').length === 2;
+  // Filter: Nur Daten ab 2015 anzeigen
+  let startIndex = 0;
+  for(let i = 0; i < m.labels.length; i++){
+    if(m.labels[i].startsWith("2015")){
+      startIndex = i;
+      break;
+    }
+  }
 
-  let displayLabels = m.labels;
+  const filteredLabels = m.labels.slice(startIndex);
+  const filteredTotal  = m.total.slice(startIndex);
+
+  // Prüfen, ob es echte Monatsdaten sind
+  const isMonthlyData = filteredLabels[0] && filteredLabels[0].includes('-') && filteredLabels[0].split('-').length === 2;
+
+  let displayLabels = filteredLabels;
   if (!isMonthlyData) {
-    displayLabels = m.labels.map(label => label.toString().slice(0,4));
+    displayLabels = filteredLabels.map(label => label.toString().slice(0,4));
   }
 
   const ctx = document.getElementById("main-chart").getContext("2d");
@@ -553,11 +561,11 @@ function renderMonthlyChart(data){
       labels: displayLabels,
       datasets:[{
         label: "Total registrations",
-        data:  m.total,
+        data:  filteredTotal,
         borderColor: "#00e5ff",
         backgroundColor: "rgba(0,229,255,0.08)",
-        borderWidth: 2, 
-        tension: 0.3, 
+        borderWidth: 2.5, 
+        tension: 0.25, 
         fill: true, 
         pointRadius: 0, 
         pointHoverRadius: 5,
@@ -571,6 +579,7 @@ function renderMonthlyChart(data){
           ...CHART_BASE.scales.x,
           ticks: {
             ...CHART_BASE.scales.x.ticks,
+            maxTicksLimit: 24,
             callback: function(value, index) {
               return displayLabels[index];
             }
@@ -580,6 +589,7 @@ function renderMonthlyChart(data){
     }
   });
 }
+// ==================== ENDE NEUE FUNKTION ====================
 
 function renderAnnualChart(data, mode){
   const a    = data.annual;
