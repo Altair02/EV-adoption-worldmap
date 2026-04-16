@@ -1,6 +1,6 @@
 # scripts/update_data.py
-# Version: v49 - April 2026
-# Unterstützt alle EU/EEA + Asien/Pazifik + Nordamerika Länder mit monatlichen Overrides
+# Version: v51 - April 2026
+# Unterstützt alle EU/EEA + Asien/Pazifik + Nordamerika + weitere wichtige Märkte
 
 import csv
 import json
@@ -60,9 +60,20 @@ COUNTRIES = {
     "KR": ("south_korea", "South Korea"),
     "CN": ("china", "China"),
 
-    # Nordamerika (neu)
+    # Nordamerika
     "CA": ("canada", "Canada"),
     "US": ("united_states", "United States"),
+
+    # Neue Länder (hinzugefügt in v51)
+    "BR": ("brazil", "Brazil"),
+    "RU": ("russia", "Russia"),
+    "TR": ("turkey", "Turkey"),
+    "MX": ("mexico", "Mexico"),
+    "AR": ("argentina", "Argentina"),
+    "CL": ("chile", "Chile"),
+    "IR": ("iran", "Iran"),
+    "SA": ("saudi_arabia", "Saudi Arabia"),
+    "ZA": ("south_africa", "South Africa"),
 }
 
 # ====================== OVERRIDES ======================
@@ -82,7 +93,7 @@ def load_override(filename):
         return None, None, None
 
 overrides = {
-    # Europa
+    # Europa (bestehend)
     "DE": load_override("germany_monthly_override.json"),
     "FR": load_override("france_monthly_override.json"),
     "IT": load_override("italy_monthly_override.json"),
@@ -126,12 +137,23 @@ overrides = {
     "KR": load_override("south_korea_monthly_override.json"),
     "CN": load_override("china_monthly_override.json"),
 
-    # Nordamerika (neu)
+    # Nordamerika
     "CA": load_override("canada_monthly_override.json"),
     "US": load_override("united_states_monthly_override.json"),
+
+    # Neue Länder (v51)
+    "BR": load_override("brazil_monthly_override.json"),
+    "RU": load_override("russia_monthly_override.json"),
+    "TR": load_override("turkey_monthly_override.json"),
+    "MX": load_override("mexico_monthly_override.json"),
+    "AR": load_override("argentina_monthly_override.json"),
+    "CL": load_override("chile_monthly_override.json"),
+    "IR": load_override("iran_monthly_override.json"),
+    "SA": load_override("saudi_arabia_monthly_override.json"),
+    "ZA": load_override("south_africa_monthly_override.json"),
 }
 
-# ====================== ECB FETCH (mit urllib) ======================
+# ====================== ECB FETCH ======================
 def fetch_ecb_monthly(ecb_code):
     url = ECB_BASE_URL.format(country=ecb_code)
     headers = {"User-Agent": "Mozilla/5.0 (compatible; GitHub-Actions EV-Map)"}
@@ -152,11 +174,8 @@ def fetch_ecb_monthly(ecb_code):
                     continue
         result.sort(key=lambda x: x[0])
         return result
-    except (HTTPError, URLError) as e:
-        print(f"  Fehler beim Laden von ECB {ecb_code}: {e}")
-        return []
     except Exception as e:
-        print(f"  Unerwarteter Fehler bei {ecb_code}: {e}")
+        print(f"  Fehler beim Laden von ECB {ecb_code}: {e}")
         return []
 
 # ====================== WRITE JSON ======================
@@ -206,8 +225,9 @@ def main():
     for ecb_code, (filename, display_name) in COUNTRIES.items():
         print(f"Verarbeite {display_name} ({ecb_code}) ...")
         
-        # Für Länder ohne ECB-Daten nur Override verwenden
-        if ecb_code in ["IN", "TH", "MY", "ID", "AU", "NZ", "JP", "KR", "CN", "CA", "US"]:
+        # Länder ohne ECB-Daten nur per Override verwenden
+        if ecb_code in ["IN", "TH", "MY", "ID", "AU", "NZ", "JP", "KR", "CN", "CA", "US", 
+                        "BR", "RU", "TR", "MX", "AR", "CL", "IR", "SA", "ZA"]:
             ecb_data = []
         else:
             ecb_data = fetch_ecb_monthly(ecb_code)
