@@ -140,7 +140,7 @@
       <div id="modal-loading"><div class="modal-spinner"></div>Loading…</div>
       <div id="modal-content" style="display:none">
         <div class="chart-tabs" id="main-tabs">
-          <button class="chart-tab active" id="monthly-tab" onclick="switchTab('monthly',this)">Monthly total</button>
+          <button class="chart-tab" id="monthly-tab" onclick="switchTab('monthly',this)">Monthly total</button>
           <button class="chart-tab" onclick="switchTab('absolute',this)">Powertrain absolute</button>
           <button class="chart-tab" onclick="switchTab('share',this)">Market share %</button>
           <button class="chart-tab" onclick="switchTab('stacked',this)">Stacked</button>
@@ -236,8 +236,8 @@ const DATA = {
     "Vietnam":[800000,100,"VAMA"],"Taiwan":[450000,23,"TTMA"],
     "Philippines":[300000,115,"CAMPI"],"Egypt":[250000,110,"AMIC"]
   },
-  2023: { /* Hier deine originalen 2023 Daten einfügen */ },
-  2022: { /* Hier deine originalen 2022 Daten einfügen */ }
+  2023: { /* Deine originalen 2023 Daten hier einfügen */ },
+  2022: { /* Deine originalen 2022 Daten hier einfügen */ }
 };
 
 const EV_SHARE = {
@@ -259,8 +259,8 @@ const EV_SHARE = {
     "South Africa": 1.9,
     "Vietnam": 4.5, "Taiwan": 3.8, "Philippines": 2.1, "Egypt": 1.8
   },
-  2023: { /* Hier deine originalen 2023 EV_SHARE Daten einfügen */ },
-  2022: { /* Hier deine originalen 2022 EV_SHARE Daten einfügen */ }
+  2023: { /* Deine originalen 2023 EV_SHARE Daten hier einfügen */ },
+  2022: { /* Deine originalen 2022 EV_SHARE Daten hier einfügen */ }
 };
 
 const FILE_MAP = {
@@ -458,7 +458,7 @@ window.openModal = async function(countryName){
 
   try{
     const resp = await fetch("data/countries/"+fileKey+".json?v="+Date.now());
-    if(!resp.ok) throw new Error("HTTP "+resp.status+" — "+fileKey+".json");
+    if(!resp.ok) throw new Error("HTTP "+resp.status);
     modalData = await resp.json();
 
     if(modalData.last_updated){
@@ -467,18 +467,18 @@ window.openModal = async function(countryName){
         "Updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
     }
 
-    const hasMonthly = !!(modalData.monthly && modalData.monthly.labels && modalData.monthly.labels.length);
+    const hasMonthly = !!(modalData.monthly && modalData.monthly.labels && modalData.monthly.labels.length > 0);
 
     const monthlyTabBtn = document.getElementById("monthly-tab");
-    if (hasMonthly && modalData.monthly.labels[0] && modalData.monthly.labels[0].includes("-")) {
+    if (hasMonthly) {
       monthlyTabBtn.textContent = "Monthly total";
       document.getElementById("modal-source").textContent = "Monthly: ECB/ACEA  ·  Annual powertrain: Eurostat";
+      activeTab = "monthly";
     } else {
       monthlyTabBtn.textContent = "Yearly total";
       document.getElementById("modal-source").textContent = "Yearly: National statistics  ·  Annual powertrain: Eurostat";
+      activeTab = "absolute";
     }
-
-    activeTab = hasMonthly ? "monthly" : "absolute";
 
     document.querySelectorAll("#main-tabs .chart-tab").forEach(b => {
       const t = b.getAttribute("onclick").match(/'(\w+)'/)[1];
@@ -520,12 +520,12 @@ function renderTab(tab){
     src.textContent = "Source: ECB Data Portal / ACEA  ·  Monthly total registrations (all powertrains)";
     renderMonthlyChart(modalData);
   } else {
-    src.textContent = "Source: Eurostat road_eqr_carpda  ·  Annual registrations by powertrain";
+    src.textContent = "Source: National statistics / Eurostat  ·  Annual registrations by powertrain";
     renderAnnualChart(modalData, tab);
   }
 }
 
-// ==================== DEINE NEUE renderMonthlyChart FUNKTION ====================
+// ==================== NEUE renderMonthlyChart (ab 2015) ====================
 function renderMonthlyChart(data){
   const m    = data.monthly;
   const wrap = document.getElementById("chart-wrap");
@@ -546,7 +546,6 @@ function renderMonthlyChart(data){
   const filteredLabels = m.labels.slice(startIndex);
   const filteredTotal  = m.total.slice(startIndex);
 
-  // Prüfen, ob es echte Monatsdaten sind
   const isMonthlyData = filteredLabels[0] && filteredLabels[0].includes('-') && filteredLabels[0].split('-').length === 2;
 
   let displayLabels = filteredLabels;
@@ -592,7 +591,7 @@ function renderMonthlyChart(data){
 // ==================== ENDE NEUE FUNKTION ====================
 
 function renderAnnualChart(data, mode){
-  const a    = data.annual;
+  const a    = data.annual || data.monthly; // Fallback falls annual nicht existiert
   const wrap = document.getElementById("chart-wrap");
   if(!a || !a.labels || !a.labels.length){
     wrap.innerHTML = '<div style="height:360px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem">No annual data available</div>';
@@ -652,7 +651,7 @@ function renderAnnualChart(data, mode){
 }
 
 function renderSummary(data){
-  const a    = data.annual;
+  const a    = data.annual || data.monthly;
   const grid = document.getElementById("summary-grid");
   if(!a || !a.labels || !a.labels.length){ grid.innerHTML=""; return; }
   const keys     = ["bev","phev","hybrid","petrol","diesel","other"];
