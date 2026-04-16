@@ -1,7 +1,6 @@
 # scripts/update_data.py
-# Version: v54 - April 2026 - 100% AUTOMATISCH über Trading Economics (keine ECB mehr)
+# Version: v54.1 - April 2026 - 100% AUTOMATISCH über Trading Economics
 
-import csv
 import json
 import os
 import re
@@ -11,7 +10,7 @@ from bs4 import BeautifulSoup
 
 DATA_DIR = "data/countries"
 
-# Alle Länder (EU + Rest) – jetzt alle auto
+# Alle Länder
 COUNTRIES = {
     "DE": ("germany", "Germany"), "FR": ("france", "France"), "IT": ("italy", "Italy"),
     "ES": ("spain", "Spain"), "NL": ("netherlands", "Netherlands"), "BE": ("belgium", "Belgium"),
@@ -34,7 +33,7 @@ COUNTRIES = {
     "IR": ("iran", "Iran"), "SA": ("saudi_arabia", "Saudi Arabia"), "ZA": ("south_africa", "South Africa"),
 }
 
-# Trading Economics Slugs
+# Trading Economics URL-Slugs
 TE_SLUGS = {
     "AR": "argentina", "AU": "australia", "BR": "brazil", "CA": "canada", "CH": "switzerland",
     "CL": "chile", "CN": "china", "CZ": "czech-republic", "DE": "germany", "DK": "denmark",
@@ -59,11 +58,11 @@ def fetch_latest_te(country_code, slug):
         soup = BeautifulSoup(resp.text, "html.parser")
         text = soup.get_text()
 
-        # Verbesserte Regex + Thousand-Erkennung + bessere Datumsprüfung
-        match = re.search(r'Car Registrations.*?increased to ([\d,]+)(?:[\s]*Thousand)?[\s]*Units? in (\w+)', text, re.IGNORECASE)
+        # Verbesserte Regex
+        match = re.search(r'Car Registrations.*?to ([\d,]+)(?:[\s]*Thousand)?[\s]*Units? in (\w+)', 
+                         text, re.IGNORECASE)
         if match:
-            num_str = match.group(1).replace(",", "")
-            value = int(num_str)
+            value = int(match.group(1).replace(",", ""))
             if "Thousand" in text[match.start():match.end() + 200]:
                 value *= 1000
 
@@ -76,9 +75,9 @@ def fetch_latest_te(country_code, slug):
             year = datetime.now().year
             date_label = f"{year}-{month_map[month_name]}"
 
-            # Nur plausible Monate akzeptieren (keine Zukunft > 2 Monate)
-            current_month = datetime.now().strftime("%Y-%m")
-            if date_label > (datetime.now().replace(day=1) + timezone.utc).strftime("%Y-%m"):
+            # Keine Zukunft-Monaten akzeptieren (max. aktueller Monat)
+            current_month = datetime.now(timezone.utc).strftime("%Y-%m")
+            if date_label > current_month:
                 return None, None
 
             print(f"  → {display_name} Auto-Fetch: {date_label} = {value:,} Einheiten")
@@ -122,7 +121,7 @@ def write_country_json(country_code):
         last_updated = last_upd_override or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         source_monthly = source_override or "Auto-Fetch (Trading Economics)"
     else:
-        labels, total = [], []
+        labels = total = []
         last_updated = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         source_monthly = "No data available"
 
@@ -142,7 +141,7 @@ def write_country_json(country_code):
     print(f"  ✓ Geschrieben: {filename} ({len(labels)} Monate)")
 
 def main():
-    print("=== Car Registration Data Update gestartet (v54) ===")
+    print("=== Car Registration Data Update gestartet (v54.1) ===")
     print(f"Zeit: {datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')}\n")
 
     for ecb_code in COUNTRIES:
