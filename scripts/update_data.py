@@ -1,5 +1,5 @@
 # scripts/update_data.py
-# Version: v54.2 - April 2026 - 100% AUTOMATISCH über Trading Economics (final)
+# Version: v54.3 - April 2026 - 100% AUTOMATISCH + final fixes
 
 import json
 import os
@@ -10,7 +10,6 @@ from bs4 import BeautifulSoup
 
 DATA_DIR = "data/countries"
 
-# Alle Länder
 COUNTRIES = {
     "DE": ("germany", "Germany"), "FR": ("france", "France"), "IT": ("italy", "Italy"),
     "ES": ("spain", "Spain"), "NL": ("netherlands", "Netherlands"), "BE": ("belgium", "Belgium"),
@@ -33,19 +32,7 @@ COUNTRIES = {
     "IR": ("iran", "Iran"), "SA": ("saudi_arabia", "Saudi Arabia"), "ZA": ("south_africa", "South Africa"),
 }
 
-# Trading Economics Slugs
-TE_SLUGS = {
-    "AR": "argentina", "AU": "australia", "BR": "brazil", "CA": "canada", "CH": "switzerland",
-    "CL": "chile", "CN": "china", "CZ": "czech-republic", "DE": "germany", "DK": "denmark",
-    "ES": "spain", "FI": "finland", "FR": "france", "GB": "united-kingdom", "GR": "greece",
-    "HU": "hungary", "ID": "indonesia", "IE": "ireland", "IN": "india", "IR": "iran",
-    "IS": "iceland", "IT": "italy", "JP": "japan", "KR": "south-korea", "LT": "lithuania",
-    "LU": "luxembourg", "LV": "latvia", "MX": "mexico", "MY": "malaysia", "NL": "netherlands",
-    "NO": "norway", "NZ": "new-zealand", "PL": "poland", "PT": "portugal", "RO": "romania",
-    "RU": "russia", "SA": "saudi-arabia", "SE": "sweden", "SI": "slovenia", "SK": "slovakia",
-    "TH": "thailand", "TR": "turkey", "US": "united-states", "ZA": "south-africa", "AT": "austria",
-    "BE": "belgium", "BG": "bulgaria", "CY": "cyprus", "EE": "estonia", "HR": "croatia", "MT": "malta",
-}
+TE_SLUGS = {**{k: v for k, v in COUNTRIES.items() if k not in ["MT"]}, "MT": "malta"}  # Malta hat eigene Seite
 
 def fetch_latest_te(country_code, slug):
     url = f"https://tradingeconomics.com/{slug}/car-registrations"
@@ -58,7 +45,6 @@ def fetch_latest_te(country_code, slug):
         soup = BeautifulSoup(resp.text, "html.parser")
         text = soup.get_text()
 
-        # Verbesserte Regex (increased + decreased + Thousand)
         match = re.search(r'Car Registrations .*?(increased|decreased) to ([\d,]+)(?:[\s]*Thousand)?[\s]*Units? in (\w+)', 
                          text, re.IGNORECASE)
         if match:
@@ -74,6 +60,11 @@ def fetch_latest_te(country_code, slug):
 
             year = datetime.now().year
             date_label = f"{year}-{month_map[month_name]}"
+
+            # Keine Zukunft-Monaten (max. aktueller Monat)
+            current_month = datetime.now(timezone.utc).strftime("%Y-%m")
+            if date_label > current_month:
+                return None, None
 
             print(f"  → {display_name} Auto-Fetch: {date_label} = {value:,} Einheiten")
             return date_label, value
@@ -136,7 +127,7 @@ def write_country_json(country_code):
     print(f"  ✓ Geschrieben: {filename} ({len(labels)} Monate)")
 
 def main():
-    print("=== Car Registration Data Update gestartet (v54.2) ===")
+    print("=== Car Registration Data Update gestartet (v54.3) ===")
     print(f"Zeit: {datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')}\n")
 
     for ecb_code in COUNTRIES:
