@@ -1,6 +1,7 @@
 # scripts/update_data.py
-# Version: v46 - April 2026
-# Fix: Kein 'requests' mehr → nur Standard-Bibliothek (urllib)
+# Version: v47 - April 2026
+# Unterstützt alle EU/EEA + Asien/Pazifik Länder mit monatlichen Overrides
+# Verwendet nur Standard-Bibliotheken (kein 'requests')
 
 import csv
 import json
@@ -16,6 +17,7 @@ ECB_BASE_URL = "https://data.ecb.europa.eu/api/v2.1/data/STS.M.CAR.REG.{country}
 
 # Länder-Mapping: ECB-Code → (Dateiname, Anzeigename)
 COUNTRIES = {
+    # Europa
     "DE": ("germany", "Germany"),
     "FR": ("france", "France"),
     "IT": ("italy", "Italy"),
@@ -47,6 +49,16 @@ COUNTRIES = {
     "LT": ("lithuania", "Lithuania"),
     "IS": ("iceland", "Iceland"),
     "GB": ("united_kingdom", "United Kingdom"),
+
+    # Asien & Pazifik (neu)
+    "IN": ("india", "India"),           # Indien (nicht ECB, nur Override)
+    "TH": ("thailand", "Thailand"),
+    "MY": ("malaysia", "Malaysia"),
+    "ID": ("indonesia", "Indonesia"),
+    "AU": ("australia", "Australia"),
+    "NZ": ("new_zealand", "New Zealand"),
+    "JP": ("japan", "Japan"),
+    "KR": ("south_korea", "South Korea"),
 }
 
 # ====================== OVERRIDES ======================
@@ -66,6 +78,7 @@ def load_override(filename):
         return None, None, None
 
 overrides = {
+    # Europa
     "DE": load_override("germany_monthly_override.json"),
     "FR": load_override("france_monthly_override.json"),
     "IT": load_override("italy_monthly_override.json"),
@@ -97,6 +110,16 @@ overrides = {
     "LT": load_override("lithuania_monthly_override.json"),
     "IS": load_override("iceland_monthly_override.json"),
     "GB": load_override("united_kingdom_monthly_override.json"),
+
+    # Asien & Pazifik
+    "IN": load_override("india_monthly_override.json"),
+    "TH": load_override("thailand_monthly_override.json"),
+    "MY": load_override("malaysia_monthly_override.json"),
+    "ID": load_override("indonesia_monthly_override.json"),
+    "AU": load_override("australia_monthly_override.json"),
+    "NZ": load_override("new_zealand_monthly_override.json"),
+    "JP": load_override("japan_monthly_override.json"),
+    "KR": load_override("south_korea_monthly_override.json"),
 }
 
 # ====================== ECB FETCH (mit urllib) ======================
@@ -173,7 +196,13 @@ def main():
 
     for ecb_code, (filename, display_name) in COUNTRIES.items():
         print(f"Verarbeite {display_name} ({ecb_code}) ...")
-        ecb_data = fetch_ecb_monthly(ecb_code)
+        
+        # Für Länder ohne ECB-Daten (z.B. Indien, Thailand, etc.) nur Override verwenden
+        if ecb_code in ["IN", "TH", "MY", "ID", "AU", "NZ", "JP", "KR"]:
+            ecb_data = []
+        else:
+            ecb_data = fetch_ecb_monthly(ecb_code)
+        
         write_country_json(ecb_code, ecb_data)
 
     print("\n=== Update abgeschlossen ===")
