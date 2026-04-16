@@ -1,18 +1,20 @@
 # scripts/update_data.py
-# Version: v45 - April 2026
-# Unterstützt alle EU/EEA + ausgewählte Länder mit monatlichen Overrides
+# Version: v46 - April 2026
+# Fix: Kein 'requests' mehr → nur Standard-Bibliothek (urllib)
 
 import csv
 import json
 import os
-import requests
 from datetime import datetime
+from urllib.request import urlopen, Request
+from urllib.error import URLError, HTTPError
 
 # ====================== KONFIGURATION ======================
 DATA_DIR = "data/countries"
-ECB_URL = "https://data.ecb.europa.eu/api/v2.1/data/STS.M.CAR.REG.{country}.M?format=csvdata&detail=dataonly"
 
-# Länder-Mapping: ECB-Code → Dateiname + Anzeigename
+ECB_BASE_URL = "https://data.ecb.europa.eu/api/v2.1/data/STS.M.CAR.REG.{country}.M?format=csvdata&detail=dataonly"
+
+# Länder-Mapping: ECB-Code → (Dateiname, Anzeigename)
 COUNTRIES = {
     "DE": ("germany", "Germany"),
     "FR": ("france", "France"),
@@ -52,12 +54,16 @@ def load_override(filename):
     path = os.path.join(DATA_DIR, filename)
     if not os.path.exists(path):
         return None, None, None
-    with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    monthly = data.get("monthly")
-    last_updated = data.get("last_updated")
-    source = data.get("source_monthly")
-    return monthly, last_updated, source
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        monthly = data.get("monthly")
+        last_updated = data.get("last_updated")
+        source = data.get("source_monthly")
+        return monthly, last_updated, source
+    except Exception as e:
+        print(f"  Warnung: Konnte Override {filename} nicht laden: {e}")
+        return None, None, None
 
 overrides = {
     "DE": load_override("germany_monthly_override.json"),
@@ -93,44 +99,52 @@ overrides = {
     "GB": load_override("united_kingdom_monthly_override.json"),
 }
 
-# ====================== HELFER ======================
+# ====================== ECB FETCH (mit urllib) ======================
 def fetch_ecb_monthly(ecb_code):
-    url = ECB_URL.format(country=ecb_code)
+    url = ECB_BASE_URL.format(country=ecb_code)
+    headers = {"User-Agent": "Mozilla/5.0 (compatible; GitHub-Actions EV-Map)"}
+    req = Request(url, headers=headers)
+
     try:
-        r = requests.get(url, timeout=30)
-        r.raise_for_status()
-        lines = r.text.strip().split("\n")
-        reader = csv.DictReader(lines)
-        data = []
+        with urlopen(req, timeout=30) as response:
+            data = response.read().decode("utf-8").strip().split("\n")
+        
+        reader = csv.DictReader(data)
+        result = []
         for row in reader:
             if row.get("OBS_VALUE") and row.get("TIME_PERIOD"):
                 try:
                     value = int(float(row["OBS_VALUE"]))
-                    data.append((row["TIME_PERIOD"], value))
-                except:
+                    result.append((row["TIME_PERIOD"], value))
+                except (ValueError, TypeError):
                     continue
-        data.sort(key=lambda x: x[0])
-        return data
-    except Exception as e:
+        result.sort(key=lambda x: x[0])
+        return result
+    except (HTTPError, URLError) as e:
         print(f"  Fehler beim Laden von ECB {ecb_code}: {e}")
         return []
+    except Exception as e:
+        print(f"  Unerwarteter Fehler bei {ecb_code}: {e}")
+        return []
 
+# ====================== WRITE JSON ======================
 def write_country_json(country_code, ecb_data):
     monthly_override, last_upd_override, source_override = overrides.get(country_code, (None, None, None))
+    display_name = COUNTRIES[country_code][1]
 
     if monthly_override and monthly_override.get("labels") and monthly_override.get("total"):
         labels = monthly_override["labels"]
         total = monthly_override["total"]
         last_updated = last_upd_override or datetime.utcnow().isoformat() + "Z"
         source_monthly = source_override or f"National statistics / ACEA (monthly up to March 2026)"
-        print(f"  → Override verwendet für {COUNTRIES[country_code][1]}")
+        print(f"  → Override verwendet für {display_name}")
     else:
         labels = [date for date, _ in ecb_data]
         total = [val for _, val in ecb_data]
         last_updated = datetime.utcnow().isoformat() + "Z"
         source_monthly = "ECB Data Portal / ACEA"
 
-    # Sicherstellen, dass Längen übereinstimmen
+    # Längen synchronisieren
     min_len = min(len(labels), len(total))
     labels = labels[:min_len]
     total = total[:min_len]
@@ -146,6 +160,7 @@ def write_country_json(country_code, ecb_data):
 
     filename = os.path.join(DATA_DIR, f"{COUNTRIES[country_code][0]}.json")
     os.makedirs(DATA_DIR, exist_ok=True)
+
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
 
