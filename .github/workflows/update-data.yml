@@ -1,9 +1,8 @@
-# .github/workflows/update-data.yml
 name: Update Car Registration Data
 
 on:
   schedule:
-    - cron: "0 14 * * *"      # täglich um 14:00 Uhr UTC
+    - cron: "0 12 * * *"     # 12:00 UTC = 14:00 deutsche Zeit (Sommerzeit)
   workflow_dispatch:
 
 permissions:
@@ -32,7 +31,7 @@ jobs:
 
       - name: Commit & push
         run: |
-          git config user.name  "github-actions[bot]"
+          git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -f data/countries/
           if git diff --cached --quiet; then
