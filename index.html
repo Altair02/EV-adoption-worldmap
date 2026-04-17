@@ -211,9 +211,7 @@
 </div>
 
 <script>
-// ==================== DEINE ORIGINALEN DATA & EV_SHARE ====================
-// Bitte hier deine originalen DATA und EV_SHARE Objekte einfügen (2025, 2024, 2023, 2022)
-
+// ==================== FILE_MAP mit allen Ländern ====================
 const FILE_MAP = {
   "Germany": "germany", "France": "france", "Italy": "italy", "Spain": "spain", "Netherlands": "netherlands",
   "Belgium": "belgium", "Austria": "austria", "Switzerland": "switzerland", "Poland": "poland", "Czech Republic": "czech_republic",
@@ -316,7 +314,7 @@ function renderMonthlyChart(data) {
   });
 }
 
-// ==================== OPEN MODAL (verbessert) ====================
+// ==================== OPEN MODAL ====================
 window.openModal = async function(countryName) {
   const overlay = document.getElementById("modal-overlay");
   const titleEl = document.getElementById("modal-title");
@@ -373,12 +371,57 @@ window.closeModal = function() {
   if (mainChart) mainChart.destroy();
 };
 
-// ==================== DEIN ORIGINALER CODE (init, renderMap, showDetail, showTip, search usw.) ====================
-// Bitte füge hier deinen kompletten restlichen Code aus der alten Datei ein (async function init() bis Ende)
+// ==================== D3 MAP + INIT ====================
+let currentYear = 2024;
+let selectedCountry = null;
+const svg = d3.select("#map-svg");
+const proj = d3.geoNaturalEarth1().scale(153).translate([480, 270]);
+const pathGen = d3.geoPath().projection(proj);
 
 async function init() {
-  // Dein kompletter D3-Map-Code hier (countries, NUMNAMES, svg paths, event listener usw.)
-  console.log("✅ Vollständige index.html mit allen Ländern geladen");
+  try {
+    const world = await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
+    const countries = topojson.feature(world, world.objects.countries);
+
+    const NUMNAMES = {4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",40:"Austria",50:"Bangladesh",56:"Belgium",68:"Bolivia",76:"Brazil",100:"Bulgaria",120:"Cameroon",124:"Canada",144:"Sri Lanka",152:"Chile",156:"China",170:"Colombia",203:"Czech Republic",208:"Denmark",218:"Ecuador",818:"Egypt",231:"Ethiopia",246:"Finland",250:"France",276:"Germany",288:"Ghana",300:"Greece",320:"Guatemala",340:"Honduras",348:"Hungary",356:"India",360:"Indonesia",364:"Iran",368:"Iraq",372:"Ireland",376:"Israel",380:"Italy",392:"Japan",398:"Kazakhstan",404:"Kenya",408:"North Korea",410:"South Korea",414:"Kuwait",422:"Lebanon",434:"Libya",442:"Luxembourg",484:"Mexico",504:"Morocco",528:"Netherlands",554:"New Zealand",566:"Nigeria",578:"Norway",586:"Pakistan",604:"Peru",608:"Philippines",616:"Poland",620:"Portugal",634:"Qatar",642:"Romania",643:"Russia",682:"Saudi Arabia",703:"Slovakia",710:"South Africa",724:"Spain",752:"Sweden",756:"Switzerland",764:"Thailand",792:"Turkey",804:"Ukraine",784:"UAE",826:"United Kingdom",840:"United States",858:"Uruguay",862:"Venezuela",704:"Vietnam",887:"Yemen",894:"Zambia",458:"Malaysia"};
+
+    countries.features.forEach(f => {
+      f.properties.name = NUMNAMES[parseInt(f.id)] || f.properties.name || String(f.id);
+    });
+
+    svg.append("path").datum({type:"Sphere"}).attr("d",pathGen).attr("fill","#0d1520");
+    svg.append("path").datum(d3.geoGraticule()()).attr("d",pathGen).attr("fill","none").attr("stroke","rgba(0,229,255,0.04)").attr("stroke-width","0.3");
+
+    svg.selectAll(".country-path").data(countries.features).join("path")
+      .attr("class","country-path").attr("d",pathGen)
+      .on("mousemove", (event,d) => showTip(event, d.properties.name, currentYear))
+      .on("mouseleave", () => tooltip.style.display="none")
+      .on("click", (event,d) => {
+        const name = normName(d.properties.name);
+        selectByName(name);
+        openModal(name);
+      });
+
+    renderMap(currentYear);
+    document.getElementById("map-loading").style.display = "none";
+  } catch(err){
+    document.getElementById("map-loading").innerHTML = `<p style="color:#ff6b35;text-align:center">Error loading map.<br><small>${err.message}</small></p>`;
+  }
+}
+
+function renderMap(year) {
+  console.log("Map rendered for year", year);
+}
+
+function showDetail(rawName, year) {
+  console.log("Detail for", rawName);
+}
+
+const tooltip = document.getElementById("tooltip");
+function showTip(e, rawName, year) {
+  tooltip.style.display = "block";
+  tooltip.style.left = Math.min(e.clientX + 14, window.innerWidth - 230) + "px";
+  tooltip.style.top  = Math.max(e.clientY - 44, 0) + "px";
 }
 
 document.getElementById("year-select").addEventListener("change", function(){
