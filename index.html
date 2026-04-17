@@ -134,13 +134,13 @@
         <div id="modal-subtitle">New car registrations</div>
         <div id="modal-source"></div>
       </div>
-      <button id="modal-close" onclick="closeModal()">&#x2715;</button>
+      <button id="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div id="modal-body">
       <div id="modal-loading"><div class="modal-spinner"></div>Loading…</div>
       <div id="modal-content" style="display:none">
         <div class="chart-tabs" id="main-tabs">
-          <button class="chart-tab" id="monthly-tab" onclick="switchTab('monthly',this)">Monthly total</button>
+          <button class="chart-tab active" id="monthly-tab" onclick="switchTab('monthly',this)">Monthly / Yearly total</button>
           <button class="chart-tab" onclick="switchTab('absolute',this)">Powertrain absolute</button>
           <button class="chart-tab" onclick="switchTab('share',this)">Market share %</button>
           <button class="chart-tab" onclick="switchTab('stacked',this)">Stacked</button>
@@ -151,7 +151,7 @@
       </div>
       <div id="modal-nodata" style="display:none" class="no-data-msg">
         📭 No data available for this country yet.<br>
-        <span style="font-size:0.68rem">Monthly charts available for selected countries</span>
+        <span style="font-size:0.68rem">Yearly estimates are shown where monthly data is unavailable</span>
       </div>
     </div>
   </div>
@@ -266,6 +266,7 @@ const EV_SHARE = {
   2022: { /* Deine originalen 2022 EV_SHARE Daten hier einfügen */ }
 };
 
+// ==================== ERWEITERTES FILE_MAP mit allen neuen Ländern ====================
 const FILE_MAP = {
   "Germany": "germany", "France": "france", "Italy": "italy", "Spain": "spain",
   "Netherlands": "netherlands", "Belgium": "belgium", "Austria": "austria",
@@ -285,16 +286,32 @@ const FILE_MAP = {
   "Mexico": "mexico", "Argentina": "argentina", "Chile": "chile",
   "Iran": "iran", "Saudi Arabia": "saudi_arabia", "South Africa": "south_africa",
   "Vietnam": "vietnam", "Taiwan": "taiwan", "Philippines": "philippines", "Egypt": "egypt",
-  // Neue Länder
+
+  // Vorherige Erweiterung
   "United Arab Emirates": "united_arab_emirates",
-  "Pakistan": "pakistan",
-  "Nigeria": "nigeria",
-  "Kenya": "kenya",
-  "Bangladesh": "bangladesh",
-  "Ethiopia": "ethiopia",
-  "Colombia": "colombia",
-  "Peru": "peru",
-  "Venezuela": "venezuela"
+  "Pakistan": "pakistan", "Nigeria": "nigeria", "Kenya": "kenya",
+  "Bangladesh": "bangladesh", "Ethiopia": "ethiopia", "Colombia": "colombia",
+  "Peru": "peru", "Venezuela": "venezuela",
+
+  // Neue afrikanische Länder
+  "Algeria": "algeria", "Angola": "angola", "Equatorial Guinea": "equatorial_guinea",
+  "Benin": "benin", "Botswana": "botswana", "Burkina Faso": "burkina_faso",
+  "Burundi": "burundi", "Djibouti": "djibouti", "Ivory Coast": "ivory_coast",
+  "Eritrea": "eritrea", "Eswatini": "eswatini", "Gabon": "gabon",
+  "Gambia": "gambia", "Ghana": "ghana", "Guinea": "guinea",
+  "Guinea-Bissau": "guinea_bissau", "Cameroon": "cameroon",
+  "Cape Verde": "cape_verde", "Comoros": "comoros",
+  "DR Congo": "democratic_republic_of_the_congo", "Congo": "republic_of_the_congo",
+  "Lesotho": "lesotho", "Liberia": "liberia", "Libya": "libya",
+  "Madagascar": "madagascar", "Malawi": "malawi", "Mali": "mali",
+  "Morocco": "morocco", "Mauritania": "mauritania", "Mauritius": "mauritius",
+  "Mozambique": "mozambique", "Namibia": "namibia", "Niger": "niger",
+  "Rwanda": "rwanda", "São Tomé and Príncipe": "sao_tome_and_principe",
+  "Senegal": "senegal", "Seychelles": "seychelles", "Sierra Leone": "sierra_leone",
+  "Zimbabwe": "zimbabwe", "Sudan": "sudan", "South Sudan": "south_sudan",
+  "Tanzania": "tanzania", "Togo": "togo", "Chad": "chad",
+  "Tunisia": "tunisia", "Uganda": "uganda",
+  "Central African Republic": "central_african_republic"
 };
 
 const NAME_MAP = {
@@ -309,7 +326,11 @@ const NAME_MAP = {
   "Kingdom of Saudi Arabia":"Saudi Arabia",
   "Republic of South Africa":"South Africa",
   "Taiwan, Province of China":"Taiwan",
-  "Egypt, Arab Rep.":"Egypt"
+  "Egypt, Arab Rep.":"Egypt",
+  "DR Congo":"DR Congo",
+  "Congo":"Congo",
+  "São Tomé and Príncipe":"São Tomé and Príncipe",
+  "Central African Republic":"Central African Republic"
 };
 
 function normName(n){ return NAME_MAP[n]||n; }
@@ -406,7 +427,7 @@ function showTip(e, rawName, year){
   tooltip.style.top  = Math.max(e.clientY-44, 0)+"px";
 }
 
-// Chart modal
+// ==================== CHART CONFIG ====================
 let mainChart = null, modalData = null, activeTab = "monthly";
 
 const COLORS = {
@@ -435,103 +456,7 @@ const CHART_BASE = {
   }
 };
 
-function destroyChart(){ if(mainChart){ mainChart.destroy(); mainChart=null; } }
-function resetWrap(){
-  const w = document.getElementById("chart-wrap");
-  if(w) w.innerHTML = '<canvas id="main-chart"></canvas>';
-}
-
-window.openModal = async function(countryName){
-  const overlay = document.getElementById("modal-overlay");
-  const content = document.getElementById("modal-content");
-  const nodata  = document.getElementById("modal-nodata");
-  const loading = document.getElementById("modal-loading");
-
-  document.getElementById("modal-title").textContent = countryName;
-  overlay.classList.add("open");
-  loading.style.display = "block";
-  content.style.display = "none";
-  nodata.style.display  = "none";
-  destroyChart();
-
-  const fileKey = FILE_MAP[countryName];
-  if(!fileKey){ 
-    loading.style.display="none"; 
-    nodata.style.display="block"; 
-    return; 
-  }
-
-  try{
-    const resp = await fetch("data/countries/"+fileKey+".json?v="+Date.now());
-    if(!resp.ok) throw new Error("HTTP "+resp.status);
-    modalData = await resp.json();
-
-    if(modalData.last_updated){
-      const d = new Date(modalData.last_updated);
-      document.getElementById("modal-subtitle").textContent = "Updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
-    }
-
-    const hasMonthly = !!(modalData.monthly && modalData.monthly.labels && modalData.monthly.labels.length > 0);
-    const firstLabel = hasMonthly ? String(modalData.monthly.labels[0]) : "";
-    const isRealMonthly = firstLabel.includes('-') && firstLabel.split('-').length === 2;
-
-    const monthlyTabBtn = document.getElementById("monthly-tab");
-
-    if (hasMonthly && isRealMonthly) {
-      monthlyTabBtn.textContent = "Monthly total";
-      document.getElementById("modal-source").innerHTML = 'Monthly: ECB Data Portal / ACEA <span style="color:var(--muted)">·</span> Annual powertrain: Eurostat';
-      activeTab = "monthly";
-    } else {
-      monthlyTabBtn.textContent = "Yearly total";
-      document.getElementById("modal-source").innerHTML = 'Yearly: National statistics + fallback <span style="color:var(--muted)">·</span> Annual powertrain: Eurostat';
-      activeTab = "absolute";
-    }
-
-    document.querySelectorAll("#main-tabs .chart-tab").forEach(b => {
-      const t = b.getAttribute("onclick").match(/'(\w+)'/)[1];
-      b.classList.toggle("active", t === activeTab);
-    });
-
-    resetWrap();
-    renderTab(activeTab);
-    renderSummary(modalData);
-
-    loading.style.display = "none";
-    content.style.display = "block";
-  } catch(e){
-    console.error("openModal:", e);
-    loading.style.display = "none";
-    nodata.style.display  = "block";
-  }
-};
-
-window.closeModal = function(){
-  document.getElementById("modal-overlay").classList.remove("open");
-  destroyChart();
-};
-document.getElementById("modal-overlay").addEventListener("click", function(e){ if(e.target===this) closeModal(); });
-document.addEventListener("keydown", e => { if(e.key==="Escape") closeModal(); });
-
-window.switchTab = function(tab, btn){
-  activeTab = tab;
-  document.querySelectorAll("#main-tabs .chart-tab").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
-  destroyChart();
-  resetWrap();
-  renderTab(tab);
-};
-
-function renderTab(tab){
-  const src = document.getElementById("tab-source");
-  if(tab==="monthly"){
-    src.textContent = "Source: ECB Data Portal / ACEA  ·  Monthly total registrations (all powertrains)";
-    renderMonthlyChart(modalData);
-  } else {
-    src.textContent = "Source: National statistics + fallback  ·  Annual registrations by powertrain";
-    renderAnnualChart(modalData, tab);
-  }
-}
-
+// ==================== RENDER FUNCTIONS ====================
 function renderMonthlyChart(data){
   const m = data.monthly || {};
   const wrap = document.getElementById("chart-wrap");
@@ -557,6 +482,8 @@ function renderMonthlyChart(data){
   }
 
   const ctx = document.getElementById("main-chart").getContext("2d");
+  if (mainChart) mainChart.destroy();
+
   mainChart = new Chart(ctx, {
     type: "line",
     data: {
@@ -589,165 +516,66 @@ function renderMonthlyChart(data){
   });
 }
 
-function renderAnnualChart(data, mode){
-  const a    = data.annual || data.monthly;
-  const wrap = document.getElementById("chart-wrap");
-  if(!a || !a.labels || !a.labels.length){
-    wrap.innerHTML = '<div style="height:360px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem">No annual data available</div>';
-    return;
-  }
-  const keys = ["bev","phev","hybrid","petrol","diesel","other"];
-  let datasets;
-  if(mode==="share"){
-    const totals = a.labels.map((_,i) => keys.reduce((s,k)=>s+(a[k]?a[k][i]:0)||0, 0));
-    datasets = keys.map(k => ({
-      label: LABELS[k],
-      data:  (a[k]||[]).map((v,i) => totals[i] ? +((v/totals[i])*100).toFixed(1) : 0),
-      borderColor: COLORS[k].line, backgroundColor: COLORS[k].fill,
-      borderWidth:2, tension:0.3, fill:false, pointRadius:4, pointHoverRadius:7,
-    }));
-  } else if(mode==="stacked"){
-    datasets = keys.map(k => ({
-      label: LABELS[k], data: a[k]||[],
-      borderColor: COLORS[k].line, backgroundColor: COLORS[k].fill,
-      borderWidth:1.5, tension:0.3, fill:true, pointRadius:0,
-    }));
-  } else {
-    datasets = keys.map(k => ({
-      label: LABELS[k], data: a[k]||[],
-      borderColor: COLORS[k].line, backgroundColor: COLORS[k].fill,
-      borderWidth:2, tension:0.3, fill:false, pointRadius:4, pointHoverRadius:7,
-    }));
-  }
-  const ctx = document.getElementById("main-chart").getContext("2d");
-  mainChart = new Chart(ctx, {
-    type:"line",
-    data:{ labels: a.labels, datasets },
-    options:{
-      ...CHART_BASE,
-      plugins:{
-        ...CHART_BASE.plugins,
-        tooltip:{ ...CHART_BASE.plugins.tooltip,
-          callbacks:{ label: ctx => {
-            const v = ctx.parsed.y;
-            return " "+ctx.dataset.label+": "+(mode==="share" ? v.toFixed(1)+"%" : v.toLocaleString("en"));
-          }}
-        }
-      },
-      scales:{
-        x: { ...CHART_BASE.scales.x },
-        y: {
-          stacked: mode==="stacked",
-          ...CHART_BASE.scales.y,
-          ticks:{ ...CHART_BASE.scales.y.ticks,
-            callback: v => mode==="share" ? v+"%" : v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v
-          }
-        }
-      }
-    }
-  });
-}
+// ==================== OPEN MODAL (verbessert) ====================
+window.openModal = async function(countryName){
+  const overlay = document.getElementById("modal-overlay");
+  const content = document.getElementById("modal-content");
+  const nodata  = document.getElementById("modal-nodata");
+  const loading = document.getElementById("modal-loading");
 
-function renderSummary(data){
-  const a    = data.annual || data.monthly;
-  const grid = document.getElementById("summary-grid");
-  if(!a || !a.labels || !a.labels.length){ grid.innerHTML=""; return; }
-  const keys     = ["bev","phev","hybrid","petrol","diesel","other"];
-  const last     = a.labels.length-1;
-  const lastYear = a.labels[last].toString().slice(0,4);
-  const total    = keys.reduce((s,k) => s+((a[k]&&a[k][last])||0), 0);
-  grid.innerHTML = keys.map(k => {
-    const v   = (a[k]&&a[k][last])||0;
-    const pct = total ? ((v/total)*100).toFixed(1) : 0;
-    return `<div class="summary-card">
-      <div class="sc-val" style="color:${COLORS[k].line}">${fmt(v)}</div>
-      <div class="sc-label">${LABELS[k]}</div>
-      <div class="sc-pct">${pct}% (${lastYear})</div>
-    </div>`;
-  }).join("");
-}
+  document.getElementById("modal-title").textContent = countryName;
+  overlay.classList.add("open");
+  loading.style.display = "block";
+  content.style.display = "none";
+  nodata.style.display  = "none";
 
-// ── Map initialisation ────────────────────────────────────────────────────────
-(async function(){
-  const input   = document.getElementById("country-search");
-  const results = document.getElementById("search-results");
+  if (mainChart) mainChart.destroy();
 
-  function allCountries(){
-    const set = new Set([
-      ...Object.keys(DATA[currentYear] || {}),
-      ...Object.keys(FILE_MAP),
-    ]);
-    return Array.from(set).sort();
+  const fileKey = FILE_MAP[countryName];
+  if(!fileKey){ 
+    loading.style.display="none"; 
+    nodata.style.display="block"; 
+    return; 
   }
 
-  function highlightOnMap(matchSet){
-    svg.selectAll(".country-path")
-      .classed("search-highlighted", d => matchSet && matchSet.has(normName(d.properties.name)))
-      .classed("search-dim",         d => matchSet && matchSet.size > 0 && !matchSet.has(normName(d.properties.name)));
-  }
+  try{
+    const resp = await fetch("data/countries/"+fileKey+".json?v="+Date.now());
+    if(!resp.ok) throw new Error("HTTP "+resp.status);
+    modalData = await resp.json();
 
-  function clearHighlight(){
-    svg.selectAll(".country-path")
-      .classed("search-highlighted", false)
-      .classed("search-dim", false);
-  }
+    const hasMonthly = !!(modalData.monthly && modalData.monthly.labels && modalData.monthly.labels.length > 0);
+    const firstLabel = hasMonthly ? String(modalData.monthly.labels[0]) : "";
+    const isRealMonthly = firstLabel.includes('-') && firstLabel.split('-').length === 2;
 
-  input.addEventListener("input", function(){
-    const q = this.value.trim().toLowerCase();
-    results.innerHTML = "";
+    const monthlyTabBtn = document.getElementById("monthly-tab");
 
-    if(!q){
-      clearHighlight();
-      return;
+    if (hasMonthly && isRealMonthly) {
+      monthlyTabBtn.textContent = "Monthly total";
+      document.getElementById("modal-source").innerHTML = 'Monthly: Trading Economics / National stats';
+    } else {
+      monthlyTabBtn.textContent = "Yearly total";
+      document.getElementById("modal-source").innerHTML = 'Yearly: National statistics + historical fallback';
     }
 
-    const matches = allCountries().filter(n => n.toLowerCase().includes(q)).slice(0, 8);
+    loading.style.display = "none";
+    content.style.display = "block";
 
-    if(!matches.length){
-      clearHighlight();
-      results.innerHTML = `<div style="font-size:.68rem;color:var(--muted);padding:6px 10px">No results</div>`;
-      return;
-    }
+    renderMonthlyChart(modalData);
 
-    highlightOnMap(new Set(matches));
+  } catch(e){
+    console.error("openModal:", e);
+    loading.style.display = "none";
+    nodata.style.display  = "block";
+  }
+};
 
-    matches.forEach(name => {
-      const ev    = (EV_SHARE[currentYear]||{})[name];
-      const total = (DATA[currentYear]||{})[name] ? (DATA[currentYear][name])[0] : null;
-      const item  = document.createElement("div");
-      item.className = "search-result-item";
-      item.innerHTML = `
-        <span class="sr-name">${name}</span>
-        <span class="sr-share">${ev != null ? ev.toFixed(1)+"% BEV" : total ? fmt(total) : ""}</span>`;
+window.closeModal = function(){
+  document.getElementById("modal-overlay").classList.remove("open");
+  if (mainChart) mainChart.destroy();
+};
 
-      item.addEventListener("mouseenter", () => highlightOnMap(new Set([name])));
-      item.addEventListener("mouseleave", () => highlightOnMap(new Set(matches)));
-
-      item.addEventListener("click", () => {
-        input.value = "";
-        results.innerHTML = "";
-        clearHighlight();
-        selectByName(name);
-        openModal(name);
-      });
-      results.appendChild(item);
-    });
-  });
-
-  document.addEventListener("click", function(e){
-    if(!e.target.closest(".search-wrap") && !e.target.closest(".search-results")){
-      results.innerHTML = "";
-      clearHighlight();
-    }
-  });
-
-  input.addEventListener("keydown", function(e){
-    const items = results.querySelectorAll(".search-result-item");
-    if(!items.length) return;
-    if(e.key === "Enter") items[0].click();
-    if(e.key === "Escape"){ input.value=""; results.innerHTML=""; clearHighlight(); }
-  });
-})();
+// Rest des Codes (init, map, search, tooltip, etc.) bleibt wie in deinem alten Code
+// (kopiere den Rest deines originalen Scripts hierher, falls noch nicht enthalten)
 
 async function init(){
   try{
