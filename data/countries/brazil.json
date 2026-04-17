@@ -123,7 +123,8 @@
       "2024-12",
       "2025-01",
       "2025-02",
-      "2025-03"
+      "2025-03",
+      "2026-02"
     ],
     "total": [
       185000,
@@ -248,9 +249,10 @@
       235000,
       170536,
       185200,
-      269500
+      269500,
+      185200000
     ]
   },
-  "last_updated": "2026-04-16T12:00:00Z",
-  "source_monthly": "ANFAVEA – reale monatliche Neuzulassungen bis März 2026"
+  "last_updated": "2026-04-17T00:00:23.854337Z",
+  "source_monthly": "Auto-Fetch (Trading Economics)"
 }

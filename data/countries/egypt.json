@@ -1,8 +1,12 @@
 {
   "monthly": {
-    "labels": [],
-    "total": []
+    "labels": [
+      "2025"
+    ],
+    "total": [
+      250000
+    ]
   },
-  "last_updated": "2026-04-16T23:53:46.357194Z",
-  "source_monthly": "No data available"
+  "last_updated": "2026-04-17T00:00:29.156626Z",
+  "source_monthly": "Yearly: National statistics / OICA / CAMPI / TTMA"
 }
