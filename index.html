@@ -183,7 +183,7 @@
         <div class="panel-title">Search Country</div>
         <div class="search-wrap">
           <span class="search-icon">&#x1F50D;</span>
-          <input class="search-input" id="country-search" type="text" placeholder="e.g. Vietnam, Taiwan, Philippines, Egypt…" autocomplete="off">
+          <input class="search-input" id="country-search" type="text" placeholder="e.g. Vietnam, Taiwan, Philippines, Egypt, UAE…" autocomplete="off">
         </div>
         <div class="search-results" id="search-results"></div>
       </div>
@@ -257,7 +257,10 @@ const EV_SHARE = {
     "Brazil": 6.2, "Russia": 4.8, "Turkey": 17.0, "Mexico": 3.1,
     "Argentina": 2.8, "Chile": 8.5, "Iran": 1.2, "Saudi Arabia": 2.5,
     "South Africa": 1.9,
-    "Vietnam": 4.5, "Taiwan": 3.8, "Philippines": 2.1, "Egypt": 1.8
+    "Vietnam": 4.5, "Taiwan": 3.8, "Philippines": 2.1, "Egypt": 1.8,
+    "United Arab Emirates": 12.0, "Pakistan": 1.5, "Nigeria": 0.8,
+    "Kenya": 2.0, "Bangladesh": 1.2, "Ethiopia": 0.5, "Colombia": 3.5,
+    "Peru": 4.0, "Venezuela": 2.0
   },
   2023: { /* Deine originalen 2023 EV_SHARE Daten hier einfügen */ },
   2022: { /* Deine originalen 2022 EV_SHARE Daten hier einfügen */ }
@@ -281,14 +284,24 @@ const FILE_MAP = {
   "Brazil": "brazil", "Russia": "russia", "Turkey": "turkey",
   "Mexico": "mexico", "Argentina": "argentina", "Chile": "chile",
   "Iran": "iran", "Saudi Arabia": "saudi_arabia", "South Africa": "south_africa",
-  "Vietnam": "vietnam", "Taiwan": "taiwan", "Philippines": "philippines", "Egypt": "egypt"
+  "Vietnam": "vietnam", "Taiwan": "taiwan", "Philippines": "philippines", "Egypt": "egypt",
+  // Neue Länder
+  "United Arab Emirates": "united_arab_emirates",
+  "Pakistan": "pakistan",
+  "Nigeria": "nigeria",
+  "Kenya": "kenya",
+  "Bangladesh": "bangladesh",
+  "Ethiopia": "ethiopia",
+  "Colombia": "colombia",
+  "Peru": "peru",
+  "Venezuela": "venezuela"
 };
 
 const NAME_MAP = {
   "United States of America":"United States",
   "Republic of Korea":"South Korea",
   "Czechia":"Czech Republic",
-  "United Arab Emirates":"UAE",
+  "United Arab Emirates":"United Arab Emirates",
   "Iran (Islamic Republic of)":"Iran",
   "Russian Federation":"Russia",
   "United Kingdom of Great Britain and Northern Ireland":"United Kingdom",
@@ -470,7 +483,7 @@ window.openModal = async function(countryName){
       activeTab = "monthly";
     } else {
       monthlyTabBtn.textContent = "Yearly total";
-      document.getElementById("modal-source").innerHTML = 'Yearly: National statistics <span style="color:var(--muted)">·</span> Annual powertrain: Eurostat';
+      document.getElementById("modal-source").innerHTML = 'Yearly: National statistics + fallback <span style="color:var(--muted)">·</span> Annual powertrain: Eurostat';
       activeTab = "absolute";
     }
 
@@ -514,12 +527,11 @@ function renderTab(tab){
     src.textContent = "Source: ECB Data Portal / ACEA  ·  Monthly total registrations (all powertrains)";
     renderMonthlyChart(modalData);
   } else {
-    src.textContent = "Source: National statistics / Eurostat  ·  Annual registrations by powertrain";
+    src.textContent = "Source: National statistics + fallback  ·  Annual registrations by powertrain";
     renderAnnualChart(modalData, tab);
   }
 }
 
-// ==================== Verbesserte renderMonthlyChart ====================
 function renderMonthlyChart(data){
   const m = data.monthly || {};
   const wrap = document.getElementById("chart-wrap");
@@ -528,7 +540,6 @@ function renderMonthlyChart(data){
     return;
   }
 
-  // Filter ab 2015
   let startIndex = 0;
   for(let i = 0; i < m.labels.length; i++){
     if(String(m.labels[i]).startsWith("2015")){
@@ -558,7 +569,7 @@ function renderMonthlyChart(data){
         borderWidth: 2.8,
         tension: 0.25,
         fill: true,
-        pointRadius: filteredTotal.length === 1 ? 6 : 0,   // großer Punkt bei nur einem Wert
+        pointRadius: filteredTotal.length === 1 ? 6 : 0,
         pointHoverRadius: 7,
         pointBackgroundColor: "#00e5ff"
       }]
@@ -567,10 +578,7 @@ function renderMonthlyChart(data){
       ...CHART_BASE,
       scales: {
         ...CHART_BASE.scales,
-        x: {
-          ...CHART_BASE.scales.x,
-          ticks: { ...CHART_BASE.scales.x.ticks, maxTicksLimit: 20 }
-        },
+        x: { ...CHART_BASE.scales.x, ticks: { ...CHART_BASE.scales.x.ticks, maxTicksLimit: 20 } },
         y: {
           ...CHART_BASE.scales.y,
           min: Math.max(0, Math.min(...filteredTotal) * 0.95),
@@ -633,8 +641,7 @@ function renderAnnualChart(data, mode){
           ...CHART_BASE.scales.y,
           ticks:{ ...CHART_BASE.scales.y.ticks,
             callback: v => mode==="share" ? v+"%" : v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v
-          },
-          title:{ display:true, text: mode==="share"?"Market share (%)":"Annual registrations", color:"#64748b", font:{ family:"DM Mono", size:9 } }
+          }
         }
       }
     }
