@@ -12,40 +12,110 @@ import io
 
 DATA_DIR = "data/countries"
 
-# ==================== LÄNDER ====================
+# ==================== LÄNDER-KONFIGURATION ====================
 COUNTRIES = {
-    # ... deine bisherigen Länder (DE bis VE) bleiben unverändert ...
-    "DE": ("germany", "Germany"), "FR": ("france", "France"), ... ,  # (wie vorher)
+    "DE": ("germany", "Germany"), "FR": ("france", "France"), "IT": ("italy", "Italy"),
+    "ES": ("spain", "Spain"), "NL": ("netherlands", "Netherlands"), "BE": ("belgium", "Belgium"),
+    "AT": ("austria", "Austria"), "CH": ("switzerland", "Switzerland"), "PL": ("poland", "Poland"),
+    "CZ": ("czech_republic", "Czech Republic"), "SK": ("slovakia", "Slovakia"),
+    "HU": ("hungary", "Hungary"), "RO": ("romania", "Romania"), "BG": ("bulgaria", "Bulgaria"),
+    "HR": ("croatia", "Croatia"), "SI": ("slovenia", "Slovenia"), "GR": ("greece", "Greece"),
+    "PT": ("portugal", "Portugal"), "IE": ("ireland", "Ireland"), "LU": ("luxembourg", "Luxembourg"),
+    "FI": ("finland", "Finland"), "SE": ("sweden", "Sweden"), "DK": ("denmark", "Denmark"),
+    "NO": ("norway", "Norway"), "MT": ("malta", "Malta"), "CY": ("cyprus", "Cyprus"),
+    "EE": ("estonia", "Estonia"), "LV": ("latvia", "Latvia"), "LT": ("lithuania", "Lithuania"),
+    "IS": ("iceland", "Iceland"), "GB": ("united_kingdom", "United Kingdom"),
+    "IN": ("india", "India"), "TH": ("thailand", "Thailand"), "MY": ("malaysia", "Malaysia"),
+    "ID": ("indonesia", "Indonesia"), "AU": ("australia", "Australia"),
+    "NZ": ("new_zealand", "New Zealand"), "JP": ("japan", "Japan"),
+    "KR": ("south_korea", "South Korea"), "CN": ("china", "China"),
+    "CA": ("canada", "Canada"), "US": ("united_states", "United States"),
+    "BR": ("brazil", "Brazil"), "RU": ("russia", "Russia"), "TR": ("turkey", "Turkey"),
+    "MX": ("mexico", "Mexico"), "AR": ("argentina", "Argentina"), "CL": ("chile", "Chile"),
+    "IR": ("iran", "Iran"), "SA": ("saudi_arabia", "Saudi Arabia"), "ZA": ("south_africa", "South Africa"),
+    "VN": ("vietnam", "Vietnam"),
+    "TW": ("taiwan", "Taiwan"),
+    "PH": ("philippines", "Philippines"),
+    "EG": ("egypt", "Egypt"),
 
-    # Afrikanische Länder
-    "DZ": ("algeria", "Algeria"), "AO": ("angola", "Angola"),
-    "GQ": ("equatorial_guinea", "Equatorial Guinea"), "BJ": ("benin", "Benin"),
-    "BW": ("botswana", "Botswana"), "BF": ("burkina_faso", "Burkina Faso"),
-    "BI": ("burundi", "Burundi"), "DJ": ("djibouti", "Djibouti"),
-    "CI": ("ivory_coast", "Ivory Coast"), "ER": ("eritrea", "Eritrea"),
-    "SZ": ("eswatini", "Eswatini"), "GA": ("gabon", "Gabon"),
-    "GM": ("gambia", "Gambia"), "GH": ("ghana", "Ghana"),
-    "GN": ("guinea", "Guinea"), "GW": ("guinea_bissau", "Guinea-Bissau"),
-    "CM": ("cameroon", "Cameroon"), "CV": ("cape_verde", "Cape Verde"),
-    "KM": ("comoros", "Comoros"), "CD": ("democratic_republic_of_the_congo", "DR Congo"),
-    "CG": ("republic_of_the_congo", "Congo"), "LS": ("lesotho", "Lesotho"),
-    "LR": ("liberia", "Liberia"), "LY": ("libya", "Libya"),
-    "MG": ("madagascar", "Madagascar"), "MW": ("malawi", "Malawi"),
-    "ML": ("mali", "Mali"), "MA": ("morocco", "Morocco"),
-    "MR": ("mauritania", "Mauritania"), "MU": ("mauritius", "Mauritius"),
-    "MZ": ("mozambique", "Mozambique"), "NA": ("namibia", "Namibia"),
-    "NE": ("niger", "Niger"), "RW": ("rwanda", "Rwanda"),
+    # Vorherige Erweiterung
+    "AE": ("united_arab_emirates", "United Arab Emirates"),
+    "PK": ("pakistan", "Pakistan"),
+    "NG": ("nigeria", "Nigeria"),
+    "KE": ("kenya", "Kenya"),
+    "BD": ("bangladesh", "Bangladesh"),
+    "ET": ("ethiopia", "Ethiopia"),
+    "CO": ("colombia", "Colombia"),
+    "PE": ("peru", "Peru"),
+    "VE": ("venezuela", "Venezuela"),
+
+    # Neue afrikanische Länder
+    "DZ": ("algeria", "Algeria"),
+    "AO": ("angola", "Angola"),
+    "GQ": ("equatorial_guinea", "Equatorial Guinea"),
+    "BJ": ("benin", "Benin"),
+    "BW": ("botswana", "Botswana"),
+    "BF": ("burkina_faso", "Burkina Faso"),
+    "BI": ("burundi", "Burundi"),
+    "DJ": ("djibouti", "Djibouti"),
+    "CI": ("ivory_coast", "Ivory Coast"),
+    "ER": ("eritrea", "Eritrea"),
+    "SZ": ("eswatini", "Eswatini"),
+    "GA": ("gabon", "Gabon"),
+    "GM": ("gambia", "Gambia"),
+    "GH": ("ghana", "Ghana"),
+    "GN": ("guinea", "Guinea"),
+    "GW": ("guinea_bissau", "Guinea-Bissau"),
+    "CM": ("cameroon", "Cameroon"),
+    "CV": ("cape_verde", "Cape Verde"),
+    "KM": ("comoros", "Comoros"),
+    "CD": ("democratic_republic_of_the_congo", "DR Congo"),
+    "CG": ("republic_of_the_congo", "Congo"),
+    "LS": ("lesotho", "Lesotho"),
+    "LR": ("liberia", "Liberia"),
+    "LY": ("libya", "Libya"),
+    "MG": ("madagascar", "Madagascar"),
+    "MW": ("malawi", "Malawi"),
+    "ML": ("mali", "Mali"),
+    "MA": ("morocco", "Morocco"),
+    "MR": ("mauritania", "Mauritania"),
+    "MU": ("mauritius", "Mauritius"),
+    "MZ": ("mozambique", "Mozambique"),
+    "NA": ("namibia", "Namibia"),
+    "NE": ("niger", "Niger"),
+    "RW": ("rwanda", "Rwanda"),
     "ST": ("sao_tome_and_principe", "São Tomé and Príncipe"),
-    "SN": ("senegal", "Senegal"), "SC": ("seychelles", "Seychelles"),
-    "SL": ("sierra_leone", "Sierra Leone"), "ZW": ("zimbabwe", "Zimbabwe"),
-    "SD": ("sudan", "Sudan"), "SS": ("south_sudan", "South Sudan"),
-    "TZ": ("tanzania", "Tanzania"), "TG": ("togo", "Togo"),
-    "TD": ("chad", "Chad"), "TN": ("tunisia", "Tunisia"),
-    "UG": ("uganda", "Uganda"), "CF": ("central_african_republic", "Central African Republic"),
+    "SN": ("senegal", "Senegal"),
+    "SC": ("seychelles", "Seychelles"),
+    "SL": ("sierra_leone", "Sierra Leone"),
+    "ZW": ("zimbabwe", "Zimbabwe"),
+    "SD": ("sudan", "Sudan"),
+    "SS": ("south_sudan", "South Sudan"),
+    "TZ": ("tanzania", "Tanzania"),
+    "TG": ("togo", "Togo"),
+    "TD": ("chad", "Chad"),
+    "TN": ("tunisia", "Tunisia"),
+    "UG": ("uganda", "Uganda"),
+    "CF": ("central_african_republic", "Central African Republic"),
 }
 
 TE_SLUGS = {
-    # ... bestehende Einträge ...
+    "DE": "germany", "FR": "france", "IT": "italy", "ES": "spain", "NL": "netherlands",
+    "BE": "belgium", "AT": "austria", "CH": "switzerland", "PL": "poland", "CZ": "czech-republic",
+    "SK": "slovakia", "HU": "hungary", "RO": "romania", "BG": "bulgaria", "HR": "croatia",
+    "SI": "slovenia", "GR": "greece", "PT": "portugal", "IE": "ireland", "LU": "luxembourg",
+    "FI": "finland", "SE": "sweden", "DK": "denmark", "NO": "norway", "MT": "malta",
+    "CY": "cyprus", "EE": "estonia", "LV": "latvia", "LT": "lithuania", "IS": "iceland",
+    "GB": "united-kingdom", "IN": "india", "TH": "thailand", "MY": "malaysia",
+    "ID": "indonesia", "AU": "australia", "NZ": "new-zealand", "JP": "japan",
+    "KR": "south-korea", "CN": "china", "CA": "canada", "US": "united-states",
+    "BR": "brazil", "RU": "russia", "TR": "turkey", "MX": "mexico", "AR": "argentina",
+    "CL": "chile", "IR": "iran", "SA": "saudi-arabia", "ZA": "south-africa",
+    "VN": "vietnam", "TW": "taiwan", "PH": "philippines", "EG": "egypt",
+    "AE": "united-arab-emirates", "PK": "pakistan", "NG": "nigeria", "KE": "kenya",
+    "BD": "bangladesh", "ET": "ethiopia", "CO": "colombia", "PE": "peru", "VE": "venezuela",
+
+    # Afrikanische Länder
     "DZ": "algeria", "AO": "angola", "GQ": "equatorial-guinea", "BJ": "benin",
     "BW": "botswana", "BF": "burkina-faso", "BI": "burundi", "DJ": "djibouti",
     "CI": "ivory-coast", "ER": "eritrea", "SZ": "eswatini", "GA": "gabon",
@@ -61,15 +131,12 @@ TE_SLUGS = {
     "TD": "chad", "TN": "tunisia", "UG": "uganda", "CF": "central-african-republic",
 }
 
-# Alle Länder, die nur jährliche Daten bekommen sollen
-YEARLY_ONLY = {
-    "EG", "TW", "PH", "DZ", "AO", "GQ", "BJ", "BW", "BF", "BI", "DJ", "CI", "ER", "SZ",
-    "GA", "GM", "GH", "GN", "GW", "CM", "CV", "KM", "CD", "CG", "LS", "LR", "LY", "MG",
-    "MW", "ML", "MA", "MR", "MU", "MZ", "NA", "NE", "RW", "ST", "SN", "SC", "SL", "ZW",
-    "SD", "SS", "TZ", "TG", "TD", "TN", "UG", "CF"
-}
+YEARLY_ONLY = {"EG", "TW", "PH", "DZ", "AO", "GQ", "BJ", "BW", "BF", "BI", "DJ", "CI", "ER", "SZ",
+               "GA", "GM", "GH", "GN", "GW", "CM", "CV", "KM", "CD", "CG", "LS", "LR", "LY", "MG",
+               "MW", "ML", "MA", "MR", "MU", "MZ", "NA", "NE", "RW", "ST", "SN", "SC", "SL", "ZW",
+               "SD", "SS", "TZ", "TG", "TD", "TN", "UG", "CF"}
 
-# ==================== ZENTRALISIERTER FALLBACK FÜR ALLE JÄHRLICHEN LÄNDER ====================
+# Zentraler Fallback für alle jährlichen Länder
 AFRICA_YEARLY_FALLBACK = {
     "EG": {2015:220000,2016:240000,2017:260000,2018:280000,2019:300000,2020:180000,2021:220000,2022:240000,2023:250000,2024:260000,2025:250000},
     "TW": {2015:380000,2016:390000,2017:410000,2018:430000,2019:420000,2020:380000,2021:400000,2022:410000,2023:430000,2024:440000,2025:450000},
@@ -123,7 +190,85 @@ AFRICA_YEARLY_FALLBACK = {
     "CF": {2015:3000,2016:3200,2017:3500,2018:3800,2019:4000,2020:2800,2021:3000,2022:3200,2023:3500,2024:3800,2025:4000},
 }
 
-# (Die restlichen Funktionen: fetch_latest_te, create_chart, send_telegram bleiben gleich)
+# VIETNAM, UAE, PAKISTAN usw. (deine bisherigen Fallbacks) – bitte hier einfügen
+VIETNAM_MONTHLY_FALLBACK = { ... }  # dein vollständiger Vietnam-Block
+UAE_MONTHLY_FALLBACK = { ... }
+PAKISTAN_MONTHLY_FALLBACK = { ... }
+# ... alle anderen bestehenden Fallbacks ...
+
+MONTH_MAP = {
+    "jan": "01", "feb": "02", "mar": "03", "apr": "04", "may": "05", "jun": "06",
+    "jul": "07", "aug": "08", "sep": "09", "oct": "10", "nov": "11", "dec": "12",
+    "january": "01", "february": "02", "march": "03", "april": "04", "may": "05",
+    "june": "06", "july": "07", "august": "08", "september": "09", "october": "10",
+    "november": "11", "december": "12"
+}
+
+def fetch_latest_te(country_code):
+    slug = TE_SLUGS.get(country_code)
+    if not slug:
+        return None, None, None
+    url = f"https://tradingeconomics.com/{slug}/car-registrations"
+    try:
+        headers = {"User-Agent": "Mozilla/5.0"}
+        r = requests.get(url, headers=headers, timeout=15)
+        r.raise_for_status()
+        soup = BeautifulSoup(r.text, "lxml")
+        text = soup.get_text()
+
+        match = re.search(r"Car Registrations.*?to\s+([\d,]+)\s*(?:Thousand|Units?)?\s+in\s+([A-Za-z]+)\s+(\d{4})", text, re.IGNORECASE | re.DOTALL)
+        if not match:
+            match = re.search(r"([\d,]+)\s*(?:Thousand|Units?)?\s+in\s+([A-Za-z]+)\s+(\d{4})", text, re.IGNORECASE)
+
+        if match:
+            value_str = match.group(1).replace(",", "")
+            month_name = match.group(2).lower()[:3]
+            year = match.group(3)
+            month = MONTH_MAP.get(month_name)
+            if month:
+                label = f"{year}-{month}"
+                value = int(value_str)
+                if "thousand" in text.lower() or "k" in text.lower():
+                    value *= 1000
+                return label, value, url
+        return None, None, url
+    except Exception as e:
+        print(f"  Fehler beim Fetch von {country_code}: {e}")
+        return None, None, None
+
+def create_chart(country_name, labels, total, highlight_label=None):
+    plt.figure(figsize=(10, 5.5), facecolor="#0a0e17")
+    ax = plt.gca()
+    ax.set_facecolor("#0a0e17")
+    plt.plot(labels[-48:], total[-48:], color="#00e5ff", linewidth=2.5, marker="o", markersize=4 if len(labels) < 10 else 0)
+    if highlight_label and highlight_label in labels:
+        idx = labels.index(highlight_label)
+        plt.plot(labels[idx], total[idx], "o", color="#ff6b35", markersize=8)
+    plt.title(f"{country_name} - New Car Registrations", color="white", fontsize=14, pad=20)
+    plt.xlabel("Period", color="#94a3b8")
+    plt.ylabel("Units", color="#94a3b8")
+    plt.grid(True, alpha=0.15)
+    ax.tick_params(colors="#64748b")
+    for spine in ax.spines.values():
+        spine.set_color("#1e2d45")
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png", dpi=200, bbox_inches="tight", facecolor="#0a0e17")
+    plt.close()
+    buf.seek(0)
+    return buf
+
+def send_telegram(title, image_buf, caption):
+    token = os.getenv("TELEGRAM_BOT_TOKEN")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID")
+    if not token or not chat_id:
+        return
+    try:
+        url = f"https://api.telegram.org/bot{token}/sendPhoto"
+        files = {"photo": ("chart.png", image_buf, "image/png")}
+        data = {"chat_id": chat_id, "caption": caption, "parse_mode": "HTML"}
+        requests.post(url, data=data, files=files, timeout=10)
+    except Exception as e:
+        print(f"  Telegram-Fehler: {e}")
 
 def write_country_json(country_code):
     display_name = COUNTRIES[country_code][1]
@@ -135,16 +280,18 @@ def write_country_json(country_code):
     filename = os.path.join(DATA_DIR, f"{COUNTRIES[country_code][0]}.json")
     os.makedirs(DATA_DIR, exist_ok=True)
 
-    data = json.load(open(filename, "r", encoding="utf-8")) if os.path.exists(filename) else {
-        "monthly": {"labels": [], "total": []}, "last_updated": None, "source_monthly": None
-    }
+    if os.path.exists(filename):
+        with open(filename, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    else:
+        data = {"monthly": {"labels": [], "total": []}, "last_updated": None, "source_monthly": None}
 
     monthly = data["monthly"]
     changed = False
-    new_label = new_value = None
+    new_label = None
+    new_value = None
 
     if is_yearly_only:
-        # Jährliche Verarbeitung (alle afrikanischen + EG/TW/PH)
         if label and len(label) >= 4:
             year_only = label[:4]
             if year_only not in monthly["labels"]:
@@ -170,17 +317,59 @@ def write_country_json(country_code):
         source_monthly = "Yearly: National statistics / OICA + historical fallback"
 
     elif country_code == "VN":
-        # Vietnam bleibt unverändert (monatlich)
-        # ... (dein bisheriger Vietnam-Block)
-        pass
+        # Vietnam monatlich (dein bestehender Block)
+        if label and value is not None:
+            if label not in monthly["labels"]:
+                monthly["labels"].append(label)
+                monthly["total"].append(value)
+                changed = True
+                new_label = label
+                new_value = value
+
+        if len(monthly["labels"]) < 30:
+            added = 0
+            for lbl, val in VIETNAM_MONTHLY_FALLBACK.items():
+                if lbl not in monthly["labels"]:
+                    monthly["labels"].append(lbl)
+                    monthly["total"].append(val)
+                    added += 1
+            if added > 0:
+                print(f"  → Vietnam: Monatlicher Fallback hinzugefügt ({added} Einträge)")
+                changed = True
+
+        source_monthly = "Monthly: Trading Economics + historical fallback"
 
     elif country_code in ["AE", "PK", "NG", "KE", "BD", "ET", "CO", "PE", "VE"]:
-        # Deine bisherigen nicht-afrikanischen Fallback-Länder
-        # ... (unverändert)
-        pass
+        # Deine bisherigen nicht-afrikanischen Fallbacks
+        fallback_dict = {
+            "AE": UAE_MONTHLY_FALLBACK, "PK": PAKISTAN_MONTHLY_FALLBACK,
+            "NG": NIGERIA_FALLBACK, "KE": KENYA_FALLBACK, "BD": BANGLADESH_FALLBACK,
+            "ET": ETHIOPIA_FALLBACK, "CO": COLOMBIA_FALLBACK, "PE": PERU_FALLBACK,
+            "VE": VENEZUELA_FALLBACK
+        }.get(country_code, {})
+
+        if label and value is not None:
+            if label not in monthly["labels"]:
+                monthly["labels"].append(label)
+                monthly["total"].append(value)
+                changed = True
+                new_label = label
+                new_value = value
+
+        if len(monthly["labels"]) < 12:
+            added = 0
+            for lbl, val in fallback_dict.items():
+                if lbl not in monthly["labels"]:
+                    monthly["labels"].append(lbl)
+                    monthly["total"].append(val)
+                    added += 1
+            if added > 0:
+                print(f"  → {display_name}: Fallback hinzugefügt ({added} Einträge)")
+                changed = True
+
+        source_monthly = "Monthly/Yearly: National statistics + historical fallback"
 
     else:
-        # Standard Trading Economics Länder
         if label and value is not None and label not in monthly["labels"]:
             monthly["labels"].append(label)
             monthly["total"].append(value)
@@ -189,7 +378,6 @@ def write_country_json(country_code):
             new_value = value
         source_monthly = "Auto-Fetch (Trading Economics)"
 
-    # Abschluss
     data["last_updated"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     data["source_monthly"] = source_monthly
 
@@ -207,6 +395,7 @@ def write_country_json(country_code):
             img = create_chart(display_name, list(monthly["labels"]), list(monthly["total"]), new_label)
             caption = f"✅ <b>{display_name}</b>\nNeuer Eintrag: <b>{new_label}</b>\nZulassungen: <b>{new_value:,}</b>"
             send_telegram("Neue Zulassungszahlen", img, caption)
+            print(f"  → Telegram mit Chart für {display_name} gesendet")
         except Exception as e:
             print(f"  Warnung: Chart für {display_name}: {e}")
 
