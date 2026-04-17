@@ -308,12 +308,11 @@ function fmt(n){
 }
 
 // ── Hauptvariablen ─────────────────────────────────────────────────────
-let currentYear = 2024, selectedCountry = null, colorScale;
-const svg = d3.select("#map-svg");
-const proj = d3.geoNaturalEarth1().scale(153).translate([480, 270]);
+let currentYear=2024, selectedCountry=null, colorScale;
+const svg     = d3.select("#map-svg");
+const proj    = d3.geoNaturalEarth1().scale(153).translate([480,270]);
 const pathGen = d3.geoPath().projection(proj);
 
-// ── Map & Top List ─────────────────────────────────────────────────────
 function buildScale(year){
   const evScale = d3.scaleLinear()
     .domain([0, 5, 20, 50, 100])
@@ -340,6 +339,9 @@ function renderMap(year){
 function renderTopList(year){
   const entries = Object.entries(DATA[year] || {}).sort((a,b)=>b[1][0]-a[1][0]).slice(0,10);
   const maxV = entries[0] ? entries[0][1][0] : 0;
+  
+  document.getElementById("top-year").textContent = year;
+
   document.getElementById("top-list").innerHTML = entries.map(([name,d],i)=>`
     <div class="top-item" onclick="selectByName('${name.replace(/'/g,"\\'")}')">
       <span class="top-rank">${i+1}</span>
@@ -353,15 +355,17 @@ function renderTopList(year){
 
 function showDetail(rawName, year){
   const name = normName(rawName);
-  const d = DATA[year] ? DATA[year][name] : null;
+  const d    = DATA[year] ? DATA[year][name] : null;
   const panel = document.getElementById("detail-content");
+  
   if(!d){
     panel.innerHTML = `<span style="color:var(--muted)">No data for <b style="color:var(--text)">${rawName}</b> in ${year}.</span>`;
     return;
   }
-  const perK = (d[0]/(d[1]*1000)).toFixed(1);
+
+  const perK   = (d[0]/(d[1]*1000)).toFixed(1);
   const sorted = Object.entries(DATA[year] || {}).sort((a,b)=>b[1][0]-a[1][0]);
-  const rank = sorted.findIndex(([k])=>k===name)+1;
+  const rank   = sorted.findIndex(([k])=>k===name)+1;
   const hasChart = !!FILE_MAP[name];
 
   panel.innerHTML = `
@@ -371,7 +375,10 @@ function showDetail(rawName, year){
     <div class="stat-row"><span class="stat-label">Population</span><span class="stat-value">${d[1]}\u00a0M</span></div>
     <div class="stat-row"><span class="stat-label">World rank</span><span class="stat-value">#${rank} of ${sorted.length}</span></div>
     <div class="stat-row"><span class="stat-label">Source</span><span class="stat-value" style="font-size:.65rem">${d[2]}</span></div>
-    ${hasChart ? `<button class="open-chart-btn" onclick="openModal('${name}')">&#x1F4CA; Monthly & powertrain chart \u2192</button>` : `<div style="margin-top:10px;font-size:.65rem;color:var(--muted)">&#x1F4ED; Chart available for selected countries only</div>`}`;
+    ${hasChart
+      ? `<button class="open-chart-btn" onclick="openModal('${name}')">&#x1F4CA; Monthly & powertrain chart \u2192</button>`
+      : `<div style="margin-top:10px;font-size:.65rem;color:var(--muted)">&#x1F4ED; Chart available for selected countries only</div>`
+    }`;
 }
 
 window.selectByName = function(name){
@@ -456,7 +463,8 @@ window.openModal = async function(countryName){
 
     if(modalData.last_updated){
       const d = new Date(modalData.last_updated);
-      document.getElementById("modal-subtitle").textContent = "Updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
+      document.getElementById("modal-subtitle").textContent =
+        "Updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
     }
 
     const hasMonthly = !!(modalData.monthly && modalData.monthly.labels && modalData.monthly.labels.length > 0);
@@ -520,7 +528,7 @@ function renderTab(tab){
   }
 }
 
-// ==================== NEUE renderMonthlyChart (wichtigster Fix) ====================
+// ==================== NEUE renderMonthlyChart (Fix für jährliche Daten) ====================
 function renderMonthlyChart(data){
   const m    = data.monthly;
   const wrap = document.getElementById("chart-wrap");
