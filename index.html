@@ -459,18 +459,18 @@ window.openModal = async function(countryName){
     }
 
     const hasMonthly = !!(modalData.monthly && modalData.monthly.labels && modalData.monthly.labels.length > 0);
-    const firstLabel = hasMonthly ? modalData.monthly.labels[0].toString() : "";
+    const firstLabel = hasMonthly ? String(modalData.monthly.labels[0]) : "";
     const isRealMonthly = firstLabel.includes('-') && firstLabel.split('-').length === 2;
 
     const monthlyTabBtn = document.getElementById("monthly-tab");
 
     if (hasMonthly && isRealMonthly) {
       monthlyTabBtn.textContent = "Monthly total";
-      document.getElementById("modal-source").textContent = "Monthly: ECB/ACEA  ·  Annual powertrain: Eurostat";
+      document.getElementById("modal-source").innerHTML = 'Monthly: ECB Data Portal / ACEA <span style="color:var(--muted)">·</span> Annual powertrain: Eurostat';
       activeTab = "monthly";
     } else {
       monthlyTabBtn.textContent = "Yearly total";
-      document.getElementById("modal-source").textContent = "Yearly: National statistics  ·  Annual powertrain: Eurostat";
+      document.getElementById("modal-source").innerHTML = 'Yearly: National statistics <span style="color:var(--muted)">·</span> Annual powertrain: Eurostat';
       activeTab = "absolute";
     }
 
@@ -519,31 +519,30 @@ function renderTab(tab){
   }
 }
 
-// ==================== FIX: renderMonthlyChart ====================
+// ==================== Verbesserte renderMonthlyChart ====================
 function renderMonthlyChart(data){
-  const m    = data.monthly;
+  const m = data.monthly || {};
   const wrap = document.getElementById("chart-wrap");
-  if(!m || !m.labels || !m.labels.length){
-    wrap.innerHTML = '<div style="height:360px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem;flex-direction:column;gap:10px"><span style="font-size:1.5rem">&#x1F4C5;</span>Monthly data not yet available</div>';
+  if(!m.labels || m.labels.length === 0){
+    wrap.innerHTML = '<div style="height:360px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.8rem;flex-direction:column;gap:12px"><span style="font-size:2rem">📅</span>Monthly data not yet available<br><small>Yearly data shown in "Yearly total" tab</small></div>';
     return;
   }
 
+  // Filter ab 2015
   let startIndex = 0;
   for(let i = 0; i < m.labels.length; i++){
-    if(m.labels[i].startsWith("2015")){
-      startIndex = i;
-      break;
+    if(String(m.labels[i]).startsWith("2015")){
+      startIndex = i; break;
     }
   }
-
   const filteredLabels = m.labels.slice(startIndex);
   const filteredTotal  = m.total.slice(startIndex);
 
-  const isMonthlyData = filteredLabels[0] && filteredLabels[0].includes('-') && filteredLabels[0].split('-').length === 2;
+  const isRealMonthly = filteredLabels.length > 0 && String(filteredLabels[0]).includes('-') && String(filteredLabels[0]).split('-').length === 2;
 
   let displayLabels = filteredLabels;
-  if (!isMonthlyData) {
-    displayLabels = filteredLabels.map(label => label.toString().slice(0,4));
+  if (!isRealMonthly) {
+    displayLabels = filteredLabels.map(l => String(l).slice(0,4));
   }
 
   const ctx = document.getElementById("main-chart").getContext("2d");
@@ -551,16 +550,17 @@ function renderMonthlyChart(data){
     type: "line",
     data: {
       labels: displayLabels,
-      datasets:[{
+      datasets: [{
         label: "Total registrations",
-        data:  filteredTotal,
+        data: filteredTotal,
         borderColor: "#00e5ff",
         backgroundColor: "rgba(0,229,255,0.08)",
-        borderWidth: 2.5, 
-        tension: 0.25, 
-        fill: true, 
-        pointRadius: 0, 
-        pointHoverRadius: 5,
+        borderWidth: 2.8,
+        tension: 0.25,
+        fill: true,
+        pointRadius: filteredTotal.length === 1 ? 6 : 0,   // großer Punkt bei nur einem Wert
+        pointHoverRadius: 7,
+        pointBackgroundColor: "#00e5ff"
       }]
     },
     options: {
@@ -569,13 +569,12 @@ function renderMonthlyChart(data){
         ...CHART_BASE.scales,
         x: {
           ...CHART_BASE.scales.x,
-          ticks: {
-            ...CHART_BASE.scales.x.ticks,
-            maxTicksLimit: 24,
-            callback: function(value, index) {
-              return displayLabels[index];
-            }
-          }
+          ticks: { ...CHART_BASE.scales.x.ticks, maxTicksLimit: 20 }
+        },
+        y: {
+          ...CHART_BASE.scales.y,
+          min: Math.max(0, Math.min(...filteredTotal) * 0.95),
+          max: Math.max(...filteredTotal) * 1.05
         }
       }
     }
