@@ -27,6 +27,6 @@
       250000
     ]
   },
-  "last_updated": "2026-04-17T01:29:33.657157Z",
-  "source_monthly": "Yearly: National statistics / OICA / CAMPI / TTMA"
+  "last_updated": "2026-04-17T02:44:33.381878Z",
+  "source_monthly": "Yearly: National statistics / OICA + historical fallback"
 }
