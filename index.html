@@ -519,7 +519,7 @@ function renderTab(tab){
   }
 }
 
-// ==================== FIX: renderMonthlyChart für jährliche Daten ====================
+// ==================== FIX: renderMonthlyChart ====================
 function renderMonthlyChart(data){
   const m    = data.monthly;
   const wrap = document.getElementById("chart-wrap");
@@ -528,7 +528,6 @@ function renderMonthlyChart(data){
     return;
   }
 
-  // Filter ab 2015
   let startIndex = 0;
   for(let i = 0; i < m.labels.length; i++){
     if(m.labels[i].startsWith("2015")){
