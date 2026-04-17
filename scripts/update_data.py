@@ -190,18 +190,16 @@ AFRICA_YEARLY_FALLBACK = {
     "CF": {2015:3000,2016:3200,2017:3500,2018:3800,2019:4000,2020:2800,2021:3000,2022:3200,2023:3500,2024:3800,2025:4000},
 }
 
-# VIETNAM, UAE, PAKISTAN usw. (deine bisherigen Fallbacks) – bitte hier einfügen
-VIETNAM_MONTHLY_FALLBACK = { ... }  # dein vollständiger Vietnam-Block
-UAE_MONTHLY_FALLBACK = { ... }
-PAKISTAN_MONTHLY_FALLBACK = { ... }
-# ... alle anderen bestehenden Fallbacks ...
+# ==================== DEINE BESTEHENDEN FALLBACKS (bitte hier eintragen) ====================
+# VIETNAM_MONTHLY_FALLBACK = { ... }   ← dein vollständiger Block
+# UAE_MONTHLY_FALLBACK = { ... }
+# PAKISTAN_MONTHLY_FALLBACK = { ... }
+# NIGERIA_FALLBACK = { ... }
+# usw.
 
 MONTH_MAP = {
     "jan": "01", "feb": "02", "mar": "03", "apr": "04", "may": "05", "jun": "06",
-    "jul": "07", "aug": "08", "sep": "09", "oct": "10", "nov": "11", "dec": "12",
-    "january": "01", "february": "02", "march": "03", "april": "04", "may": "05",
-    "june": "06", "july": "07", "august": "08", "september": "09", "october": "10",
-    "november": "11", "december": "12"
+    "jul": "07", "aug": "08", "sep": "09", "oct": "10", "nov": "11", "dec": "12"
 }
 
 def fetch_latest_te(country_code):
@@ -317,7 +315,6 @@ def write_country_json(country_code):
         source_monthly = "Yearly: National statistics / OICA + historical fallback"
 
     elif country_code == "VN":
-        # Vietnam monatlich (dein bestehender Block)
         if label and value is not None:
             if label not in monthly["labels"]:
                 monthly["labels"].append(label)
@@ -340,7 +337,6 @@ def write_country_json(country_code):
         source_monthly = "Monthly: Trading Economics + historical fallback"
 
     elif country_code in ["AE", "PK", "NG", "KE", "BD", "ET", "CO", "PE", "VE"]:
-        # Deine bisherigen nicht-afrikanischen Fallbacks
         fallback_dict = {
             "AE": UAE_MONTHLY_FALLBACK, "PK": PAKISTAN_MONTHLY_FALLBACK,
             "NG": NIGERIA_FALLBACK, "KE": KENYA_FALLBACK, "BD": BANGLADESH_FALLBACK,
