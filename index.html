@@ -226,6 +226,68 @@
 </div>
 
 <script>
+const NAME_MAP = {
+  "United States of America": "United States",
+  "Republic of Korea": "South Korea",
+  "Czechia": "Czech Republic",
+  "United Arab Emirates": "UAE",
+  "Iran (Islamic Republic of)": "Iran",
+  "Russian Federation": "Russia",
+  "United Kingdom of Great Britain and Northern Ireland": "United Kingdom",
+  "Viet Nam": "Vietnam",
+  "Korea, Republic of": "South Korea",
+  "Iran, Islamic Republic of": "Iran",
+  "Türkiye": "Turkey",
+  "Kazakhstan": "Kazakhstan",
+  "Kosovo": "Kosovo",
+  "North Macedonia": "North Macedonia",
+  "Macedonia": "North Macedonia",
+  "Serbia": "Serbia",
+  "Bosnia and Herzegovina": "Bosnia and Herzegovina",
+  "Bosnia": "Bosnia and Herzegovina",
+  "Albania": "Albania",
+  "Ukraine": "Ukraine",
+  "Belarus": "Belarus",
+  "Moldova": "Moldova",
+  "Greenland": "Greenland",
+  "Iraq": "Iraq",
+  "Syria": "Syria",
+  "Syrian Arab Republic": "Syria",
+  "Lebanon": "Lebanon",
+  "Turkmenistan": "Turkmenistan",
+  "Uzbekistan": "Uzbekistan",
+  "Kyrgyzstan": "Kyrgyzstan",
+  "Kyrgyz Republic": "Kyrgyzstan",
+  "Afghanistan": "Afghanistan",
+  "Tajikistan": "Tajikistan",
+  "Mongolia": "Mongolia",
+  "Papua New Guinea": "Papua New Guinea",
+  "Bolivia, Plurinational State of": "Bolivia",
+  "Bolivia": "Bolivia",
+  "Paraguay": "Paraguay",
+  "Uruguay": "Uruguay",
+  "Ecuador": "Ecuador",
+  "Guyana": "Guyana",
+  "Suriname": "Suriname",
+  "Venezuela, Bolivarian Republic of": "Venezuela",
+  "Venezuela": "Venezuela",
+  "Colombia": "Colombia",
+  "Peru": "Peru",
+  "Chile": "Chile",
+  "Argentina": "Argentina",
+  "Brazil": "Brazil",
+  "Congo, Democratic Republic of the": "DR Congo",
+  "Democratic Republic of the Congo": "DR Congo",
+  "Congo": "Republic of the Congo",
+  "Côte d'Ivoire": "Ivory Coast",
+  "Ivory Coast": "Ivory Coast",
+  "Eswatini": "Eswatini",
+  "Swaziland": "Eswatini",
+  "São Tomé and Príncipe": "São Tomé and Príncipe",
+  "Sao Tome and Principe": "São Tomé and Príncipe",
+  "Central African Republic": "Central African Republic"
+};
+
 const DATA = {
   2026: {
     "Germany":[2900000,84,"KBA"],"France":[1680000,68,"ACEA"],
@@ -257,7 +319,12 @@ const DATA = {
     "Nicaragua":[65000,8,"National"],"Honduras":[90000,10,"National"],
     "Guatemala":[160000,13,"National"],"Panama":[65000,5,"National"],
     "Costa Rica":[85000,7,"National"],"Belize":[8000,1,"National"],
-    "Jamaica":[45000,4,"National"],"Puerto Rico":[120000,9,"National"]
+    "Jamaica":[45000,4,"National"],"Puerto Rico":[120000,9,"National"],
+    "Chile":[320000,20,"ANAC"],"Colombia":[300000,52,"ANDEMOS"],
+    "Peru":[200000,34,"AAP"],"Venezuela":[100000,28,"CAV"],
+    "Bolivia":[45000,12,"National/OICA"],"Paraguay":[80000,7.5,"National/OICA"],
+    "Uruguay":[65000,3.4,"National/OICA"],"Ecuador":[120000,18,"National/OICA"],
+    "Guyana":[15000,2.1,"National/OICA"],"Suriname":[8000,1.4,"National/OICA"]
   },
   2025: {
     "Germany":[2858000,84,"KBA"],"France":[1632000,68,"ACEA"],
@@ -289,7 +356,12 @@ const DATA = {
     "Nicaragua":[62000,8,"National"],"Honduras":[86000,10,"National"],
     "Guatemala":[155000,13,"National"],"Panama":[62000,5,"National"],
     "Costa Rica":[82000,7,"National"],"Belize":[7800,1,"National"],
-    "Jamaica":[43000,4,"National"],"Puerto Rico":[115000,9,"National"]
+    "Jamaica":[43000,4,"National"],"Puerto Rico":[115000,9,"National"],
+    "Chile":[310000,20,"ANAC"],"Colombia":[290000,52,"ANDEMOS"],
+    "Peru":[195000,34,"AAP"],"Venezuela":[95000,28,"CAV"],
+    "Bolivia":[43000,12,"National/OICA"],"Paraguay":[78000,7.5,"National/OICA"],
+    "Uruguay":[63000,3.4,"National/OICA"],"Ecuador":[115000,18,"National/OICA"],
+    "Guyana":[14500,2.1,"National/OICA"],"Suriname":[7800,1.4,"National/OICA"]
   },
   2024: {
     "China":[22000000,1412,"OICA/CAAM"],"United States":[15940000,334,"OICA/Wards"],
@@ -322,17 +394,161 @@ const DATA = {
     "Nicaragua":[59000,8,"National"],"Honduras":[82000,10,"National"],
     "Guatemala":[150000,13,"National"],"Panama":[59000,5,"National"],
     "Costa Rica":[79000,7,"National"],"Belize":[7500,1,"National"],
-    "Jamaica":[41000,4,"National"],"Puerto Rico":[110000,9,"National"]
+    "Jamaica":[41000,4,"National"],"Puerto Rico":[110000,9,"National"],
+    "Chile":[320000,20,"ANAC"],"Colombia":[300000,52,"ANDEMOS"],
+    "Peru":[200000,34,"AAP"],"Venezuela":[100000,28,"CAV"],
+    "Bolivia":[45000,12,"National/OICA"],"Paraguay":[80000,7.5,"National/OICA"],
+    "Uruguay":[65000,3.4,"National/OICA"],"Ecuador":[120000,18,"National/OICA"],
+    "Guyana":[15000,2.1,"National/OICA"],"Suriname":[8000,1.4,"National/OICA"]
   },
-  2023: { /* unverändert aus Original */ },
-  2022: { /* unverändert aus Original */ },
-  2021: { /* unverändert aus Original */ },
-  2020: { /* unverändert aus Original */ },
-  2019: { /* unverändert aus Original */ },
-  2018: { /* unverändert aus Original */ },
-  2017: { /* unverändert aus Original */ },
-  2016: { /* unverändert aus Original */ },
-  2015: { /* unverändert aus Original */ }
+  2023: {
+    "China":[21400000,1412,"OICA/CAAM"],"United States":[15600000,334,"OICA/Wards"],
+    "India":[4100000,1428,"OICA/SIAM"],"Japan":[4780000,124,"OICA/JAMA"],
+    "Germany":[2845000,84,"KBA"],"Brazil":[2200000,216,"OICA/ANFAVEA"],
+    "United Kingdom":[1903000,67,"SMMT"],"France":[1775000,68,"ACEA"],
+    "South Korea":[1700000,52,"OICA/KAMA"],"Italy":[1567000,60,"ANFIA"],
+    "Canada":[1840000,38,"OICA"],"Spain":[949000,47,"ANFAC"],
+    "Mexico":[1400000,128,"OICA/AMIA"],"Australia":[1200000,26,"VFACTS"],
+    "Russia":[1020000,144,"AEB"],"Turkey":[1200000,85,"OSD"],
+    "Indonesia":[1010000,278,"Gaikindo"],"Thailand":[750000,72,"TAI"],
+    "Malaysia":[780000,33,"MAA"],"South Africa":[540000,60,"NAAMSA"],
+    "Iran":[870000,87,"OICA"],"Poland":[475000,38,"ACEA"],
+    "Netherlands":[370000,17,"ACEA"],"Belgium":[477000,11,"ACEA"],
+    "Sweden":[290000,10,"BIL Sweden"],"Switzerland":[252000,9,"auto-schweiz"],
+    "Austria":[239000,9,"ACEA"],"Norway":[127000,5,"OFV"],
+    "Denmark":[173000,6,"ACEA"],"Finland":[88000,6,"ACEA"],
+    "Portugal":[200000,10,"ACEA"],"Czech Republic":[221000,11,"ACEA"]
+  },
+  2022: {
+    "China":[19600000,1412,"OICA/CAAM"],"United States":[13760000,334,"OICA/Wards"],
+    "India":[4720000,1380,"OICA/SIAM"],"Japan":[4200000,124,"OICA/JAMA"],
+    "Germany":[2650000,84,"KBA"],"Brazil":[2100000,215,"OICA/ANFAVEA"],
+    "United Kingdom":[1610000,67,"SMMT"],"France":[1530000,68,"ACEA"],
+    "South Korea":[1690000,52,"OICA/KAMA"],"Italy":[1310000,60,"ANFIA"],
+    "Canada":[1550000,38,"OICA"],"Spain":[860000,47,"ANFAC"],
+    "Mexico":[1080000,128,"OICA/AMIA"],"Australia":[1080000,26,"VFACTS"],
+    "Russia":[690000,144,"AEB"],"Turkey":[980000,85,"OSD"],
+    "Indonesia":[1050000,278,"Gaikindo"],"Thailand":[850000,72,"TAI"],
+    "Malaysia":[730000,33,"MAA"],"South Africa":[490000,60,"NAAMSA"],
+    "Iran":[800000,87,"OICA"],"Poland":[420000,38,"ACEA"],
+    "Netherlands":[350000,17,"ACEA"],"Sweden":[270000,10,"BIL Sweden"],
+    "Norway":[140000,5,"OFV"],"Switzerland":[260000,9,"auto-schweiz"],
+    "Austria":[240000,9,"ACEA"],"Denmark":[170000,6,"ACEA"],
+    "Finland":[95000,6,"ACEA"],"Portugal":[190000,10,"ACEA"],
+    "Czech Republic":[210000,11,"ACEA"]
+  },
+  2021: {
+    "China":[21480000,1412,"OICA/CAAM"],"United States":[15400000,334,"OICA/Wards"],
+    "Germany":[2620000,84,"KBA"],"Japan":[4440000,124,"OICA/JAMA"],
+    "India":[3290000,1380,"OICA/SIAM"],"United Kingdom":[1650000,67,"SMMT"],
+    "France":[1660000,68,"ACEA"],"South Korea":[1740000,52,"OICA/KAMA"],
+    "Italy":[1460000,60,"ANFIA"],"Canada":[1660000,38,"OICA"],
+    "Spain":[860000,47,"ANFAC"],"Brazil":[2110000,215,"OICA/ANFAVEA"],
+    "Australia":[914000,26,"VFACTS"],"Mexico":[1080000,128,"OICA/AMIA"],
+    "Turkey":[970000,85,"OSD"],"Russia":[1670000,144,"AEB"],
+    "Netherlands":[400000,17,"ACEA"],"Sweden":[300000,10,"BIL Sweden"],
+    "Belgium":[530000,11,"ACEA"],"Switzerland":[300000,9,"auto-schweiz"],
+    "Austria":[248000,9,"ACEA"],"Norway":[176000,5,"OFV"],
+    "Denmark":[213000,6,"ACEA"],"Poland":[500000,38,"ACEA"],
+    "Portugal":[196000,10,"ACEA"],"Finland":[120000,6,"ACEA"],
+    "Czech Republic":[213000,11,"ACEA"]
+  },
+  2020: {
+    "China":[19994000,1412,"OICA/CAAM"],"United States":[14500000,334,"OICA/Wards"],
+    "Germany":[2917000,84,"KBA"],"Japan":[4600000,124,"OICA/JAMA"],
+    "India":[2900000,1380,"OICA/SIAM"],"United Kingdom":[1630000,67,"SMMT"],
+    "France":[1650000,68,"ACEA"],"South Korea":[1900000,52,"OICA/KAMA"],
+    "Italy":[1382000,60,"ANFIA"],"Canada":[1550000,38,"OICA"],
+    "Spain":[851000,47,"ANFAC"],"Brazil":[2060000,215,"OICA/ANFAVEA"],
+    "Australia":[917000,26,"VFACTS"],"Mexico":[950000,128,"OICA/AMIA"],
+    "Turkey":[860000,85,"OSD"],"Russia":[1600000,144,"AEB"],
+    "Netherlands":[443000,17,"ACEA"],"Sweden":[290000,10,"BIL Sweden"],
+    "Belgium":[452000,11,"ACEA"],"Switzerland":[310000,9,"auto-schweiz"],
+    "Austria":[247000,9,"ACEA"],"Norway":[141000,5,"OFV"],
+    "Denmark":[217000,6,"ACEA"],"Poland":[427000,38,"ACEA"],
+    "Portugal":[161000,10,"ACEA"],"Finland":[107000,6,"ACEA"],
+    "Czech Republic":[193000,11,"ACEA"]
+  },
+  2019: {
+    "China":[21440000,1412,"OICA/CAAM"],"United States":[17100000,334,"OICA/Wards"],
+    "Germany":[3607000,84,"KBA"],"Japan":[5200000,124,"OICA/JAMA"],
+    "India":[3800000,1380,"OICA/SIAM"],"United Kingdom":[2311000,67,"SMMT"],
+    "France":[2211000,68,"ACEA"],"South Korea":[1800000,52,"OICA/KAMA"],
+    "Italy":[1916000,60,"ANFIA"],"Canada":[1950000,38,"OICA"],
+    "Spain":[1253000,47,"ANFAC"],"Brazil":[2770000,215,"OICA/ANFAVEA"],
+    "Australia":[1062000,26,"VFACTS"],"Mexico":[1320000,128,"OICA/AMIA"],
+    "Turkey":[492000,85,"OSD"],"Russia":[1760000,144,"AEB"],
+    "Netherlands":[443000,17,"ACEA"],"Sweden":[356000,10,"BIL Sweden"],
+    "Belgium":[551000,11,"ACEA"],"Switzerland":[316000,9,"auto-schweiz"],
+    "Austria":[331000,9,"ACEA"],"Norway":[142000,5,"OFV"],
+    "Denmark":[222000,6,"ACEA"],"Poland":[517000,38,"ACEA"],
+    "Portugal":[226000,10,"ACEA"],"Finland":[120000,6,"ACEA"],
+    "Czech Republic":[239000,11,"ACEA"]
+  },
+  2018: {
+    "China":[23560000,1412,"OICA/CAAM"],"United States":[17700000,334,"OICA/Wards"],
+    "Germany":[3436000,84,"KBA"],"Japan":[5270000,124,"OICA/JAMA"],
+    "India":[3387000,1380,"OICA/SIAM"],"United Kingdom":[2367000,67,"SMMT"],
+    "France":[2173000,68,"ACEA"],"South Korea":[1830000,52,"OICA/KAMA"],
+    "Italy":[1910000,60,"ANFIA"],"Canada":[1990000,38,"OICA"],
+    "Spain":[1321000,47,"ANFAC"],"Brazil":[2500000,215,"OICA/ANFAVEA"],
+    "Australia":[1153000,26,"VFACTS"],"Mexico":[1290000,128,"OICA/AMIA"],
+    "Turkey":[635000,85,"OSD"],"Russia":[1800000,144,"AEB"],
+    "Netherlands":[443000,17,"ACEA"],"Sweden":[357000,10,"BIL Sweden"],
+    "Belgium":[550000,11,"ACEA"],"Switzerland":[320000,9,"auto-schweiz"],
+    "Austria":[338000,9,"ACEA"],"Norway":[147000,5,"OFV"],
+    "Denmark":[230000,6,"ACEA"],"Poland":[478000,38,"ACEA"],
+    "Portugal":[203000,10,"ACEA"],"Finland":[120000,6,"ACEA"],
+    "Czech Republic":[253000,11,"ACEA"]
+  },
+  2017: {
+    "China":[24720000,1412,"OICA/CAAM"],"United States":[17200000,334,"OICA/Wards"],
+    "Germany":[3441000,84,"KBA"],"Japan":[5230000,124,"OICA/JAMA"],
+    "India":[3287000,1380,"OICA/SIAM"],"United Kingdom":[2540000,67,"SMMT"],
+    "France":[2113000,68,"ACEA"],"South Korea":[1800000,52,"OICA/KAMA"],
+    "Italy":[1971000,60,"ANFIA"],"Canada":[2000000,38,"OICA"],
+    "Spain":[1234000,47,"ANFAC"],"Brazil":[2240000,215,"OICA/ANFAVEA"],
+    "Australia":[1189000,26,"VFACTS"],"Mexico":[1588000,128,"OICA/AMIA"],
+    "Turkey":[682000,85,"OSD"],"Russia":[1596000,144,"AEB"],
+    "Netherlands":[397000,17,"ACEA"],"Sweden":[379000,10,"BIL Sweden"],
+    "Belgium":[563000,11,"ACEA"],"Switzerland":[327000,9,"auto-schweiz"],
+    "Austria":[362000,9,"ACEA"],"Norway":[150000,5,"OFV"],
+    "Denmark":[221000,6,"ACEA"],"Poland":[486000,38,"ACEA"],
+    "Portugal":[195000,10,"ACEA"],"Finland":[118000,6,"ACEA"],
+    "Czech Republic":[255000,11,"ACEA"]
+  },
+  2016: {
+    "China":[24380000,1412,"OICA/CAAM"],"United States":[17900000,334,"OICA/Wards"],
+    "Germany":[3352000,84,"KBA"],"Japan":[4970000,124,"OICA/JAMA"],
+    "India":[3047000,1380,"OICA/SIAM"],"United Kingdom":[2692000,67,"SMMT"],
+    "France":[2015000,68,"ACEA"],"South Korea":[1820000,52,"OICA/KAMA"],
+    "Italy":[1825000,60,"ANFIA"],"Canada":[1950000,38,"OICA"],
+    "Spain":[1147000,47,"ANFAC"],"Brazil":[2050000,215,"OICA/ANFAVEA"],
+    "Australia":[1178000,26,"VFACTS"],"Mexico":[1643000,128,"OICA/AMIA"],
+    "Turkey":[916000,85,"OSD"],"Russia":[1426000,144,"AEB"],
+    "Netherlands":[389000,17,"ACEA"],"Sweden":[374000,10,"BIL Sweden"],
+    "Belgium":[561000,11,"ACEA"],"Switzerland":[319000,9,"auto-schweiz"],
+    "Austria":[357000,9,"ACEA"],"Norway":[150000,5,"OFV"],
+    "Denmark":[213000,6,"ACEA"],"Poland":[479000,38,"ACEA"],
+    "Portugal":[187000,10,"ACEA"],"Finland":[122000,6,"ACEA"],
+    "Czech Republic":[247000,11,"ACEA"]
+  },
+  2015: {
+    "China":[21100000,1374,"OICA/CAAM"],"United States":[17470000,321,"OICA/Wards"],
+    "Germany":[3206000,82,"KBA"],"Japan":[5046000,127,"OICA/JAMA"],
+    "India":[2790000,1310,"OICA/SIAM"],"United Kingdom":[2633000,65,"SMMT"],
+    "France":[1917000,67,"ACEA"],"South Korea":[1832000,51,"OICA/KAMA"],
+    "Italy":[1576000,61,"ANFIA"],"Canada":[1896000,36,"OICA"],
+    "Spain":[1034000,46,"ANFAC"],"Brazil":[2566000,208,"OICA/ANFAVEA"],
+    "Australia":[1155000,24,"VFACTS"],"Mexico":[1351000,121,"OICA/AMIA"],
+    "Turkey":[868000,79,"OSD"],"Russia":[1601000,144,"AEB"],
+    "Netherlands":[449000,17,"ACEA"],"Sweden":[381000,10,"BIL Sweden"],
+    "Belgium":[553000,11,"ACEA"],"Switzerland":[340000,8,"auto-schweiz"],
+    "Austria":[356000,9,"ACEA"],"Norway":[153000,5,"OFV"],
+    "Denmark":[225000,6,"ACEA"],"Poland":[362000,38,"ACEA"],
+    "Portugal":[162000,10,"ACEA"],"Finland":[105000,6,"ACEA"],
+    "Czech Republic":[255000,11,"ACEA"]
+  }
 };
 
 const EV_SHARE = {
@@ -354,7 +570,10 @@ const EV_SHARE = {
     "Fiji":1.5,"Vanuatu":0.8,"Solomon Islands":0.6,"French Southern Antarctic Lands":0,
     "Falkland Islands":0,"Dominican Republic":2.1,"Cuba":1.4,"Bahamas":3.0,
     "Nicaragua":1.1,"Honduras":1.3,"Guatemala":1.0,"Panama":2.8,
-    "Costa Rica":4.2,"Belize":1.5,"Jamaica":2.0,"Puerto Rico":5.5
+    "Costa Rica":4.2,"Belize":1.5,"Jamaica":2.0,"Puerto Rico":5.5,
+    "Chile":6.8,"Colombia":4.5,"Peru":3.0,"Venezuela":1.2,
+    "Bolivia":1.5,"Paraguay":2.0,"Uruguay":4.5,"Ecuador":2.8,
+    "Guyana":0.8,"Suriname":0.5
   },
   2025: {
     "Norway":95.9,"Denmark":68.5,"Sweden":36.5,"Finland":37.2,"Netherlands":40.2,
@@ -374,7 +593,10 @@ const EV_SHARE = {
     "Fiji":1.4,"Vanuatu":0.7,"Solomon Islands":0.5,"French Southern Antarctic Lands":0,
     "Falkland Islands":0,"Dominican Republic":1.9,"Cuba":1.3,"Bahamas":2.8,
     "Nicaragua":1.0,"Honduras":1.2,"Guatemala":0.9,"Panama":2.6,
-    "Costa Rica":3.9,"Belize":1.4,"Jamaica":1.8,"Puerto Rico":5.2
+    "Costa Rica":3.9,"Belize":1.4,"Jamaica":1.8,"Puerto Rico":5.2,
+    "Chile":6.2,"Colombia":4.1,"Peru":2.8,"Venezuela":1.1,
+    "Bolivia":1.4,"Paraguay":1.9,"Uruguay":4.2,"Ecuador":2.5,
+    "Guyana":0.7,"Suriname":0.4
   },
   2024: {
     "Norway":90.0,"Iceland":54.0,"Sweden":35.0,"Denmark":40.0,"Finland":25.0,
@@ -396,17 +618,91 @@ const EV_SHARE = {
     "Fiji":1.3,"Vanuatu":0.6,"Solomon Islands":0.4,"French Southern Antarctic Lands":0,
     "Falkland Islands":0,"Dominican Republic":1.8,"Cuba":1.2,"Bahamas":2.5,
     "Nicaragua":0.9,"Honduras":1.1,"Guatemala":0.8,"Panama":2.4,
-    "Costa Rica":3.7,"Belize":1.3,"Jamaica":1.7,"Puerto Rico":5.0
+    "Costa Rica":3.7,"Belize":1.3,"Jamaica":1.7,"Puerto Rico":5.0,
+    "Chile":6.5,"Colombia":4.0,"Peru":2.5,"Venezuela":1.0,
+    "Bolivia":1.2,"Paraguay":1.8,"Uruguay":4.0,"Ecuador":2.2,
+    "Guyana":0.6,"Suriname":0.4
   },
-  2023: { /* unverändert aus Original */ },
-  2022: { /* unverändert aus Original */ },
-  2021: { /* unverändert aus Original */ },
-  2020: { /* unverändert aus Original */ },
-  2019: { /* unverändert aus Original */ },
-  2018: { /* unverändert aus Original */ },
-  2017: { /* unverändert aus Original */ },
-  2016: { /* unverändert aus Original */ },
-  2015: { /* unverändert aus Original */ }
+  2023: {
+    "Norway":82.0,"Iceland":52.0,"Sweden":39.0,"Denmark":31.0,"Finland":22.0,
+    "Netherlands":30.0,"Belgium":21.0,"Germany":18.4,"United Kingdom":16.5,
+    "France":16.8,"Austria":11.0,"Switzerland":18.5,"Luxembourg":22.0,
+    "Portugal":14.5,"Spain":3.6,"Italy":3.7,"Czech Republic":2.8,
+    "Poland":3.2,"Hungary":3.5,"Romania":2.0,"Slovakia":2.5,
+    "Slovenia":4.8,"Croatia":2.8,"Bulgaria":1.5,"Latvia":5.0,
+    "Lithuania":4.5,"Estonia":7.0,"Greece":4.0,"Ireland":12.5,
+    "Malta":3.0,"Cyprus":2.8,"China":26.0,"United States":7.6,
+    "Japan":3.2,"South Korea":9.0,"Australia":7.2,"Canada":7.0,
+    "India":2.0,"Brazil":4.1,"Turkey":4.3,"Mexico":1.5,"Thailand":9.5
+  },
+  2022: {
+    "Norway":79.0,"Iceland":45.0,"Sweden":32.0,"Denmark":20.5,"Finland":19.0,
+    "Netherlands":23.0,"Belgium":10.5,"Germany":17.7,"United Kingdom":16.6,
+    "France":13.3,"Austria":9.0,"Switzerland":17.0,"Luxembourg":19.0,
+    "Portugal":11.2,"Spain":4.6,"Italy":3.7,"Czech Republic":2.0,
+    "Poland":2.4,"Hungary":2.5,"Romania":1.5,"Slovakia":1.8,
+    "Slovenia":3.5,"Croatia":2.0,"Bulgaria":0.8,"Latvia":3.5,
+    "Lithuania":3.0,"Estonia":5.0,"Greece":3.0,"Ireland":9.5,
+    "China":21.0,"United States":5.8,"Japan":3.2,"South Korea":9.0,
+    "Australia":3.8,"Canada":5.0,"Brazil":2.5,"Turkey":1.8,"Thailand":2.0
+  },
+  2021: {
+    "Norway":72.0,"Iceland":55.0,"Sweden":37.0,"Denmark":12.0,"Finland":12.0,
+    "Netherlands":22.0,"Belgium":8.6,"Germany":13.5,"United Kingdom":12.0,
+    "France":9.8,"Austria":6.5,"Switzerland":13.5,"Luxembourg":12.0,
+    "Portugal":7.5,"Spain":3.3,"Italy":4.6,"Czech Republic":1.3,
+    "Poland":1.6,"Hungary":1.8,"Romania":0.6,"Slovakia":0.9,
+    "Slovenia":2.5,"Croatia":1.4,"Bulgaria":0.4,"Latvia":2.0,
+    "Lithuania":2.2,"Estonia":3.5,"Greece":2.0,"Ireland":7.5,
+    "China":13.0,"United States":2.9,"Japan":0.9,"South Korea":5.7,
+    "Australia":2.0,"Canada":4.2,"Brazil":0.5,"Turkey":0.5,"Thailand":0.4
+  },
+  2020: {
+    "Norway":54.0,"Iceland":45.0,"Sweden":23.0,"Denmark":5.5,"Finland":4.0,
+    "Netherlands":20.0,"Belgium":4.5,"Germany":6.5,"United Kingdom":5.5,
+    "France":5.5,"Austria":3.0,"Switzerland":7.0,"Luxembourg":5.5,
+    "Portugal":3.5,"Spain":1.7,"Italy":1.5,"Czech Republic":0.5,
+    "Poland":0.5,"Hungary":0.5,"Romania":0.3,"Slovakia":0.3,
+    "Slovenia":1.0,"Croatia":0.5,"Bulgaria":0.2,"Latvia":0.8,
+    "Lithuania":0.8,"Estonia":1.5,"Greece":0.8,"Ireland":4.5,
+    "China":4.3,"United States":1.8,"Japan":0.8,"South Korea":2.4,
+    "Australia":0.7,"Canada":2.8,"Brazil":0.3,"Turkey":0.3,"Thailand":0.2
+  },
+  2019: {
+    "Norway":42.4,"Iceland":20.0,"Sweden":4.4,"Denmark":2.5,"Finland":1.5,
+    "Netherlands":13.9,"Belgium":1.0,"Germany":1.8,"United Kingdom":1.5,
+    "France":1.9,"Austria":1.2,"Switzerland":3.5,"Luxembourg":2.0,
+    "Portugal":2.0,"Spain":0.9,"Italy":0.8,"Czech Republic":0.3,
+    "Poland":0.3,"Hungary":0.3,"Romania":0.2,"Slovakia":0.2,
+    "Slovenia":0.6,"Croatia":0.3,"Bulgaria":0.1,"Estonia":0.8,
+    "Greece":0.4,"Ireland":1.5,"China":3.9,"United States":1.5,
+    "Japan":0.5,"South Korea":1.9,"Australia":0.6,"Canada":1.9
+  },
+  2018: {
+    "Norway":31.0,"Iceland":17.0,"Sweden":3.0,"Denmark":1.5,"Finland":0.8,
+    "Netherlands":4.0,"Belgium":0.5,"Germany":1.0,"United Kingdom":1.0,
+    "France":1.0,"Austria":0.7,"Switzerland":2.0,"Luxembourg":1.2,
+    "Portugal":0.7,"Spain":0.5,"Italy":0.4,"China":2.6,
+    "United States":1.3,"Japan":0.4,"South Korea":0.8,"Australia":0.3,"Canada":1.1
+  },
+  2017: {
+    "Norway":20.9,"Iceland":10.0,"Sweden":2.5,"Denmark":1.2,"Finland":0.5,
+    "Netherlands":1.5,"Belgium":0.4,"Germany":0.7,"United Kingdom":0.9,
+    "France":0.8,"Austria":0.5,"Switzerland":1.5,"Luxembourg":0.9,
+    "Portugal":0.5,"Spain":0.4,"Italy":0.3,"China":1.8,
+    "United States":1.0,"Japan":0.3,"South Korea":0.6,"Australia":0.2
+  },
+  2016: {
+    "Norway":15.7,"Iceland":5.0,"Sweden":1.3,"Denmark":0.8,"Netherlands":4.5,
+    "Belgium":0.3,"Germany":0.4,"United Kingdom":0.7,"France":0.7,
+    "Austria":0.3,"Switzerland":1.0,"Luxembourg":0.7,"China":1.5,
+    "United States":0.9,"Japan":0.3
+  },
+  2015: {
+    "Norway":17.1,"Iceland":2.5,"Sweden":1.1,"Denmark":0.5,"Netherlands":4.0,
+    "Germany":0.3,"United Kingdom":0.5,"France":0.5,"Switzerland":0.7,
+    "China":1.0,"United States":0.6,"Japan":0.2
+  }
 };
 
 const FILE_MAP = {
@@ -425,42 +721,10 @@ const FILE_MAP = {
   "Indonesia":"indonesia","Thailand":"thailand","Malaysia":"malaysia","Iran":"iran",
   "Vietnam":"vietnam","Taiwan":"taiwan","Philippines":"philippines","Pakistan":"pakistan",
   "Bangladesh":"bangladesh","Saudi Arabia":"saudi_arabia",
-  "United Arab Emirates":"united_arab_emirates","Israel":"israel","Kazakhstan":"kazakhstan"
-};
-
-const NAME_MAP = {
-  "United States of America":"United States",
-  "Republic of Korea":"South Korea",
-  "Czechia":"Czech Republic",
-  "United Arab Emirates":"UAE",
-  "Iran (Islamic Republic of)":"Iran",
-  "Russian Federation":"Russia",
-  "United Kingdom of Great Britain and Northern Ireland":"United Kingdom",
-  "Viet Nam":"Vietnam",
-  "Korea, Republic of":"South Korea",
-  "Iran, Islamic Republic of":"Iran",
-  "Türkiye":"Turkey",
-  "Kazakhstan":"Kazakhstan",
-  "Sri Lanka":"Sri Lanka",
-  "Myanmar":"Myanmar",
-  "Cambodia":"Cambodia",
-  "New Caledonia":"New Caledonia",
-  "Fiji":"Fiji",
-  "Vanuatu":"Vanuatu",
-  "Solomon Islands":"Solomon Islands",
-  "French Southern Antarctic Lands":"French Southern Antarctic Lands",
-  "Falkland Islands":"Falkland Islands",
-  "Dominican Republic":"Dominican Republic",
-  "Cuba":"Cuba",
-  "Bahamas":"Bahamas",
-  "Nicaragua":"Nicaragua",
-  "Honduras":"Honduras",
-  "Guatemala":"Guatemala",
-  "Panama":"Panama",
-  "Costa Rica":"Costa Rica",
-  "Belize":"Belize",
-  "Jamaica":"Jamaica",
-  "Puerto Rico":"Puerto Rico"
+  "United Arab Emirates":"united_arab_emirates","Israel":"israel","Kazakhstan":"kazakhstan",
+  "Chile":"chile","Colombia":"colombia","Peru":"peru","Venezuela":"venezuela",
+  "Bolivia":"bolivia","Paraguay":"paraguay","Uruguay":"uruguay","Ecuador":"ecuador",
+  "Guyana":"guyana","Suriname":"suriname"
 };
 
 function normName(n){return NAME_MAP[n]||n;}
