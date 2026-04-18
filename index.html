@@ -432,8 +432,6 @@ const FILE_MAP = {
   "Uruguay":"uruguay","Ecuador":"ecuador","Guyana":"guyana","Suriname":"suriname"
 };
 
-const NAME_MAP = { ... };  // Dieser zweite Block ist entfernt – nur der erste bleibt
-
 function normName(n){return NAME_MAP[n]||n;}
 function fmt(n){
   if(!n&&n!==0)return"\u2014";
@@ -545,7 +543,7 @@ function showTip(e,rawName,year){
   tooltip.style.top=Math.max(e.clientY-44,0)+"px";
 }
 
-// Chart modal bleibt unverändert
+// Chart modal
 let chartM=null,chartA=null,modalData=null,ptMode="absolute";
 const COLORS={
   bev:{line:"#00e5ff",fill:"rgba(0,229,255,0.12)"},phev:{line:"#4ade80",fill:"rgba(74,222,128,0.10)"},
@@ -705,7 +703,7 @@ window.switchTopList=function(mode,btn){
   inp.addEventListener("keydown",function(e){
     const items=res.querySelectorAll(".search-result-item");if(!items.length)return;
     if(e.key==="Enter")items[0].click();
-    if(e.key==="Escape"){inp.value="";res.innerHTML="";clr();}
+    if(e.key==="Escape"){inp.value:"";res.innerHTML:"";clr();}
   });
 })();
 
