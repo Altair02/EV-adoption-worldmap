@@ -2,8 +2,8 @@ name: Update Car Registration Data
 
 on:
   schedule:
-    - cron: "0 * * * *"      # jede volle Stunde (UTC)
-  workflow_dispatch:         # kann manuell gestartet werden
+    - cron: "0 * * * *"      # jede volle Stunde
+  workflow_dispatch:
 
 permissions:
   contents: write
