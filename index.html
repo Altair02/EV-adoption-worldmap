@@ -227,6 +227,72 @@
 </div>
 
 <script>
+const DATA = {
+  2026: {
+    "China":[23000000,1412,"OICA/CAAM"],"India":[4400000,1428,"OICA/SIAM"],
+    "Japan":[4100000,124,"OICA/JAMA"],"South Korea":[1700000,52,"OICA/KAMA"],
+    "Indonesia":[1050000,278,"Gaikindo"],"Thailand":[750000,72,"TAI"],
+    "Malaysia":[820000,33,"MAA"],"Vietnam":[800000,100,"VAMA"],
+    "Philippines":[480000,117,"CAMPI"],"Taiwan":[450000,23,"MOTC"],
+    "Pakistan":[320000,240,"PAMA"],"Bangladesh":[280000,173,"National"],
+    "Iran":[950000,87,"OICA"],"Saudi Arabia":[680000,36,"OICA"],
+    "United Arab Emirates":[360000,10,"OICA"],"Israel":[320000,9,"National"],
+    "Kazakhstan":[220000,20,"National"],"Turkey":[1300000,85,"OSD"],
+    "Brazil":[2600000,216,"OICA/ANFAVEA"],"Argentina":[450000,46,"ADEFA"],
+    "Chile":[320000,20,"ANAC"],"Colombia":[300000,52,"ANDEMOS"],
+    "Peru":[200000,34,"AAP"],"Venezuela":[100000,28,"CAV"],
+    "Bolivia":[45000,12,"National/OICA"],"Paraguay":[80000,7.5,"National/OICA"],
+    "Uruguay":[65000,3.4,"National/OICA"],"Ecuador":[120000,18,"National/OICA"],
+    "Guyana":[15000,2.1,"National/OICA"],"Suriname":[8000,1.4,"National/OICA"]
+  },
+  2025: {
+    "China":[22500000,1412,"OICA/CAAM"],"India":[4400000,1428,"OICA/SIAM"],
+    "Japan":[4100000,124,"OICA/JAMA"],"South Korea":[1700000,52,"OICA/KAMA"],
+    "Indonesia":[1020000,278,"Gaikindo"],"Thailand":[720000,72,"TAI"],
+    "Malaysia":[810000,33,"MAA"],"Vietnam":[780000,100,"VAMA"],
+    "Philippines":[420000,117,"CAMPI"],"Taiwan":[445000,23,"MOTC"],
+    "Pakistan":[310000,240,"PAMA"],"Bangladesh":[265000,173,"National"],
+    "Iran":[920000,87,"OICA"],"Saudi Arabia":[665000,36,"OICA"],
+    "United Arab Emirates":[355000,10,"OICA"],"Israel":[310000,9,"National"],
+    "Kazakhstan":[210000,20,"National"],"Turkey":[1270000,85,"OSD"],
+    "Brazil":[2550000,216,"OICA/ANFAVEA"],"Argentina":[430000,46,"ADEFA"],
+    "Chile":[310000,20,"ANAC"],"Colombia":[290000,52,"ANDEMOS"],
+    "Peru":[195000,34,"AAP"],"Venezuela":[95000,28,"CAV"],
+    "Bolivia":[43000,12,"National/OICA"],"Paraguay":[78000,7.5,"National/OICA"],
+    "Uruguay":[63000,3.4,"National/OICA"],"Ecuador":[115000,18,"National/OICA"],
+    "Guyana":[14500,2.1,"National/OICA"],"Suriname":[7800,1.4,"National/OICA"]
+  },
+  2024: {
+    "China":[22000000,1412,"OICA/CAAM"],"United States":[15940000,334,"OICA/Wards"],
+    "India":[4270000,1428,"OICA/SIAM"],"Japan":[4250000,124,"OICA/JAMA"],
+    "Germany":[2817000,84,"KBA"],"Brazil":[2600000,216,"OICA/ANFAVEA"],
+    "United Kingdom":[1953000,67,"SMMT"],"France":[1718000,68,"ACEA"],
+    "South Korea":[1680000,52,"OICA/KAMA"],"Italy":[1559000,60,"ANFIA"],
+    "Canada":[1900000,38,"OICA"],"Spain":[1017000,47,"ANFAC"],
+    "Mexico":[1450000,128,"OICA/AMIA"],"Australia":[1160000,26,"VFACTS"],
+    "Russia":[980000,144,"AEB"],"Turkey":[1250000,85,"OSD"],
+    "Indonesia":[1000000,278,"Gaikindo"],"Malaysia":[800000,33,"MAA"],
+    "Iran":[900000,87,"OICA"],"Thailand":[700000,72,"TAI"],
+    "Argentina":[450000,46,"ADEFA"],"South Africa":[560000,60,"NAAMSA"],
+    "Saudi Arabia":[650000,36,"OICA"],"Poland":[552000,38,"ACEA"],
+    "Netherlands":[381000,17,"ACEA"],"Belgium":[448000,11,"ACEA"],
+    "Sweden":[270000,10,"BIL Sweden"],"Switzerland":[240000,9,"auto-schweiz"],
+    "Austria":[254000,9,"ACEA"],"Norway":[129000,5,"OFV"],
+    "Denmark":[173000,6,"ACEA"],"Finland":[74000,6,"ACEA"],
+    "Portugal":[210000,10,"ACEA"],"Czech Republic":[232000,11,"ACEA"],
+    "UAE":[350000,10,"OICA"],
+    "Vietnam":[750000,100,"VAMA"],"Philippines":[370000,117,"CAMPI"],
+    "Taiwan":[440000,23,"MOTC"],"Pakistan":[300000,240,"PAMA"],
+    "Bangladesh":[250000,173,"National"],
+    "Brazil":[2600000,216,"OICA/ANFAVEA"],"Argentina":[450000,46,"ADEFA"],
+    "Chile":[320000,20,"ANAC"],"Colombia":[300000,52,"ANDEMOS"],
+    "Peru":[200000,34,"AAP"],"Venezuela":[100000,28,"CAV"],
+    "Bolivia":[45000,12,"National/OICA"],"Paraguay":[80000,7.5,"National/OICA"],
+    "Uruguay":[65000,3.4,"National/OICA"],"Ecuador":[120000,18,"National/OICA"],
+    "Guyana":[15000,2.1,"National/OICA"],"Suriname":[8000,1.4,"National/OICA"]
+  }
+};
+
 const EV_SHARE = {
   2026: {
     "Norway":96.0,"Denmark":68.0,"Sweden":37.0,"Finland":38.0,"Netherlands":40.0,
@@ -307,6 +373,39 @@ const EV_SHARE = {
   }
 };
 
+const FILE_MAP = {
+  "Austria":"austria","Belgium":"belgium","Bulgaria":"bulgaria","Cyprus":"cyprus",
+  "Czech Republic":"czech_republic","Germany":"germany","Denmark":"denmark",
+  "Estonia":"estonia","Greece":"greece","Spain":"spain","Finland":"finland",
+  "France":"france","Croatia":"croatia","Hungary":"hungary","Ireland":"ireland",
+  "Italy":"italy","Lithuania":"lithuania","Luxembourg":"luxembourg","Latvia":"latvia",
+  "Malta":"malta","Netherlands":"netherlands","Poland":"poland","Portugal":"portugal",
+  "Romania":"romania","Sweden":"sweden","Slovenia":"slovenia","Slovakia":"slovakia",
+  "Norway":"norway","Switzerland":"switzerland","United Kingdom":"united_kingdom",
+  "Algeria":"algeria","Angola":"angola","Equatorial Guinea":"equatorial_guinea",
+  "Benin":"benin","Botswana":"botswana","Burkina Faso":"burkina_faso","Burundi":"burundi",
+  "Djibouti":"djibouti","Ivory Coast":"ivory_coast","Eritrea":"eritrea","Eswatini":"eswatini",
+  "Gabon":"gabon","Gambia":"gambia","Ghana":"ghana","Guinea":"guinea","Guinea-Bissau":"guinea_bissau",
+  "Cameroon":"cameroon","Cape Verde":"cape_verde","Comoros":"comoros","DR Congo":"democratic_republic_of_the_congo",
+  "Congo":"republic_of_the_congo","Lesotho":"lesotho","Liberia":"liberia","Libya":"libya",
+  "Madagascar":"madagascar","Malawi":"malawi","Mali":"mali","Morocco":"morocco",
+  "Mauritania":"mauritania","Mauritius":"mauritius","Mozambique":"mozambique","Namibia":"namibia",
+  "Niger":"niger","Rwanda":"rwanda","São Tomé and Príncipe":"sao_tome_and_principe",
+  "Senegal":"senegal","Seychelles":"seychelles","Sierra Leone":"sierra_leone","Zimbabwe":"zimbabwe",
+  "Sudan":"sudan","South Sudan":"south_sudan","Tanzania":"tanzania","Togo":"togo",
+  "Chad":"chad","Tunisia":"tunisia","Uganda":"uganda","Central African Republic":"central_african_republic",
+  "Egypt":"egypt","South Africa":"south_africa","Nigeria":"nigeria","Kenya":"kenya",
+  "Ethiopia":"ethiopia","Ghana":"ghana","Libya":"libya",
+  "India":"india","Thailand":"thailand","Malaysia":"malaysia","Indonesia":"indonesia",
+  "Japan":"japan","South Korea":"south_korea","China":"china","Vietnam":"vietnam",
+  "Taiwan":"taiwan","Philippines":"philippines","Pakistan":"pakistan",
+  "Bangladesh":"bangladesh","Iran":"iran","Saudi Arabia":"saudi_arabia",
+  "United Arab Emirates":"united_arab_emirates","Israel":"israel","Kazakhstan":"kazakhstan",
+  "Brazil":"brazil","Argentina":"argentina","Chile":"chile","Colombia":"colombia",
+  "Peru":"peru","Venezuela":"venezuela","Bolivia":"bolivia","Paraguay":"paraguay",
+  "Uruguay":"uruguay","Ecuador":"ecuador","Guyana":"guyana","Suriname":"suriname"
+};
+
 const NAME_MAP = {
   "United States of America":"United States",
   "Republic of Korea":"South Korea",
@@ -342,6 +441,7 @@ function buildScale(){
     .range(["#1a2030","#7c6700","#0d7377","#14a085","#00e5a0"])
     .clamp(true);
 }
+
 function renderMap(year){
   colorScale=buildScale();
   const ev=EV_SHARE[year]||{};
@@ -409,8 +509,9 @@ function showDetail(rawName,year){
     <div class="stat-row"><span class="stat-label">Source</span><span class="stat-value" style="font-size:.65rem">${d[2]}</span></div>
     ${hasChart
       ?`<button class="open-chart-btn" onclick="openModal('${name}')">&#x1F4CA; Monthly &amp; powertrain chart \u2192</button>`
-      :`<div style="margin-top:10px;font-size:.65rem;color:var(--muted)">&#x1F4ED; Chart available for EU/EEA + selected non-EU countries</div>`}`;
+      :`<div style="margin-top:10px;font-size:.65rem;color:var(--muted)">&#x1F4ED; Chart available for many countries</div>`}`;
 }
+
 window.selectByName=function(name){
   selectedCountry=name;
   showDetail(name,currentYear);
@@ -431,9 +532,8 @@ function showTip(e,rawName,year){
   tooltip.style.top=Math.max(e.clientY-44,0)+"px";
 }
 
-// ── Chart modal ───────────────────────────────────────────────────────────────
+// Chart modal (unverändert ab hier)
 let chartM=null,chartA=null,modalData=null,ptMode="absolute";
-
 const COLORS={
   bev:{line:"#00e5ff",fill:"rgba(0,229,255,0.12)"},phev:{line:"#4ade80",fill:"rgba(74,222,128,0.10)"},
   hybrid:{line:"#facc15",fill:"rgba(250,204,21,0.08)"},petrol:{line:"#f87171",fill:"rgba(248,113,113,0.08)"},
@@ -473,7 +573,7 @@ window.openModal=async function(cn){
       const d=new Date(modalData.last_updated);
       document.getElementById("modal-subtitle").textContent="Updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
     }
-    document.getElementById("modal-source").textContent="Monthly: "+(modalData.source_monthly||"ECB/ACEA")+"  \u00b7  Annual: Eurostat";
+    document.getElementById("modal-source").textContent="Monthly: "+(modalData.source_monthly||"ECB/ACEA")+" \u00b7 Annual: Eurostat";
     const hm=!!(modalData.monthly&&modalData.monthly.labels&&modalData.monthly.labels.length);
     const im=hm&&String(modalData.monthly.labels[0]).includes("-");
     document.getElementById("sec-monthly-title").innerHTML=(im?"&#x1F4C5; Monthly":"&#x1F4C5; Yearly")+" total registrations";
@@ -488,11 +588,13 @@ window.openModal=async function(cn){
     ld.style.display="none";ct.style.display="block";
   }catch(e){console.error(e);ld.style.display="none";nd.style.display="block";}
 };
+
 window.closeModal=function(){
   document.getElementById("modal-overlay").classList.remove("open");
   if(chartM){chartM.destroy();chartM=null;}
   if(chartA){chartA.destroy();chartA=null;}
 };
+
 document.getElementById("modal-overlay").addEventListener("click",function(e){if(e.target===this)closeModal();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
 
@@ -613,6 +715,7 @@ async function init(){
     document.getElementById("map-loading").innerHTML=`<p style="color:#ff6b35;text-align:center">Error loading map.<br><small>${err.message}</small></p>`;
   }
 }
+
 document.getElementById("year-select").addEventListener("change",function(){
   currentYear=parseInt(this.value);renderMap(currentYear);
   if(selectedCountry)showDetail(selectedCountry,currentYear);
