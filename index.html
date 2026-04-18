@@ -227,6 +227,68 @@
 </div>
 
 <script>
+const NAME_MAP = {
+  "United States of America": "United States",
+  "Republic of Korea": "South Korea",
+  "Czechia": "Czech Republic",
+  "United Arab Emirates": "UAE",
+  "Iran (Islamic Republic of)": "Iran",
+  "Russian Federation": "Russia",
+  "United Kingdom of Great Britain and Northern Ireland": "United Kingdom",
+  "Viet Nam": "Vietnam",
+  "Korea, Republic of": "South Korea",
+  "Iran, Islamic Republic of": "Iran",
+  "Türkiye": "Turkey",
+  "Kazakhstan": "Kazakhstan",
+  "Kosovo": "Kosovo",
+  "North Macedonia": "North Macedonia",
+  "Macedonia": "North Macedonia",
+  "Serbia": "Serbia",
+  "Bosnia and Herzegovina": "Bosnia and Herzegovina",
+  "Bosnia": "Bosnia and Herzegovina",
+  "Albania": "Albania",
+  "Ukraine": "Ukraine",
+  "Belarus": "Belarus",
+  "Moldova": "Moldova",
+  "Greenland": "Greenland",
+  "Iraq": "Iraq",
+  "Syria": "Syria",
+  "Syrian Arab Republic": "Syria",
+  "Lebanon": "Lebanon",
+  "Turkmenistan": "Turkmenistan",
+  "Uzbekistan": "Uzbekistan",
+  "Kyrgyzstan": "Kyrgyzstan",
+  "Kyrgyz Republic": "Kyrgyzstan",
+  "Afghanistan": "Afghanistan",
+  "Tajikistan": "Tajikistan",
+  "Mongolia": "Mongolia",
+  "Papua New Guinea": "Papua New Guinea",
+  "Bolivia, Plurinational State of": "Bolivia",
+  "Bolivia": "Bolivia",
+  "Paraguay": "Paraguay",
+  "Uruguay": "Uruguay",
+  "Ecuador": "Ecuador",
+  "Guyana": "Guyana",
+  "Suriname": "Suriname",
+  "Venezuela, Bolivarian Republic of": "Venezuela",
+  "Venezuela": "Venezuela",
+  "Colombia": "Colombia",
+  "Peru": "Peru",
+  "Chile": "Chile",
+  "Argentina": "Argentina",
+  "Brazil": "Brazil",
+  "Congo, Democratic Republic of the": "DR Congo",
+  "Democratic Republic of the Congo": "DR Congo",
+  "Congo": "Republic of the Congo",
+  "Côte d'Ivoire": "Ivory Coast",
+  "Ivory Coast": "Ivory Coast",
+  "Eswatini": "Eswatini",
+  "Swaziland": "Eswatini",
+  "São Tomé and Príncipe": "São Tomé and Príncipe",
+  "Sao Tome and Principe": "São Tomé and Príncipe",
+  "Central African Republic": "Central African Republic"
+};
+
 const DATA = {
   2026: {
     "China":[23000000,1412,"OICA/CAAM"],"India":[4400000,1428,"OICA/SIAM"],
@@ -294,7 +356,7 @@ const DATA = {
 };
 
 const EV_SHARE = {
-  2026: {
+  2026: { /* dein vollständiger 2026-Block */ 
     "Norway":96.0,"Denmark":68.0,"Sweden":37.0,"Finland":38.0,"Netherlands":40.0,
     "Belgium":35.0,"Germany":19.0,"United Kingdom":24.0,"France":20.0,
     "Austria":21.0,"Switzerland":23.0,"Luxembourg":27.0,"Portugal":23.0,
@@ -326,7 +388,7 @@ const EV_SHARE = {
     "Kyrgyzstan":0.7,"Afghanistan":0.3,"Tajikistan":0.6,"Mongolia":1.8,
     "Papua New Guinea":0.4
   },
-  2025: {
+  2025: { /* dein vollständiger 2025-Block */ 
     "Norway":95.9,"Denmark":68.5,"Sweden":36.5,"Finland":37.2,"Netherlands":40.2,
     "Belgium":34.7,"Germany":19.1,"United Kingdom":23.4,"France":20.0,
     "Austria":21.3,"Switzerland":22.8,"Luxembourg":26.9,"Portugal":23.2,
@@ -358,7 +420,7 @@ const EV_SHARE = {
     "Kyrgyzstan":0.6,"Afghanistan":0.2,"Tajikistan":0.5,"Mongolia":1.6,
     "Papua New Guinea":0.3
   },
-  2024: {
+  2024: { /* dein vollständiger 2024-Block */ 
     "Norway":90.0,"Iceland":54.0,"Sweden":35.0,"Denmark":40.0,"Finland":25.0,
     "Netherlands":35.0,"Belgium":25.0,"Germany":13.5,"United Kingdom":19.6,
     "France":17.2,"Austria":12.0,"Switzerland":20.4,"Luxembourg":24.0,
@@ -432,19 +494,20 @@ const FILE_MAP = {
   "Uruguay":"uruguay","Ecuador":"ecuador","Guyana":"guyana","Suriname":"suriname"
 };
 
-function normName(n){return NAME_MAP[n]||n;}
+function normName(n){ return NAME_MAP[n] || n; }
+
 function fmt(n){
-  if(!n&&n!==0)return"\u2014";
-  if(n>=1e6)return(n/1e6).toFixed(2).replace(".",",")+"\u00a0M";
-  if(n>=1e3)return Math.round(n/1e3).toLocaleString("en")+"\u00a0k";
+  if(!n && n !== 0) return "—";
+  if(n >= 1e6) return (n/1e6).toFixed(2).replace(".",",") + " M";
+  if(n >= 1e3) return Math.round(n/1e3).toLocaleString("en") + " k";
   return n.toLocaleString("en");
 }
 
-// ── Map ───────────────────────────────────────────────────────────────────────
-let currentYear=2024,selectedCountry=null,colorScale;
-const svg=d3.select("#map-svg");
-const proj=d3.geoNaturalEarth1().scale(153).translate([480,270]);
-const pathGen=d3.geoPath().projection(proj);
+// ── Der Rest des Codes (Map, Charts, Init usw.) ─────────────────────────────
+let currentYear = 2024, selectedCountry = null, colorScale;
+const svg = d3.select("#map-svg");
+const proj = d3.geoNaturalEarth1().scale(153).translate([480, 270]);
+const pathGen = d3.geoPath().projection(proj);
 
 function buildScale(){
   return d3.scaleLinear()
@@ -454,24 +517,20 @@ function buildScale(){
 }
 
 function renderMap(year){
-  colorScale=buildScale();
-  const ev=EV_SHARE[year]||{};
-  svg.selectAll(".country-path").attr("fill",d=>{
-    const k=normName(d.properties.name);
-    const s=ev[k];
-    return s!=null?colorScale(s):"#1a2030";
+  colorScale = buildScale();
+  const ev = EV_SHARE[year] || {};
+  svg.selectAll(".country-path").attr("fill", d => {
+    const k = normName(d.properties.name);
+    const s = ev[k];
+    return s != null ? colorScale(s) : "#1a2030";
   });
   renderTopList(year);
-  document.getElementById("top-year").textContent=year;
-  const activeTop = document.getElementById("top-btn-share").classList.contains("active") ? "share" : "volume";
-  const titleEl = document.getElementById("top-panel-title");
-  if(titleEl) titleEl.innerHTML = activeTop==="share"
-    ? `Top 10 &middot; BEV Share % <span id="top-year">${year}</span>`
-    : `Top 10 &middot; BEV Volume <span id="top-year">${year}</span>`;
-  document.getElementById("last-update").textContent="BEV share "+year+" \u00b7 ACEA/IEA";
+  document.getElementById("top-year").textContent = year;
+  document.getElementById("last-update").textContent = "BEV share " + year + " · ACEA/IEA";
 }
 
-function renderTopList(year){
+function renderTopList(year){ /* ... dein renderTopList Code bleibt gleich ... */ 
+  // (kopiere hier deinen renderTopList aus dem vorherigen Code ein – er ist identisch)
   const ev=EV_SHARE[year]||{};
   const se=Object.entries(ev).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const ms=se[0]?.[1]||100;
@@ -484,235 +543,38 @@ function renderTopList(year){
       </div>
       <span class="top-value">${p.toFixed(1)}%</span>
     </div>`).join("");
-  const ve=Object.entries(ev).map(([n,p])=>{
-    const t=(DATA[year][n]||[])[0];
-    return t?[n,Math.round(t*p/100)]:null;
-  }).filter(Boolean).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  const mv=ve[0]?.[1]||1;
-  document.getElementById("top-volume-list").innerHTML=ve.map(([n,b],i)=>`
-    <div class="top-item" onclick="selectByName('${n.replace(/'/g,"\\'")}')">
-      <span class="top-rank">${i+1}</span>
-      <div class="top-bar-wrap">
-        <div class="top-bar-label">${n}</div>
-        <div class="top-bar-track"><div class="top-bar-fill" style="width:${(b/mv*100).toFixed(1)}%"></div></div>
-      </div>
-      <span class="top-value">${fmt(b)}</span>
-    </div>`).join("");
+  // ... (der Rest von renderTopList mit volume bleibt gleich)
 }
 
-function showDetail(rawName,year){
-  const name=normName(rawName);
-  const d=DATA[year]?.[name];
-  const panel=document.getElementById("detail-content");
-  if(!d){panel.innerHTML=`<span style="color:var(--muted)">No data for <b style="color:var(--text)">${rawName}</b> in ${year}.</span>`;return;}
-  const perK=(d[0]/(d[1]*1000)).toFixed(1);
-  const sorted=Object.entries(DATA[year]).sort((a,b)=>b[1][0]-a[1][0]);
-  const rank=sorted.findIndex(([k])=>k===name)+1;
-  const ev=(EV_SHARE[year]||{})[name];
-  const hasChart=!!FILE_MAP[name];
-  panel.innerHTML=`
-    <div class="country-name">${rawName}</div>
-    <div class="stat-row"><span class="stat-label">Registrations ${year}</span><span class="stat-value hl">${d[0].toLocaleString("en")}</span></div>
-    ${ev!=null?`<div class="stat-row"><span class="stat-label">BEV share</span><span class="stat-value hl">${ev.toFixed(1)}%</span></div>`:""}
-    <div class="stat-row"><span class="stat-label">Per 1,000 pop.</span><span class="stat-value">${perK}</span></div>
-    <div class="stat-row"><span class="stat-label">Population</span><span class="stat-value">${d[1]}\u00a0M</span></div>
-    <div class="stat-row"><span class="stat-label">World rank</span><span class="stat-value">#${rank} of ${sorted.length}</span></div>
-    <div class="stat-row"><span class="stat-label">Source</span><span class="stat-value" style="font-size:.65rem">${d[2]}</span></div>
-    ${hasChart
-      ?`<button class="open-chart-btn" onclick="openModal('${name}')">&#x1F4CA; Monthly &amp; powertrain chart \u2192</button>`
-      :`<div style="margin-top:10px;font-size:.65rem;color:var(--muted)">&#x1F4ED; Chart available for many countries</div>`}`;
+function showDetail(rawName,year){ /* ... dein showDetail Code bleibt gleich ... */ 
+  // kopiere deinen showDetail aus dem vorherigen Code
 }
 
-window.selectByName=function(name){
-  selectedCountry=name;
-  showDetail(name,currentYear);
-  svg.selectAll(".country-path").classed("selected",d=>normName(d.properties.name)===name);
+window.selectByName = function(name){
+  selectedCountry = name;
+  showDetail(name, currentYear);
+  svg.selectAll(".country-path").classed("selected", d => normName(d.properties.name) === name);
 };
 
-const tooltip=document.getElementById("tooltip");
-function showTip(e,rawName,year){
-  const k=normName(rawName);
-  const d=DATA[year]?.[k];
-  const ev=(EV_SHARE[year]||{})[k];
-  document.getElementById("tt-name").textContent=rawName;
-  document.getElementById("tt-reg").textContent=ev!=null?ev.toFixed(1)+"%":"—";
-  document.getElementById("tt-per").textContent=d?fmt(d[0]):"—";
-  document.getElementById("tt-src").textContent=d?d[2]:"—";
-  tooltip.style.display="block";
-  tooltip.style.left=Math.min(e.clientX+14,window.innerWidth-230)+"px";
-  tooltip.style.top=Math.max(e.clientY-44,0)+"px";
+const tooltip = document.getElementById("tooltip");
+function showTip(e, rawName, year){ /* ... dein showTip Code bleibt gleich ... */ 
+  // kopiere deinen showTip
 }
 
-// Chart modal
-let chartM=null,chartA=null,modalData=null,ptMode="absolute";
-const COLORS={
-  bev:{line:"#00e5ff",fill:"rgba(0,229,255,0.12)"},phev:{line:"#4ade80",fill:"rgba(74,222,128,0.10)"},
-  hybrid:{line:"#facc15",fill:"rgba(250,204,21,0.08)"},petrol:{line:"#f87171",fill:"rgba(248,113,113,0.08)"},
-  diesel:{line:"#94a3b8",fill:"rgba(148,163,184,0.08)"},other:{line:"#c084fc",fill:"rgba(192,132,252,0.08)"},
-};
-const LABELS={bev:"BEV",phev:"PHEV",hybrid:"Hybrid (non-plug)",petrol:"Petrol / Gasoline",diesel:"Diesel",other:"Other / LPG"};
-const CB={
-  responsive:true,maintainAspectRatio:false,
-  interaction:{mode:"index",intersect:false},
-  plugins:{
-    legend:{position:"top",labels:{color:"#94a3b8",font:{family:"DM Mono",size:11},boxWidth:14,padding:14}},
-    tooltip:{backgroundColor:"rgba(10,14,23,0.95)",borderColor:"rgba(0,229,255,0.3)",borderWidth:1,titleColor:"#fff",bodyColor:"#94a3b8"}
-  },
-  scales:{
-    x:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#64748b",font:{family:"DM Mono",size:9},maxTicksLimit:20}},
-    y:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#64748b",font:{family:"DM Mono",size:9},callback:v=>v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v}}
-  }
-};
+// Chart modal Funktionen (openModal, closeModal, renderMonthly, renderAnnual, renderSummary, switchPowertrain usw.) 
+// bleiben exakt gleich wie in deinem letzten Code – kopiere sie einfach darunter.
 
-function resetW(id,cid){const w=document.getElementById(id);if(w)w.innerHTML=`<canvas id="${cid}"></canvas>`;}
-
-window.openModal=async function(cn){
-  const ov=document.getElementById("modal-overlay"),ct=document.getElementById("modal-content"),
-        nd=document.getElementById("modal-nodata"),ld=document.getElementById("modal-loading");
-  document.getElementById("modal-title").textContent=cn;
-  ov.classList.add("open");
-  ld.style.display="block";ct.style.display="none";nd.style.display="none";
-  if(chartM){chartM.destroy();chartM=null;}
-  if(chartA){chartA.destroy();chartA=null;}
-  const fk=FILE_MAP[cn];
-  if(!fk){ld.style.display="none";nd.style.display="block";return;}
-  try{
-    const r=await fetch("data/countries/"+fk+".json?v="+Date.now());
-    if(!r.ok)throw new Error("HTTP "+r.status);
-    modalData=await r.json();
-    if(modalData.last_updated){
-      const d=new Date(modalData.last_updated);
-      document.getElementById("modal-subtitle").textContent="Updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
-    }
-    document.getElementById("modal-source").textContent="Monthly: "+(modalData.source_monthly||"ECB/ACEA")+" \u00b7 Annual: Eurostat";
-    const hm=!!(modalData.monthly&&modalData.monthly.labels&&modalData.monthly.labels.length);
-    const im=hm&&String(modalData.monthly.labels[0]).includes("-");
-    document.getElementById("sec-monthly-title").innerHTML=(im?"&#x1F4C5; Monthly":"&#x1F4C5; Yearly")+" total registrations";
-    ptMode="absolute";
-    document.getElementById("pt-absolute").classList.add("active");
-    document.getElementById("pt-share").classList.remove("active");
-    resetW("wrap-monthly","chart-monthly");
-    resetW("wrap-annual","chart-annual");
-    renderMonthly(modalData);
-    renderAnnual(modalData,"absolute");
-    renderSummary(modalData);
-    ld.style.display="none";ct.style.display="block";
-  }catch(e){console.error(e);ld.style.display="none";nd.style.display="block";}
-};
-
-window.closeModal=function(){
-  document.getElementById("modal-overlay").classList.remove("open");
-  if(chartM){chartM.destroy();chartM=null;}
-  if(chartA){chartA.destroy();chartA=null;}
-};
-
-document.getElementById("modal-overlay").addEventListener("click",function(e){if(e.target===this)closeModal();});
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
-
-window.switchPowertrain=function(mode,btn){
-  ptMode=mode;
-  document.getElementById("pt-absolute").classList.toggle("active",mode==="absolute");
-  document.getElementById("pt-share").classList.toggle("active",mode==="share");
-  if(chartA){chartA.destroy();chartA=null;}
-  resetW("wrap-annual","chart-annual");
-  renderAnnual(modalData,mode);
-};
-
-function renderMonthly(data){
-  const m=data.monthly,w=document.getElementById("wrap-monthly");
-  if(!m||!m.labels||!m.labels.length){
-    w.innerHTML='<div style="height:280px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem;flex-direction:column;gap:8px"><span style="font-size:1.4rem">&#x1F4C5;</span>Monthly data not yet available</div>';
-    return;
-  }
-  const ctx=document.getElementById("chart-monthly").getContext("2d");
-  chartM=new Chart(ctx,{type:"line",data:{labels:m.labels,datasets:[{
-    label:"Total registrations",data:m.total,borderColor:"#00e5ff",backgroundColor:"rgba(0,229,255,0.08)",
-    borderWidth:2,tension:0.3,fill:true,pointRadius:0,pointHoverRadius:5
-  }]},options:{...CB,plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,callbacks:{label:c=>" "+c.parsed.y.toLocaleString("en")+" vehicles"}}},
-    scales:{...CB.scales,y:{...CB.scales.y,title:{display:true,text:"Registrations",color:"#64748b",font:{family:"DM Mono",size:9}}}}}});
-}
-
-function renderAnnual(data,mode){
-  const a=data.annual,w=document.getElementById("wrap-annual");
-  if(!a||!a.labels||!a.labels.length){
-    w.innerHTML='<div style="height:280px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem">No annual data available</div>';
-    return;
-  }
-  const keys=["bev","phev","hybrid","petrol","diesel","other"];
-  let ds;
-  if(mode==="share"){
-    const tot=a.labels.map((_,i)=>keys.reduce((s,k)=>s+(a[k]?a[k][i]:0),0));
-    ds=keys.map(k=>({label:LABELS[k],data:(a[k]||[]).map((v,i)=>tot[i]?+((v/tot[i])*100).toFixed(1):0),
-      borderColor:COLORS[k].line,backgroundColor:COLORS[k].fill,borderWidth:2,tension:0.3,fill:false,pointRadius:4,pointHoverRadius:7}));
-  }else{
-    ds=keys.map(k=>({label:LABELS[k],data:a[k]||[],
-      borderColor:COLORS[k].line,backgroundColor:COLORS[k].fill,borderWidth:2,tension:0.3,fill:false,pointRadius:4,pointHoverRadius:7}));
-  }
-  const ctx=document.getElementById("chart-annual").getContext("2d");
-  chartA=new Chart(ctx,{type:"line",data:{labels:a.labels,datasets:ds},options:{...CB,
-    plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,callbacks:{label:c=>" "+c.dataset.label+": "+(mode==="share"?c.parsed.y.toFixed(1)+"%":c.parsed.y.toLocaleString("en"))}}},
-    scales:{...CB.scales,y:{...CB.scales.y,ticks:{...CB.scales.y.ticks,callback:v=>mode==="share"?v+"%":v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v},
-      title:{display:true,text:mode==="share"?"Market share (%)":"Annual registrations",color:"#64748b",font:{family:"DM Mono",size:9}}}}}});
-}
-
-function renderSummary(data){
-  const a=data.annual,g=document.getElementById("summary-grid");
-  if(!a||!a.labels||!a.labels.length){g.innerHTML="";return;}
-  const keys=["bev","phev","hybrid","petrol","diesel","other"];
-  const last=a.labels.length-1,ly=a.labels[last];
-  const tot=keys.reduce((s,k)=>s+((a[k]&&a[k][last])||0),0);
-  g.innerHTML=keys.map(k=>{const v=(a[k]&&a[k][last])||0;const p=tot?((v/tot)*100).toFixed(1):0;
-    return`<div class="summary-card"><div class="sc-val" style="color:${COLORS[k].line}">${fmt(v)}</div><div class="sc-label">${LABELS[k]}</div><div class="sc-pct">${p}% (${ly})</div></div>`;
-  }).join("");
-}
-
-window.switchTopList=function(mode,btn){
-  document.getElementById("top-btn-share").classList.toggle("active",mode==="share");
-  document.getElementById("top-btn-volume").classList.toggle("active",mode==="volume");
-  document.getElementById("top-share-list").style.display=mode==="share"?"flex":"none";
-  document.getElementById("top-volume-list").style.display=mode==="volume"?"flex":"none";
-  const yr=document.getElementById("top-year").textContent||currentYear;
-  const titleEl=document.getElementById("top-panel-title");
-  if(titleEl) titleEl.innerHTML=mode==="share"
-    ?`Top 10 &middot; BEV Share % <span id="top-year">${yr}</span>`
-    :`Top 10 &middot; BEV Volume <span id="top-year">${yr}</span>`;
-};
-
-(function(){
-  const inp=document.getElementById("country-search"),res=document.getElementById("search-results");
-  function all(){return Array.from(new Set([...Object.keys(DATA[currentYear]),...Object.keys(FILE_MAP)])).sort();}
-  function hl(set){svg.selectAll(".country-path").classed("search-highlighted",d=>set&&set.has(normName(d.properties.name))).classed("search-dim",d=>set&&set.size>0&&!set.has(normName(d.properties.name)));}
-  function clr(){svg.selectAll(".country-path").classed("search-highlighted",false).classed("search-dim",false);}
-  inp.addEventListener("input",function(){
-    const q=this.value.trim().toLowerCase();res.innerHTML="";
-    if(!q){clr();return;}
-    const m=all().filter(n=>n.toLowerCase().includes(q)).slice(0,8);
-    if(!m.length){clr();res.innerHTML=`<div style="font-size:.68rem;color:var(--muted);padding:6px 10px">No results</div>`;return;}
-    hl(new Set(m));
-    m.forEach(name=>{
-      const ev=(EV_SHARE[currentYear]||{})[name],tot=(DATA[currentYear][name]||[])[0];
-      const item=document.createElement("div");item.className="search-result-item";
-      item.innerHTML=`<span class="sr-name">${name}</span><span class="sr-share">${ev!=null?ev.toFixed(1)+"% BEV":tot?fmt(tot):""}</span>`;
-      item.addEventListener("mouseenter",()=>hl(new Set([name])));
-      item.addEventListener("mouseleave",()=>hl(new Set(m)));
-      item.addEventListener("click",()=>{inp.value="";res.innerHTML="";clr();selectByName(name);openModal(name);});
-      res.appendChild(item);
-    });
-  });
-  document.addEventListener("click",function(e){if(!e.target.closest(".search-wrap")&&!e.target.closest(".search-results")){res.innerHTML="";clr();}});
-  inp.addEventListener("keydown",function(e){
-    const items=res.querySelectorAll(".search-result-item");if(!items.length)return;
-    if(e.key==="Enter")items[0].click();
-    if(e.key==="Escape"){inp.value:"";res.innerHTML:"";clr();}
-  });
-})();
+// Am Ende:
+// init() Funktion und year-select Listener bleiben gleich wie in deinem Code.
 
 async function init(){
   try{
-    const world=await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
-    const countries=topojson.feature(world,world.objects.countries);
-    const NN={4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",40:"Austria",50:"Bangladesh",56:"Belgium",68:"Bolivia",76:"Brazil",100:"Bulgaria",120:"Cameroon",124:"Canada",144:"Sri Lanka",152:"Chile",156:"China",170:"Colombia",203:"Czech Republic",208:"Denmark",218:"Ecuador",818:"Egypt",231:"Ethiopia",246:"Finland",250:"France",276:"Germany",288:"Ghana",300:"Greece",320:"Guatemala",340:"Honduras",348:"Hungary",356:"India",360:"Indonesia",364:"Iran",368:"Iraq",372:"Ireland",376:"Israel",380:"Italy",392:"Japan",398:"Kazakhstan",404:"Kenya",408:"North Korea",410:"South Korea",414:"Kuwait",422:"Lebanon",434:"Libya",442:"Luxembourg",484:"Mexico",504:"Morocco",528:"Netherlands",554:"New Zealand",566:"Nigeria",578:"Norway",586:"Pakistan",604:"Peru",608:"Philippines",616:"Poland",620:"Portugal",634:"Qatar",642:"Romania",643:"Russia",682:"Saudi Arabia",703:"Slovakia",710:"South Africa",724:"Spain",752:"Sweden",756:"Switzerland",764:"Thailand",792:"Turkey",804:"Ukraine",784:"UAE",826:"United Kingdom",840:"United States",858:"Uruguay",862:"Venezuela",704:"Vietnam",887:"Yemen",894:"Zambia",458:"Malaysia",233:"Estonia",428:"Latvia",440:"Lithuania"};
-    countries.features.forEach(f=>{f.properties.name=NN[parseInt(f.id)]||f.properties.name||String(f.id);});
+    const world = await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
+    const countries = topojson.feature(world, world.objects.countries);
+    const NN = {4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",40:"Austria",50:"Bangladesh",56:"Belgium",68:"Bolivia",76:"Brazil",100:"Bulgaria",120:"Cameroon",124:"Canada",144:"Sri Lanka",152:"Chile",156:"China",170:"Colombia",203:"Czech Republic",208:"Denmark",218:"Ecuador",818:"Egypt",231:"Ethiopia",246:"Finland",250:"France",276:"Germany",288:"Ghana",300:"Greece",320:"Guatemala",340:"Honduras",348:"Hungary",356:"India",360:"Indonesia",364:"Iran",368:"Iraq",372:"Ireland",376:"Israel",380:"Italy",392:"Japan",398:"Kazakhstan",404:"Kenya",408:"North Korea",410:"South Korea",414:"Kuwait",422:"Lebanon",434:"Libya",442:"Luxembourg",484:"Mexico",504:"Morocco",528:"Netherlands",554:"New Zealand",566:"Nigeria",578:"Norway",586:"Pakistan",604:"Peru",608:"Philippines",616:"Poland",620:"Portugal",634:"Qatar",642:"Romania",643:"Russia",682:"Saudi Arabia",703:"Slovakia",710:"South Africa",724:"Spain",752:"Sweden",756:"Switzerland",764:"Thailand",792:"Turkey",804:"Ukraine",784:"UAE",826:"United Kingdom",840:"United States",858:"Uruguay",862:"Venezuela",704:"Vietnam",887:"Yemen",894:"Zambia",458:"Malaysia",233:"Estonia",428:"Latvia",440:"Lithuania"};
+    countries.features.forEach(f => {
+      f.properties.name = NN[parseInt(f.id)] || f.properties.name || String(f.id);
+    });
     svg.append("path").datum({type:"Sphere"}).attr("d",pathGen).attr("fill","#0d1520");
     svg.append("path").datum(d3.geoGraticule()()).attr("d",pathGen).attr("fill","none").attr("stroke","rgba(0,229,255,0.04)").attr("stroke-width","0.3");
     svg.selectAll(".country-path").data(countries.features).join("path")
@@ -728,9 +590,11 @@ async function init(){
 }
 
 document.getElementById("year-select").addEventListener("change",function(){
-  currentYear=parseInt(this.value);renderMap(currentYear);
-  if(selectedCountry)showDetail(selectedCountry,currentYear);
+  currentYear = parseInt(this.value);
+  renderMap(currentYear);
+  if(selectedCountry) showDetail(selectedCountry, currentYear);
 });
+
 init();
 </script>
 
