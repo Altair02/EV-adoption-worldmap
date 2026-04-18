@@ -2,8 +2,8 @@ name: Update Car Registration Data
 
 on:
   schedule:
-    - cron: "0 12 * * *"     # 12:00 UTC = 14:00 deutsche Zeit (Sommerzeit)
-  workflow_dispatch:
+    - cron: "0 * * * *"      # jede volle Stunde (UTC)
+  workflow_dispatch:         # kann manuell gestartet werden
 
 permissions:
   contents: write
@@ -11,33 +11,38 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.12
+      - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.10"
 
       - name: Install dependencies
-        run: pip install requests beautifulsoup4 lxml matplotlib
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4 lxml matplotlib apscheduler
 
       - name: Run update script
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python scripts/update_data.py
 
-      - name: Commit & push
+      - name: Commit & push changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          
           git add -f data/countries/
+          
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "data: update registrations $(date +%Y-%m-%d) [Trading Economics]"
+            git commit -m "data: update registrations $(date +%Y-%m-%d %H:%M) [Trading Economics]"
             git push
             echo "Pushed ✓"
           fi
