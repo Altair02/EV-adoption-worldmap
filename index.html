@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -88,11 +87,9 @@
   #modal-loading { text-align: center; padding: 60px 0; color: var(--muted); font-size: 0.8rem; }
   .modal-spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 12px; }
   @keyframes spin { to{transform:rotate(360deg);} }
-  /* Modal sections */
   .modal-section-title { font-family: 'Syne', sans-serif; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
   .chart-wrap { position: relative; height: 280px; }
   .section-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
-  /* 2-button powertrain toggle */
   .pt-toggle { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; width: fit-content; margin-bottom: 12px; }
   .pt-btn { padding: 6px 18px; font-size: 0.7rem; cursor: pointer; border: none; background: transparent; color: var(--muted); font-family: 'DM Mono', monospace; transition: all .15s; white-space: nowrap; }
   .pt-btn:first-child { border-right: 1px solid var(--border); }
@@ -107,7 +104,6 @@
   #map-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--surface); flex-direction: column; gap: 12px; z-index: 10; }
   .spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
   #map-loading p { font-size: 0.72rem; color: var(--muted); }
-  /* Search */
   .search-wrap { position: relative; }
   .search-input { width: 100%; padding: 8px 12px 8px 32px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.72rem; outline: none; transition: border-color .15s; }
   .search-input::placeholder { color: var(--muted); }
@@ -144,31 +140,22 @@
     <div id="modal-body">
       <div id="modal-loading"><div class="modal-spinner"></div>Loading&hellip;</div>
       <div id="modal-content" style="display:none">
-
-```
-    <!-- Monthly / Yearly total -->
-    <div class="modal-section-title" id="sec-monthly-title">&#x1F4C5; Monthly total registrations</div>
-    <div class="chart-wrap" id="wrap-monthly"><canvas id="chart-monthly"></canvas></div>
-
-    <hr class="section-divider">
-
-    <!-- Annual powertrain — 2-button toggle -->
-    <div class="modal-section-title">&#x26A1; Annual breakdown by powertrain &middot; Eurostat</div>
-    <div class="pt-toggle">
-      <button class="pt-btn active" id="pt-absolute" onclick="switchPowertrain('absolute',this)">Powertrain absolute</button>
-      <button class="pt-btn" id="pt-share" onclick="switchPowertrain('share',this)">Market share %</button>
+        <div class="modal-section-title" id="sec-monthly-title">&#x1F4C5; Monthly total registrations</div>
+        <div class="chart-wrap" id="wrap-monthly"><canvas id="chart-monthly"></canvas></div>
+        <hr class="section-divider">
+        <div class="modal-section-title">&#x26A1; Annual breakdown by powertrain &middot; Eurostat</div>
+        <div class="pt-toggle">
+          <button class="pt-btn active" id="pt-absolute" onclick="switchPowertrain('absolute',this)">Powertrain absolute</button>
+          <button class="pt-btn" id="pt-share" onclick="switchPowertrain('share',this)">Market share %</button>
+        </div>
+        <div class="chart-wrap" id="wrap-annual"><canvas id="chart-annual"></canvas></div>
+        <div class="summary-grid" id="summary-grid"></div>
+      </div>
+      <div id="modal-nodata" style="display:none" class="no-data-msg">
+        &#x1F4ED; No data available for this country yet.<br>
+        <span style="font-size:0.68rem">ECB/ACEA covers ~30 EU/EEA countries</span>
+      </div>
     </div>
-    <div class="chart-wrap" id="wrap-annual"><canvas id="chart-annual"></canvas></div>
-    <div class="summary-grid" id="summary-grid"></div>
-
-  </div>
-  <div id="modal-nodata" style="display:none" class="no-data-msg">
-    &#x1F4ED; No data available for this country yet.<br>
-    <span style="font-size:0.68rem">ECB/ACEA covers ~30 EU/EEA countries</span>
-  </div>
-</div>
-```
-
   </div>
 </div>
 
@@ -206,7 +193,7 @@
         <div class="panel-title">Search Country</div>
         <div class="search-wrap">
           <span class="search-icon">&#x1F50D;</span>
-          <input class="search-input" id="country-search" type="text" placeholder="e.g. Norway, Malta, Estonia&hellip;" autocomplete="off">
+          <input class="search-input" id="country-search" type="text" placeholder="e.g. Norway, Vietnam, Thailand, Kenya, Algeria…" autocomplete="off">
         </div>
         <div class="search-results" id="search-results"></div>
       </div>
@@ -241,8 +228,6 @@
 
 <script>
 const DATA = {
-  // Sources: ACEA (EU/EEA exact), OICA/VDA (global) — verified April 2026
-  // Note: 2026 = Q1 annualised estimate; non-EU countries in DATA for map colouring only
   2026: {
     "Germany":[2900000,84,"KBA"],"France":[1680000,68,"ACEA"],
     "United Kingdom":[2020000,67,"SMMT"],"Italy":[1540000,60,"ANFIA"],
@@ -253,10 +238,17 @@ const DATA = {
     "Denmark":[185000,6,"ACEA"],"Finland":[72000,6,"ACEA"],
     "Portugal":[225000,10,"ACEA"],"Czech Republic":[250000,11,"ACEA"],
     "China":[23000000,1412,"OICA/CAAM"],"United States":[16200000,334,"OICA"],
-    "India":[4400000,1428,"OICA"],"Japan":[4100000,124,"OICA"],
+    "India":[4400000,1428,"OICA"],"Japan":[4100000,124,"OICA/JAMA"],
     "Brazil":[2600000,216,"OICA"],"South Korea":[1700000,52,"OICA"],
     "Canada":[1950000,38,"OICA"],"Russia":[1050000,144,"AEB"],
-    "Turkey":[1300000,85,"OSD"],"Australia":[1180000,26,"VFACTS"]
+    "Turkey":[1300000,85,"OSD"],"Australia":[1180000,26,"VFACTS"],
+    "Indonesia":[1050000,278,"Gaikindo"],"Thailand":[750000,72,"TAI"],
+    "Malaysia":[820000,33,"MAA"],"Vietnam":[800000,100,"VAMA"],
+    "Philippines":[480000,117,"CAMPI"],"Taiwan":[450000,23,"MOTC"],
+    "Pakistan":[320000,240,"PAMA"],"Bangladesh":[280000,173,"National"],
+    "Iran":[950000,87,"OICA"],"Saudi Arabia":[680000,36,"OICA"],
+    "United Arab Emirates":[360000,10,"OICA"],"Israel":[320000,9,"National"],
+    "Kazakhstan":[220000,20,"National"]
   },
   2025: {
     "Germany":[2858000,84,"KBA"],"France":[1632000,68,"ACEA"],
@@ -271,7 +263,14 @@ const DATA = {
     "India":[4400000,1428,"OICA"],"Japan":[4100000,124,"OICA"],
     "Brazil":[2600000,216,"OICA"],"South Korea":[1700000,52,"OICA"],
     "Canada":[1950000,38,"OICA"],"Russia":[1050000,144,"AEB"],
-    "Turkey":[1300000,85,"OSD"],"Australia":[1180000,26,"VFACTS"]
+    "Turkey":[1300000,85,"OSD"],"Australia":[1180000,26,"VFACTS"],
+    "Indonesia":[1000000,278,"Gaikindo"],"Thailand":[720000,72,"TAI"],
+    "Malaysia":[780000,33,"MAA"],"Vietnam":[750000,100,"VAMA"],
+    "Philippines":[450000,117,"CAMPI"],"Taiwan":[430000,23,"MOTC"],
+    "Pakistan":[300000,240,"PAMA"],"Bangladesh":[260000,173,"National"],
+    "Iran":[900000,87,"OICA"],"Saudi Arabia":[650000,36,"OICA"],
+    "United Arab Emirates":[340000,10,"OICA"],"Israel":[300000,9,"National"],
+    "Kazakhstan":[200000,20,"National"]
   },
   2024: {
     "China":[22000000,1412,"OICA/CAAM"],"United States":[15940000,334,"OICA/Wards"],
@@ -290,7 +289,11 @@ const DATA = {
     "Sweden":[270000,10,"BIL Sweden"],"Switzerland":[240000,9,"auto-schweiz"],
     "Austria":[254000,9,"ACEA"],"Norway":[129000,5,"OFV"],
     "Denmark":[173000,6,"ACEA"],"Finland":[74000,6,"ACEA"],
-    "Portugal":[210000,10,"ACEA"],"Czech Republic":[232000,11,"ACEA"]
+    "Portugal":[210000,10,"ACEA"],"Czech Republic":[232000,11,"ACEA"],
+    "Vietnam":[750000,100,"VAMA"],"Philippines":[370000,117,"CAMPI"],
+    "Taiwan":[440000,23,"MOTC"],"Pakistan":[300000,240,"PAMA"],
+    "Bangladesh":[250000,173,"National"],"Israel":[300000,9,"National"],
+    "Kazakhstan":[200000,20,"National"],"United Arab Emirates":[350000,10,"OICA"]
   },
   2023: {
     "China":[21400000,1412,"OICA/CAAM"],"United States":[15600000,334,"OICA/Wards"],
@@ -443,8 +446,7 @@ const DATA = {
 };
 
 const EV_SHARE = {
-  // Sources: IEA Global EV Outlook 2025, ACEA, Wikipedia EV data — BEV share only
-  2026: { // Q1 2026 annualised estimate
+  2026: {
     "Norway":96.0,"Denmark":68.0,"Sweden":37.0,"Finland":38.0,"Netherlands":40.0,
     "Belgium":35.0,"Germany":19.0,"United Kingdom":24.0,"France":20.0,
     "Austria":21.0,"Switzerland":23.0,"Luxembourg":27.0,"Portugal":23.0,
@@ -452,10 +454,14 @@ const EV_SHARE = {
     "Ireland":19.0,"Slovenia":11.2,"Hungary":8.5,"Slovakia":4.7,
     "Greece":6.2,"Latvia":7.1,"Lithuania":7.5,"Estonia":6.6,
     "Croatia":1.8,"Bulgaria":4.9,"Malta":38.0,"Cyprus":10.1,
-    "China":42.0,"United States":9.0,"Japan":4.0,"South Korea":10.0,
-    "Australia":8.0,"Canada":11.0,"Brazil":8.0,"Turkey":20.0
+    "China":42.0,"United States":9.0,"Japan":4.5,"South Korea":11.0,
+    "Australia":8.0,"Canada":11.0,"Brazil":8.0,"Turkey":20.0,
+    "India":3.8,"Thailand":15.0,"Malaysia":3.5,"Indonesia":2.5,
+    "Vietnam":8.5,"Philippines":2.8,"Taiwan":6.5,"Pakistan":1.2,
+    "Bangladesh":1.0,"Iran":3.5,"Saudi Arabia":4.0,
+    "United Arab Emirates":5.5,"Israel":12.0,"Kazakhstan":2.0
   },
-  2025: { // Full year ACEA verified
+  2025: {
     "Norway":95.9,"Denmark":68.5,"Sweden":36.5,"Finland":37.2,"Netherlands":40.2,
     "Belgium":34.7,"Germany":19.1,"United Kingdom":23.4,"France":20.0,
     "Austria":21.3,"Switzerland":22.8,"Luxembourg":26.9,"Portugal":23.2,
@@ -465,9 +471,12 @@ const EV_SHARE = {
     "Croatia":1.8,"Bulgaria":4.9,"Malta":37.9,"Cyprus":10.1,
     "China":40.0,"United States":9.0,"Japan":4.0,"South Korea":10.0,
     "Australia":8.5,"Canada":11.5,"Brazil":8.5,"Turkey":18.0,
-    "India":3.5,"Mexico":4.0,"Russia":5.5
+    "India":3.2,"Thailand":13.0,"Malaysia":2.8,"Indonesia":2.0,
+    "Vietnam":7.0,"Philippines":2.5,"Taiwan":5.8,"Pakistan":1.0,
+    "Bangladesh":0.9,"Iran":3.0,"Saudi Arabia":3.5,
+    "United Arab Emirates":4.8,"Israel":11.0,"Kazakhstan":1.8
   },
-  2024: { // Verified ACEA + IEA
+  2024: {
     "Norway":90.0,"Iceland":54.0,"Sweden":35.0,"Denmark":40.0,"Finland":25.0,
     "Netherlands":35.0,"Belgium":25.0,"Germany":13.5,"United Kingdom":19.6,
     "France":17.2,"Austria":12.0,"Switzerland":20.4,"Luxembourg":24.0,
@@ -479,7 +488,10 @@ const EV_SHARE = {
     "Japan":3.4,"South Korea":9.0,"Australia":7.2,"Canada":9.5,
     "India":2.5,"Thailand":12.0,"Malaysia":1.4,"Indonesia":0.8,
     "Brazil":6.2,"Russia":4.8,"Turkey":17.0,"Mexico":3.1,
-    "Argentina":2.8,"South Africa":1.9,"Israel":19.0,"New Zealand":12.0
+    "Argentina":2.8,"South Africa":1.9,"Israel":19.0,"New Zealand":12.0,
+    "Vietnam":6.5,"Philippines":2.0,"Taiwan":5.0,"Pakistan":0.9,
+    "Bangladesh":0.8,"Iran":2.8,"Saudi Arabia":3.0,
+    "United Arab Emirates":4.5,"Kazakhstan":1.5
   },
   2023: {
     "Norway":82.0,"Iceland":52.0,"Sweden":39.0,"Denmark":31.0,"Finland":22.0,
@@ -504,7 +516,7 @@ const EV_SHARE = {
     "China":21.0,"United States":5.8,"Japan":3.2,"South Korea":9.0,
     "Australia":3.8,"Canada":5.0,"Brazil":2.5,"Turkey":1.8,"Thailand":2.0
   },
-  2021: { // IEA GEO 2022
+  2021: {
     "Norway":72.0,"Iceland":55.0,"Sweden":37.0,"Denmark":12.0,"Finland":12.0,
     "Netherlands":22.0,"Belgium":8.6,"Germany":13.5,"United Kingdom":12.0,
     "France":9.8,"Austria":6.5,"Switzerland":13.5,"Luxembourg":12.0,
@@ -515,7 +527,7 @@ const EV_SHARE = {
     "China":13.0,"United States":2.9,"Japan":0.9,"South Korea":5.7,
     "Australia":2.0,"Canada":4.2,"Brazil":0.5,"Turkey":0.5,"Thailand":0.4
   },
-  2020: { // IEA GEO 2021
+  2020: {
     "Norway":54.0,"Iceland":45.0,"Sweden":23.0,"Denmark":5.5,"Finland":4.0,
     "Netherlands":20.0,"Belgium":4.5,"Germany":6.5,"United Kingdom":5.5,
     "France":5.5,"Austria":3.0,"Switzerland":7.0,"Luxembourg":5.5,
@@ -526,7 +538,7 @@ const EV_SHARE = {
     "China":4.3,"United States":1.8,"Japan":0.8,"South Korea":2.4,
     "Australia":0.7,"Canada":2.8,"Brazil":0.3,"Turkey":0.3,"Thailand":0.2
   },
-  2019: { // IEA GEO 2020, Wikipedia
+  2019: {
     "Norway":42.4,"Iceland":20.0,"Sweden":4.4,"Denmark":2.5,"Finland":1.5,
     "Netherlands":13.9,"Belgium":1.0,"Germany":1.8,"United Kingdom":1.5,
     "France":1.9,"Austria":1.2,"Switzerland":3.5,"Luxembourg":2.0,
@@ -564,7 +576,6 @@ const EV_SHARE = {
 };
 
 const FILE_MAP = {
-  // EU/EEA — monthly data via ECB/Eurostat workflow
   "Austria":"austria","Belgium":"belgium","Bulgaria":"bulgaria","Cyprus":"cyprus",
   "Czech Republic":"czech_republic","Germany":"germany","Denmark":"denmark",
   "Estonia":"estonia","Greece":"greece","Spain":"spain","Finland":"finland",
@@ -573,12 +584,14 @@ const FILE_MAP = {
   "Malta":"malta","Netherlands":"netherlands","Poland":"poland","Portugal":"portugal",
   "Romania":"romania","Sweden":"sweden","Slovenia":"slovenia","Slovakia":"slovakia",
   "Norway":"norway","Switzerland":"switzerland","United Kingdom":"united_kingdom",
-  // Non-EU — annual powertrain data, IEA/OICA sources
   "China":"china","United States":"united_states","Japan":"japan",
   "South Korea":"south_korea","Australia":"australia","Canada":"canada",
   "Brazil":"brazil","Turkey":"turkey","Russia":"russia","India":"india",
   "Mexico":"mexico","Argentina":"argentina","South Africa":"south_africa",
-  "Indonesia":"indonesia","Thailand":"thailand","Malaysia":"malaysia","Iran":"iran"
+  "Indonesia":"indonesia","Thailand":"thailand","Malaysia":"malaysia","Iran":"iran",
+  "Vietnam":"vietnam","Taiwan":"taiwan","Philippines":"philippines","Pakistan":"pakistan",
+  "Bangladesh":"bangladesh","Saudi Arabia":"saudi_arabia",
+  "United Arab Emirates":"united_arab_emirates","Israel":"israel","Kazakhstan":"kazakhstan"
 };
 
 const NAME_MAP = {
@@ -592,8 +605,10 @@ const NAME_MAP = {
   "Viet Nam":"Vietnam",
   "Korea, Republic of":"South Korea",
   "Iran, Islamic Republic of":"Iran",
-  "Türkiye":"Turkey"
+  "Türkiye":"Turkey",
+  "Kazakhstan":"Kazakhstan"
 };
+
 function normName(n){return NAME_MAP[n]||n;}
 function fmt(n){
   if(!n&&n!==0)return"\u2014";
@@ -624,8 +639,6 @@ function renderMap(year){
   });
   renderTopList(year);
   document.getElementById("top-year").textContent=year;
-  document.querySelectorAll(".top-year-ref").forEach(el=>el.textContent=year);
-  // Keep panel title in sync with active list
   const activeTop = document.getElementById("top-btn-share").classList.contains("active") ? "share" : "volume";
   const titleEl = document.getElementById("top-panel-title");
   if(titleEl) titleEl.innerHTML = activeTop==="share"
@@ -636,7 +649,6 @@ function renderMap(year){
 
 function renderTopList(year){
   const ev=EV_SHARE[year]||{};
-  // Share
   const se=Object.entries(ev).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const ms=se[0]?.[1]||100;
   document.getElementById("top-share-list").innerHTML=se.map(([n,p],i)=>`
@@ -648,7 +660,6 @@ function renderTopList(year){
       </div>
       <span class="top-value">${p.toFixed(1)}%</span>
     </div>`).join("");
-  // Volume
   const ve=Object.entries(ev).map(([n,p])=>{
     const t=(DATA[year][n]||[])[0];
     return t?[n,Math.round(t*p/100)]:null;
@@ -685,7 +696,7 @@ function showDetail(rawName,year){
     <div class="stat-row"><span class="stat-label">Source</span><span class="stat-value" style="font-size:.65rem">${d[2]}</span></div>
     ${hasChart
       ?`<button class="open-chart-btn" onclick="openModal('${name}')">&#x1F4CA; Monthly &amp; powertrain chart \u2192</button>`
-      :`<div style="margin-top:10px;font-size:.65rem;color:var(--muted)">&#x1F4ED; Chart available for EU/EEA countries only</div>`}`;
+      :`<div style="margin-top:10px;font-size:.65rem;color:var(--muted)">&#x1F4ED; Chart available for EU/EEA + selected non-EU countries</div>`}`;
 }
 window.selectByName=function(name){
   selectedCountry=name;
@@ -829,7 +840,6 @@ function renderSummary(data){
   }).join("");
 }
 
-// ── Top list toggle ───────────────────────────────────────────────────────────
 window.switchTopList=function(mode,btn){
   document.getElementById("top-btn-share").classList.toggle("active",mode==="share");
   document.getElementById("top-btn-volume").classList.toggle("active",mode==="volume");
@@ -842,7 +852,6 @@ window.switchTopList=function(mode,btn){
     :`Top 10 &middot; BEV Volume <span id="top-year">${yr}</span>`;
 };
 
-// ── Search with map highlight ─────────────────────────────────────────────────
 (function(){
   const inp=document.getElementById("country-search"),res=document.getElementById("search-results");
   function all(){return Array.from(new Set([...Object.keys(DATA[currentYear]),...Object.keys(FILE_MAP)])).sort();}
@@ -872,7 +881,6 @@ window.switchTopList=function(mode,btn){
   });
 })();
 
-// ── Map init ──────────────────────────────────────────────────────────────────
 async function init(){
   try{
     const world=await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
