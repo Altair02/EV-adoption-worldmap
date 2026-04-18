@@ -1,5 +1,5 @@
 # scripts/update_data.py
-# Version: v64 - April 2026 - Stündliches Update mit APScheduler
+# Version: v65 - GitHub Actions optimiert (einmaliger Lauf pro Workflow)
 
 import json
 import os
@@ -7,12 +7,10 @@ import re
 from datetime import datetime, timezone
 import requests
 from bs4 import BeautifulSoup
-from apscheduler.schedulers.blocking import BlockingScheduler
-from apscheduler.triggers.cron import CronTrigger
 
-# ==================== KONFIGURATION ====================
 DATA_DIR = "data/countries"
 
+# ==================== KONFIGURATION ====================
 COUNTRIES = {
     "DE": ("germany", "Germany"), "FR": ("france", "France"), "IT": ("italy", "Italy"),
     "ES": ("spain", "Spain"), "NL": ("netherlands", "Netherlands"), "BE": ("belgium", "Belgium"),
@@ -37,7 +35,7 @@ COUNTRIES = {
     "PK": ("pakistan", "Pakistan"), "NG": ("nigeria", "Nigeria"), "KE": ("kenya", "Kenya"),
     "BD": ("bangladesh", "Bangladesh"), "ET": ("ethiopia", "Ethiopia"), "CO": ("colombia", "Colombia"),
     "PE": ("peru", "Peru"), "VE": ("venezuela", "Venezuela"),
-    # Afrikanische Länder (gekürzt für Übersichtlichkeit)
+    # Afrikanische Länder
     "DZ": ("algeria", "Algeria"), "AO": ("angola", "Angola"), "GQ": ("equatorial_guinea", "Equatorial Guinea"),
     "BJ": ("benin", "Benin"), "BW": ("botswana", "Botswana"), "BF": ("burkina_faso", "Burkina Faso"),
     "BI": ("burundi", "Burundi"), "DJ": ("djibouti", "Djibouti"), "CI": ("ivory_coast", "Ivory Coast"),
@@ -68,7 +66,6 @@ MONTH_MAP = {
     "jul": "07", "aug": "08", "sep": "09", "oct": "10", "nov": "11", "dec": "12"
 }
 
-# ==================== FALLBACK-DATEN (gekürzt) ====================
 AFRICA_YEARLY_FALLBACK = {
     "EG": {2015:220000,2016:240000,2017:260000,2018:280000,2019:300000,2020:180000,2021:220000,2022:240000,2023:250000,2024:260000,2025:250000},
     "TW": {2015:380000,2016:390000,2017:410000,2018:430000,2019:420000,2020:380000,2021:400000,2022:410000,2023:430000,2024:440000,2025:450000},
@@ -88,7 +85,7 @@ def fetch_latest_te(country_code):
         soup = BeautifulSoup(r.text, "lxml")
         text = soup.get_text()
 
-        match = re.search(r"Car Registrations.*?to\s+([\d,]+)\s*(?:Thousand|Units?)?\s+in\s+([A-Za-z]+)\s+(\d{4})", 
+        match = re.search(r"Car Registrations.*?to\s+([\d,]+)\s*(?:Thousand|Units?)?\s+in\s+([A-Za-z]+)\s+(\d{4})",
                          text, re.IGNORECASE | re.DOTALL)
         
         if match:
@@ -134,32 +131,21 @@ def update_single_country(country_code):
             json.dump(data, f, indent=2, ensure_ascii=False)
         print(f" ✓ {display_name} aktualisiert")
     else:
-        print(f"   Keine neuen Daten")
+        print(f"   Keine neuen Daten für {display_name}")
 
-def hourly_update():
-    print(f"\n=== Stündliches Update gestartet um {datetime.now():%Y-%m-%d %H:%M:%S} ===")
+def run_update():
+    print(f"\n=== Update gestartet um {datetime.now():%Y-%m-%d %H:%M:%S} ===")
     for code in COUNTRIES:
         update_single_country(code)
-    print("=== Stündliches Update abgeschlossen ===\n")
+    print("=== Update abgeschlossen ===\n")
 
-# ==================== HAUPTSTART ====================
+# ==================== HAUPTSTART (für GitHub Actions) ====================
 if __name__ == "__main__":
-    print("=== Car Registration Updater v64 gestartet ===")
-    print("Drücke Ctrl+C zum Beenden.\n")
-
-    # Ordner sicherstellen
+    print("=== Car Registration Updater v65 (GitHub Actions) gestartet ===")
+    
     os.makedirs(DATA_DIR, exist_ok=True)
-
-    scheduler = BlockingScheduler(timezone="UTC")
-    scheduler.add_job(hourly_update, CronTrigger(minute=0))   # jede volle Stunde
-
-    # Sofort einmal ausführen
-    hourly_update()
-
-    print("=== Scheduler läuft jetzt im Hintergrund (jede volle Stunde) ===\n")
-
-    try:
-        scheduler.start()
-    except (KeyboardInterrupt, SystemExit):
-        scheduler.shutdown()
-        print("\nUpdater wurde beendet.")
+    
+    # Nur einmal ausführen - kein Scheduler
+    run_update()
+    
+    print("=== Skript erfolgreich beendet ===")
