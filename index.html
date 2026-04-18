@@ -10,13 +10,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0e17;
+    --bg:      #0a0e17;
     --surface: #111827;
-    --border: #1e2d45;
-    --accent: #00e5ff;
+    --border:  #1e2d45;
+    --accent:  #00e5ff;
     --accent2: #ff6b35;
-    --text: #e2e8f0;
-    --muted: #64748b;
+    --text:    #e2e8f0;
+    --muted:   #64748b;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; min-height: 100vh; }
@@ -72,6 +72,7 @@
   #tooltip strong { font-family: 'Syne', sans-serif; font-size: 0.85rem; display: block; margin-bottom: 4px; color: #fff; }
   .tt-row { display: flex; justify-content: space-between; gap: 16px; color: var(--muted); margin-top: 3px; }
   .tt-val { color: var(--accent); }
+  /* Modal */
   #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(6px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
   #modal-overlay.open { display: flex; }
   #modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 860px; max-height: 92vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 80px rgba(0,229,255,0.1); animation: modalIn .2s ease; }
@@ -86,9 +87,11 @@
   #modal-loading { text-align: center; padding: 60px 0; color: var(--muted); font-size: 0.8rem; }
   .modal-spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 12px; }
   @keyframes spin { to{transform:rotate(360deg);} }
+  /* Modal sections */
   .modal-section-title { font-family: 'Syne', sans-serif; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
   .chart-wrap { position: relative; height: 280px; }
   .section-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  /* 2-button powertrain toggle */
   .pt-toggle { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; width: fit-content; margin-bottom: 12px; }
   .pt-btn { padding: 6px 18px; font-size: 0.7rem; cursor: pointer; border: none; background: transparent; color: var(--muted); font-family: 'DM Mono', monospace; transition: all .15s; white-space: nowrap; }
   .pt-btn:first-child { border-right: 1px solid var(--border); }
@@ -103,6 +106,7 @@
   #map-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--surface); flex-direction: column; gap: 12px; z-index: 10; }
   .spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
   #map-loading p { font-size: 0.72rem; color: var(--muted); }
+  /* Search */
   .search-wrap { position: relative; }
   .search-input { width: 100%; padding: 8px 12px 8px 32px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.72rem; outline: none; transition: border-color .15s; }
   .search-input::placeholder { color: var(--muted); }
@@ -134,24 +138,30 @@
         <div id="modal-subtitle">New car registrations</div>
         <div id="modal-source"></div>
       </div>
-      <button id="modal-close" onclick="closeModal()">✕</button>
+      <button id="modal-close" onclick="closeModal()">&#x2715;</button>
     </div>
     <div id="modal-body">
-      <div id="modal-loading"><div class="modal-spinner"></div>Loading…</div>
+      <div id="modal-loading"><div class="modal-spinner"></div>Loading&hellip;</div>
       <div id="modal-content" style="display:none">
-        <div class="modal-section-title" id="sec-monthly-title">Monthly total registrations</div>
+
+        <!-- Monthly / Yearly total -->
+        <div class="modal-section-title" id="sec-monthly-title">&#x1F4C5; Monthly total registrations</div>
         <div class="chart-wrap" id="wrap-monthly"><canvas id="chart-monthly"></canvas></div>
+
         <hr class="section-divider">
-        <div class="modal-section-title">Annual breakdown by powertrain · Eurostat</div>
+
+        <!-- Annual powertrain — 2-button toggle -->
+        <div class="modal-section-title">&#x26A1; Annual breakdown by powertrain &middot; Eurostat</div>
         <div class="pt-toggle">
           <button class="pt-btn active" id="pt-absolute" onclick="switchPowertrain('absolute',this)">Powertrain absolute</button>
           <button class="pt-btn" id="pt-share" onclick="switchPowertrain('share',this)">Market share %</button>
         </div>
         <div class="chart-wrap" id="wrap-annual"><canvas id="chart-annual"></canvas></div>
         <div class="summary-grid" id="summary-grid"></div>
+
       </div>
       <div id="modal-nodata" style="display:none" class="no-data-msg">
-        No data available for this country yet.<br>
+        &#x1F4ED; No data available for this country yet.<br>
         <span style="font-size:0.68rem">ECB/ACEA covers ~30 EU/EEA countries</span>
       </div>
     </div>
@@ -162,10 +172,10 @@
   <header>
     <div class="title-block">
       <h1>Global Car<br>Registrations</h1>
-      <div class="subtitle">BEV market share · Colour = % electric · Click for monthly & powertrain detail</div>
+      <div class="subtitle">BEV market share &middot; Colour = % electric &middot; Click for monthly &amp; powertrain detail</div>
     </div>
     <div class="meta-block">
-      <div class="update-badge"><span class="dot"></span><span id="last-update">Loading…</span></div>
+      <div class="update-badge"><span class="dot"></span><span id="last-update">Loading&hellip;</span></div>
       <select class="year-select" id="year-select">
         <option value="2026">2026 (Q1)</option>
         <option value="2025">2025</option>
@@ -184,35 +194,35 @@
   </header>
   <div class="main-grid">
     <div class="map-panel">
-      <div id="map-loading"><div class="spinner"></div><p>Loading map…</p></div>
+      <div id="map-loading"><div class="spinner"></div><p>Loading map&hellip;</p></div>
       <svg id="map-svg" viewBox="0 0 960 500"></svg>
     </div>
     <div class="sidebar">
       <div class="panel">
         <div class="panel-title">Search Country</div>
         <div class="search-wrap">
-          <span class="search-icon">🔍</span>
-          <input class="search-input" id="country-search" type="text" placeholder="e.g. Norway, Germany, Kenya…" autocomplete="off">
+          <span class="search-icon">&#x1F50D;</span>
+          <input class="search-input" id="country-search" type="text" placeholder="e.g. Norway, Malta, Estonia&hellip;" autocomplete="off">
         </div>
         <div class="search-results" id="search-results"></div>
       </div>
       <div class="panel">
-        <div class="panel-title">BEV Market Share · % of new registrations</div>
+        <div class="panel-title">BEV Market Share &middot; % of new registrations</div>
         <div class="legend-bar"></div>
         <div class="legend-labels"><span>0%</span><span id="legend-mid">20%</span><span id="legend-max">50%+</span></div>
         <div class="sources-note">
-          BEV share: <a href="https://www.acea.auto/stats/" target="_blank">ACEA</a> · 
+          BEV share: <a href="https://www.acea.auto/stats/" target="_blank">ACEA</a> &middot;
           <a href="https://www.iea.org/data-and-statistics/" target="_blank">IEA</a><br>
-          Grey = no data · Click any country for monthly & powertrain chart
+          Grey = no data &middot; Click any country for monthly &amp; powertrain chart
         </div>
       </div>
       <div class="panel">
         <div class="panel-title">Country Details</div>
-        <div id="detail-content" style="color:var(--muted);font-size:.72rem">← Click a country for details</div>
+        <div id="detail-content" style="color:var(--muted);font-size:.72rem">&larr; Click a country for details</div>
       </div>
       <div class="panel">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">
-          <div class="panel-title" style="margin:0;padding:0;border:none" id="top-panel-title">Top 10 · BEV Share % <span id="top-year"></span></div>
+          <div class="panel-title" style="margin:0;padding:0;border:none" id="top-panel-title">Top 10 &middot; BEV Share % <span id="top-year"></span></div>
           <div class="pt-toggle" style="margin:0">
             <button class="pt-btn active" id="top-btn-share" onclick="switchTopList('share',this)">Share %</button>
             <button class="pt-btn" id="top-btn-volume" onclick="switchTopList('volume',this)">Volume</button>
@@ -226,164 +236,9 @@
 </div>
 
 <script>
-// ==================== NAME MAP ====================
-const NAME_MAP = {
-  "United States of America": "United States",
-  "Republic of Korea": "South Korea",
-  "Czechia": "Czech Republic",
-  "United Arab Emirates": "UAE",
-  "Iran (Islamic Republic of)": "Iran",
-  "Russian Federation": "Russia",
-  "United Kingdom of Great Britain and Northern Ireland": "United Kingdom",
-  "Viet Nam": "Vietnam",
-  "Korea, Republic of": "South Korea",
-  "Iran, Islamic Republic of": "Iran",
-  "Türkiye": "Turkey",
-  "Kazakhstan": "Kazakhstan",
-  "Kosovo": "Kosovo",
-  "North Macedonia": "North Macedonia",
-  "Macedonia": "North Macedonia",
-  "Serbia": "Serbia",
-  "Bosnia and Herzegovina": "Bosnia and Herzegovina",
-  "Bosnia": "Bosnia and Herzegovina",
-  "Albania": "Albania",
-  "Ukraine": "Ukraine",
-  "Belarus": "Belarus",
-  "Moldova": "Moldova",
-  "Greenland": "Greenland",
-  "Iraq": "Iraq",
-  "Syria": "Syria",
-  "Syrian Arab Republic": "Syria",
-  "Lebanon": "Lebanon",
-  "Turkmenistan": "Turkmenistan",
-  "Uzbekistan": "Uzbekistan",
-  "Kyrgyzstan": "Kyrgyzstan",
-  "Kyrgyz Republic": "Kyrgyzstan",
-  "Afghanistan": "Afghanistan",
-  "Tajikistan": "Tajikistan",
-  "Mongolia": "Mongolia",
-  "Papua New Guinea": "Papua New Guinea",
-  "Bolivia, Plurinational State of": "Bolivia",
-  "Bolivia": "Bolivia",
-  "Paraguay": "Paraguay",
-  "Uruguay": "Uruguay",
-  "Ecuador": "Ecuador",
-  "Guyana": "Guyana",
-  "Suriname": "Suriname",
-  "Venezuela, Bolivarian Republic of": "Venezuela",
-  "Venezuela": "Venezuela",
-  "Colombia": "Colombia",
-  "Peru": "Peru",
-  "Chile": "Chile",
-  "Argentina": "Argentina",
-  "Brazil": "Brazil",
-  "Congo, Democratic Republic of the": "DR Congo",
-  "Democratic Republic of the Congo": "DR Congo",
-  "Congo": "Republic of the Congo",
-  "Côte d'Ivoire": "Ivory Coast",
-  "Ivory Coast": "Ivory Coast",
-  "Eswatini": "Eswatini",
-  "Swaziland": "Eswatini",
-  "São Tomé and Príncipe": "São Tomé and Príncipe",
-  "Sao Tome and Principe": "São Tomé and Príncipe",
-  "Central African Republic": "Central African Republic",
-  "Sri Lanka": "Sri Lanka",
-  "Myanmar": "Myanmar",
-  "Cambodia": "Cambodia",
-  "New Caledonia": "New Caledonia",
-  "Fiji": "Fiji",
-  "Vanuatu": "Vanuatu",
-  "Solomon Islands": "Solomon Islands",
-  "French Southern Antarctic Lands": "French Southern Antarctic Lands",
-  "Falkland Islands": "Falkland Islands",
-  "Dominican Republic": "Dominican Republic",
-  "Cuba": "Cuba",
-  "Bahamas": "Bahamas",
-  "Nicaragua": "Nicaragua",
-  "Honduras": "Honduras",
-  "Guatemala": "Guatemala",
-  "Panama": "Panama",
-  "Costa Rica": "Costa Rica",
-  "Belize": "Belize",
-  "Jamaica": "Jamaica",
-  "Puerto Rico": "Puerto Rico",
-  "Algeria": "Algeria",
-  "Libya": "Libya",
-  "Sudan": "Sudan",
-  "South Sudan": "South Sudan",
-  "Chad": "Chad",
-  "Niger": "Niger",
-  "Mali": "Mali",
-  "Mauritania": "Mauritania",
-  "Senegal": "Senegal",
-  "Gambia": "Gambia",
-  "Guinea-Bissau": "Guinea-Bissau",
-  "Guinea": "Guinea",
-  "Sierra Leone": "Sierra Leone",
-  "Liberia": "Liberia",
-  "Burkina Faso": "Burkina Faso",
-  "Ghana": "Ghana",
-  "Togo": "Togo",
-  "Benin": "Benin",
-  "Nigeria": "Nigeria",
-  "Cameroon": "Cameroon",
-  "Central African Republic": "Central African Republic",
-  "Democratic Republic of the Congo": "DR Congo",
-  "Republic of the Congo": "Republic of the Congo",
-  "Gabon": "Gabon",
-  "Equatorial Guinea": "Equatorial Guinea",
-  "Angola": "Angola",
-  "Zambia": "Zambia",
-  "Zimbabwe": "Zimbabwe",
-  "Mozambique": "Mozambique",
-  "Malawi": "Malawi",
-  "Tanzania": "Tanzania",
-  "Burundi": "Burundi",
-  "Rwanda": "Rwanda",
-  "Uganda": "Uganda",
-  "Kenya": "Kenya",
-  "Somalia": "Somalia",
-  "Ethiopia": "Ethiopia",
-  "Eritrea": "Eritrea",
-  "Djibouti": "Djibouti",
-  "Saudi Arabia": "Saudi Arabia",
-  "Yemen": "Yemen",
-  "Oman": "Oman",
-  "United Arab Emirates": "UAE",
-  "Qatar": "Qatar",
-  "Bahrain": "Bahrain",
-  "Kuwait": "Kuwait",
-  "Jordan": "Jordan",
-  "Israel": "Israel",
-  "Palestine": "Palestine",
-  "North Korea": "North Korea",
-  "Laos": "Laos",
-  "Haiti": "Haiti",
-  "Canada": "Canada",
-  "Mexico": "Mexico",
-  "Guatemala": "Guatemala",
-  "Belize": "Belize",
-  "El Salvador": "El Salvador",
-  "Honduras": "Honduras",
-  "Nicaragua": "Nicaragua",
-  "Costa Rica": "Costa Rica",
-  "Panama": "Panama",
-  "Colombia": "Colombia",
-  "Venezuela": "Venezuela",
-  "Guyana": "Guyana",
-  "Suriname": "Suriname",
-  "French Guiana": "French Guiana",
-  "Ecuador": "Ecuador",
-  "Peru": "Peru",
-  "Bolivia": "Bolivia",
-  "Paraguay": "Paraguay",
-  "Chile": "Chile",
-  "Argentina": "Argentina",
-  "Uruguay": "Uruguay"
-};
-
-// ==================== DATA (Registrations) ====================
 const DATA = {
+  // Sources: ACEA (EU/EEA exact), OICA/VDA (global) — verified April 2026
+  // Note: 2026 = Q1 annualised estimate; non-EU countries in DATA for map colouring only
   2026: {
     "Germany":[2900000,84,"KBA"],"France":[1680000,68,"ACEA"],
     "United Kingdom":[2020000,67,"SMMT"],"Italy":[1540000,60,"ANFIA"],
@@ -583,35 +438,229 @@ const DATA = {
   }
 };
 
-// ==================== EV_SHARE – VOLLSTÄNDIG FÜR ALLE JAHRE ====================
 const EV_SHARE = {
-  2015: {"Norway":17.1,"Netherlands":4.0,"Sweden":1.1,"Denmark":0.5,"Switzerland":0.7,"France":0.5,"United Kingdom":0.5,"Germany":0.3,"Belgium":0.2,"Austria":0.2,"Finland":0.2,"Iceland":5.0,"China":1.0,"United States":0.6,"Japan":0.2,"South Korea":0.3,"India":0.1,"Brazil":0.1,"Russia":0.1,"Turkey":0.1,"Mexico":0.1,"South Africa":0.2,"Australia":0.2,"New Zealand":0.4,"Canada":0.5,"Afghanistan":0.1,"Albania":0.1,"Algeria":0.1,"Andorra":0.1,"Angola":0.1,"Antigua and Barbuda":0.1,"Equatorial Guinea":0.1,"Argentina":0.1,"Armenia":0.1,"Azerbaijan":0.1,"Ethiopia":0.1,"Bahamas":0.1,"Bahrain":0.2,"Bangladesh":0.1,"Barbados":0.1,"Belarus":0.1,"Belize":0.1,"Benin":0.1,"Bhutan":0.1,"Bolivia":0.1,"Bosnia and Herzegovina":0.1,"Botswana":0.1,"Brunei":0.1,"Bulgaria":0.1,"Burkina Faso":0.1,"Burundi":0.1,"Cabo Verde":0.1,"Chile":0.1,"Colombia":0.1,"Comoros":0.1,"Congo (Republic)":0.1,"Congo (Democratic Republic)":0.1,"Costa Rica":0.1,"Croatia":0.1,"Cuba":0.1,"Cyprus":0.1,"Czech Republic":0.1,"Djibouti":0.1,"Dominica":0.1,"Dominican Republic":0.1,"Ecuador":0.1,"Egypt":0.2,"El Salvador":0.1,"Eritrea":0.1,"Estonia":0.1,"Eswatini":0.1,"Fiji":0.1,"Gabon":0.1,"Gambia":0.1,"Georgia":0.1,"Ghana":0.1,"Greece":0.1,"Grenada":0.1,"Guatemala":0.1,"Guinea":0.1,"Guinea-Bissau":0.1,"Guyana":0.1,"Haiti":0.1,"Honduras":0.1,"Hungary":0.1,"Indonesia":0.1,"Iran":0.1,"Iraq":0.1,"Ireland":0.1,"Israel":0.3,"Italy":0.1,"Jamaica":0.1,"Jordan":0.2,"Kazakhstan":0.1,"Kenya":0.2,"Kiribati":0.1,"Kosovo":0.1,"Kuwait":0.2,"Kyrgyzstan":0.1,"Laos":0.1,"Latvia":0.1,"Lebanon":0.2,"Lesotho":0.1,"Liberia":0.1,"Libya":0.1,"Liechtenstein":0.1,"Lithuania":0.1,"Luxembourg":0.1,"Madagascar":0.1,"Malawi":0.1,"Malaysia":0.1,"Maldives":0.1,"Mali":0.1,"Malta":0.1,"Marshall Islands":0.1,"Mauritania":0.1,"Mauritius":0.1,"Micronesia":0.1,"Moldova":0.1,"Monaco":0.1,"Mongolia":0.1,"Montenegro":0.1,"Morocco":0.1,"Mozambique":0.1,"Myanmar":0.1,"Namibia":0.1,"Nauru":0.1,"Nepal":0.1,"Nicaragua":0.1,"Niger":0.1,"Nigeria":0.1,"North Korea":0.1,"North Macedonia":0.1,"Oman":0.2,"Pakistan":0.1,"Palau":0.1,"Panama":0.1,"Papua New Guinea":0.1,"Paraguay":0.1,"Peru":0.1,"Philippines":0.1,"Poland":0.1,"Portugal":0.1,"Qatar":0.3,"Romania":0.1,"Rwanda":0.1,"Saint Kitts and Nevis":0.1,"Saint Lucia":0.1,"Saint Vincent and the Grenadines":0.1,"Samoa":0.1,"San Marino":0.1,"São Tomé and Príncipe":0.1,"Saudi Arabia":0.2,"Senegal":0.1,"Serbia":0.1,"Seychelles":0.1,"Sierra Leone":0.1,"Singapore":0.1,"Slovakia":0.1,"Slovenia":0.1,"Solomon Islands":0.1,"Somalia":0.1,"South Sudan":0.1,"Spain":0.1,"Sri Lanka":0.1,"Sudan":0.1,"Suriname":0.1,"Syria":0.1,"Tajikistan":0.1,"Tanzania":0.1,"Thailand":0.1,"Timor-Leste":0.1,"Togo":0.1,"Tonga":0.1,"Trinidad and Tobago":0.1,"Tunisia":0.1,"Turkmenistan":0.1,"Tuvalu":0.1,"Uganda":0.1,"Ukraine":0.1,"United Arab Emirates":0.3,"Uruguay":0.1,"Uzbekistan":0.1,"Vanuatu":0.1,"Vatican City":0.1,"Venezuela":0.1,"Vietnam":0.1,"Yemen":0.1,"Zambia":0.1,"Zimbabwe":0.1,"Taiwan":0.1},
-
-  2016: {"Norway":15.7,"Netherlands":4.5,"Sweden":1.3,"Denmark":0.8,"Switzerland":1.0,"France":0.7,"United Kingdom":0.7,"Germany":0.4,"Belgium":0.3,"Austria":0.3,"Finland":0.3,"Iceland":8.0,"China":1.5,"United States":0.9,"Japan":0.3,"South Korea":0.4,"India":0.2,"Brazil":0.2,"Russia":0.2,"Turkey":0.2,"Mexico":0.2,"South Africa":0.3,"Australia":0.3,"New Zealand":0.5,"Canada":0.6,"Afghanistan":0.1,"Albania":0.1,"Algeria":0.1,"Andorra":0.1,"Angola":0.1,"Antigua and Barbuda":0.1,"Equatorial Guinea":0.1,"Argentina":0.1,"Armenia":0.1,"Azerbaijan":0.1,"Ethiopia":0.1,"Bahamas":0.1,"Bahrain":0.2,"Bangladesh":0.1,"Barbados":0.1,"Belarus":0.1,"Belize":0.1,"Benin":0.1,"Bhutan":0.1,"Bolivia":0.1,"Bosnia and Herzegovina":0.1,"Botswana":0.1,"Brunei":0.1,"Bulgaria":0.1,"Burkina Faso":0.1,"Burundi":0.1,"Cabo Verde":0.1,"Chile":0.1,"Colombia":0.1,"Comoros":0.1,"Congo (Republic)":0.1,"Congo (Democratic Republic)":0.1,"Costa Rica":0.1,"Croatia":0.1,"Cuba":0.1,"Cyprus":0.1,"Czech Republic":0.1,"Djibouti":0.1,"Dominica":0.1,"Dominican Republic":0.1,"Ecuador":0.1,"Egypt":0.2,"El Salvador":0.1,"Eritrea":0.1,"Estonia":0.1,"Eswatini":0.1,"Fiji":0.1,"Gabon":0.1,"Gambia":0.1,"Georgia":0.1,"Ghana":0.1,"Greece":0.1,"Grenada":0.1,"Guatemala":0.1,"Guinea":0.1,"Guinea-Bissau":0.1,"Guyana":0.1,"Haiti":0.1,"Honduras":0.1,"Hungary":0.1,"Indonesia":0.1,"Iran":0.1,"Iraq":0.1,"Ireland":0.1,"Israel":0.3,"Italy":0.1,"Jamaica":0.1,"Jordan":0.2,"Kazakhstan":0.1,"Kenya":0.2,"Kiribati":0.1,"Kosovo":0.1,"Kuwait":0.2,"Kyrgyzstan":0.1,"Laos":0.1,"Latvia":0.1,"Lebanon":0.2,"Lesotho":0.1,"Liberia":0.1,"Libya":0.1,"Liechtenstein":0.1,"Lithuania":0.1,"Luxembourg":0.1,"Madagascar":0.1,"Malawi":0.1,"Malaysia":0.1,"Maldives":0.1,"Mali":0.1,"Malta":0.1,"Marshall Islands":0.1,"Mauritania":0.1,"Mauritius":0.1,"Micronesia":0.1,"Moldova":0.1,"Monaco":0.1,"Mongolia":0.1,"Montenegro":0.1,"Morocco":0.1,"Mozambique":0.1,"Myanmar":0.1,"Namibia":0.1,"Nauru":0.1,"Nepal":0.1,"Nicaragua":0.1,"Niger":0.1,"Nigeria":0.1,"North Korea":0.1,"North Macedonia":0.1,"Oman":0.2,"Pakistan":0.1,"Palau":0.1,"Panama":0.1,"Papua New Guinea":0.1,"Paraguay":0.1,"Peru":0.1,"Philippines":0.1,"Poland":0.1,"Portugal":0.1,"Qatar":0.3,"Romania":0.1,"Rwanda":0.1,"Saint Kitts and Nevis":0.1,"Saint Lucia":0.1,"Saint Vincent and the Grenadines":0.1,"Samoa":0.1,"San Marino":0.1,"São Tomé and Príncipe":0.1,"Saudi Arabia":0.2,"Senegal":0.1,"Serbia":0.1,"Seychelles":0.1,"Sierra Leone":0.1,"Singapore":0.1,"Slovakia":0.1,"Slovenia":0.1,"Solomon Islands":0.1,"Somalia":0.1,"South Sudan":0.1,"Spain":0.1,"Sri Lanka":0.1,"Sudan":0.1,"Suriname":0.1,"Syria":0.1,"Tajikistan":0.1,"Tanzania":0.1,"Thailand":0.1,"Timor-Leste":0.1,"Togo":0.1,"Tonga":0.1,"Trinidad and Tobago":0.1,"Tunisia":0.1,"Turkmenistan":0.1,"Tuvalu":0.1,"Uganda":0.1,"Ukraine":0.1,"United Arab Emirates":0.3,"Uruguay":0.1,"Uzbekistan":0.1,"Vanuatu":0.1,"Vatican City":0.1,"Venezuela":0.1,"Vietnam":0.1,"Yemen":0.1,"Zambia":0.1,"Zimbabwe":0.1,"Taiwan":0.1},
-
-  2017: {"Norway":20.9,"Netherlands":1.5,"Sweden":2.5,"Denmark":1.2,"Switzerland":1.5,"France":0.8,"United Kingdom":0.9,"Germany":0.7,"Belgium":0.4,"Austria":0.5,"Finland":0.5,"Iceland":10.0,"China":1.8,"United States":1.0,"Japan":0.3,"South Korea":0.6,"India":0.3,"Brazil":0.3,"Russia":0.3,"Turkey":0.3,"Mexico":0.3,"South Africa":0.4,"Australia":0.4,"New Zealand":0.7,"Canada":0.7,"Afghanistan":0.1,"Albania":0.1,"Algeria":0.1,"Andorra":0.1,"Angola":0.1,"Antigua and Barbuda":0.1,"Equatorial Guinea":0.1,"Argentina":0.1,"Armenia":0.1,"Azerbaijan":0.1,"Ethiopia":0.1,"Bahamas":0.1,"Bahrain":0.2,"Bangladesh":0.1,"Barbados":0.1,"Belarus":0.1,"Belize":0.1,"Benin":0.1,"Bhutan":0.1,"Bolivia":0.1,"Bosnia and Herzegovina":0.1,"Botswana":0.1,"Brunei":0.1,"Bulgaria":0.1,"Burkina Faso":0.1,"Burundi":0.1,"Cabo Verde":0.1,"Chile":0.1,"Colombia":0.1,"Comoros":0.1,"Congo (Republic)":0.1,"Congo (Democratic Republic)":0.1,"Costa Rica":0.1,"Croatia":0.1,"Cuba":0.1,"Cyprus":0.1,"Czech Republic":0.1,"Djibouti":0.1,"Dominica":0.1,"Dominican Republic":0.1,"Ecuador":0.1,"Egypt":0.2,"El Salvador":0.1,"Eritrea":0.1,"Estonia":0.1,"Eswatini":0.1,"Fiji":0.1,"Gabon":0.1,"Gambia":0.1,"Georgia":0.1,"Ghana":0.1,"Greece":0.1,"Grenada":0.1,"Guatemala":0.1,"Guinea":0.1,"Guinea-Bissau":0.1,"Guyana":0.1,"Haiti":0.1,"Honduras":0.1,"Hungary":0.1,"Indonesia":0.1,"Iran":0.1,"Iraq":0.1,"Ireland":0.1,"Israel":0.3,"Italy":0.1,"Jamaica":0.1,"Jordan":0.2,"Kazakhstan":0.1,"Kenya":0.2,"Kiribati":0.1,"Kosovo":0.1,"Kuwait":0.2,"Kyrgyzstan":0.1,"Laos":0.1,"Latvia":0.1,"Lebanon":0.2,"Lesotho":0.1,"Liberia":0.1,"Libya":0.1,"Liechtenstein":0.1,"Lithuania":0.1,"Luxembourg":0.1,"Madagascar":0.1,"Malawi":0.1,"Malaysia":0.1,"Maldives":0.1,"Mali":0.1,"Malta":0.1,"Marshall Islands":0.1,"Mauritania":0.1,"Mauritius":0.1,"Micronesia":0.1,"Moldova":0.1,"Monaco":0.1,"Mongolia":0.1,"Montenegro":0.1,"Morocco":0.1,"Mozambique":0.1,"Myanmar":0.1,"Namibia":0.1,"Nauru":0.1,"Nepal":0.1,"Nicaragua":0.1,"Niger":0.1,"Nigeria":0.1,"North Korea":0.1,"North Macedonia":0.1,"Oman":0.2,"Pakistan":0.1,"Palau":0.1,"Panama":0.1,"Papua New Guinea":0.1,"Paraguay":0.1,"Peru":0.1,"Philippines":0.1,"Poland":0.1,"Portugal":0.1,"Qatar":0.3,"Romania":0.1,"Rwanda":0.1,"Saint Kitts and Nevis":0.1,"Saint Lucia":0.1,"Saint Vincent and the Grenadines":0.1,"Samoa":0.1,"San Marino":0.1,"São Tomé and Príncipe":0.1,"Saudi Arabia":0.2,"Senegal":0.1,"Serbia":0.1,"Seychelles":0.1,"Sierra Leone":0.1,"Singapore":0.1,"Slovakia":0.1,"Slovenia":0.1,"Solomon Islands":0.1,"Somalia":0.1,"South Sudan":0.1,"Spain":0.1,"Sri Lanka":0.1,"Sudan":0.1,"Suriname":0.1,"Syria":0.1,"Tajikistan":0.1,"Tanzania":0.1,"Thailand":0.1,"Timor-Leste":0.1,"Togo":0.1,"Tonga":0.1,"Trinidad and Tobago":0.1,"Tunisia":0.1,"Turkmenistan":0.1,"Tuvalu":0.1,"Uganda":0.1,"Ukraine":0.1,"United Arab Emirates":0.3,"Uruguay":0.1,"Uzbekistan":0.1,"Vanuatu":0.1,"Vatican City":0.1,"Venezuela":0.1,"Vietnam":0.1,"Yemen":0.1,"Zambia":0.1,"Zimbabwe":0.1,"Taiwan":0.1},
-
-  2018: {"Norway":31.0,"Netherlands":4.0,"Sweden":3.0,"Denmark":1.5,"Switzerland":2.0,"France":1.0,"United Kingdom":1.0,"Germany":1.0,"Belgium":0.5,"Austria":0.7,"Finland":0.8,"Iceland":15.0,"China":2.6,"United States":1.3,"Japan":0.4,"South Korea":0.8,"India":0.4,"Brazil":0.4,"Russia":0.4,"Turkey":0.4,"Mexico":0.4,"South Africa":0.5,"Australia":0.6,"New Zealand":1.0,"Canada":0.8,"Afghanistan":0.1,"Albania":0.1,"Algeria":0.1,"Andorra":0.1,"Angola":0.1,"Antigua and Barbuda":0.1,"Equatorial Guinea":0.1,"Argentina":0.1,"Armenia":0.1,"Azerbaijan":0.1,"Ethiopia":0.1,"Bahamas":0.1,"Bahrain":0.2,"Bangladesh":0.1,"Barbados":0.1,"Belarus":0.1,"Belize":0.1,"Benin":0.1,"Bhutan":0.1,"Bolivia":0.1,"Bosnia and Herzegovina":0.1,"Botswana":0.1,"Brunei":0.1,"Bulgaria":0.1,"Burkina Faso":0.1,"Burundi":0.1,"Cabo Verde":0.1,"Chile":0.1,"Colombia":0.1,"Comoros":0.1,"Congo (Republic)":0.1,"Congo (Democratic Republic)":0.1,"Costa Rica":0.1,"Croatia":0.1,"Cuba":0.1,"Cyprus":0.1,"Czech Republic":0.1,"Djibouti":0.1,"Dominica":0.1,"Dominican Republic":0.1,"Ecuador":0.1,"Egypt":0.2,"El Salvador":0.1,"Eritrea":0.1,"Estonia":0.1,"Eswatini":0.1,"Fiji":0.1,"Gabon":0.1,"Gambia":0.1,"Georgia":0.1,"Ghana":0.1,"Greece":0.1,"Grenada":0.1,"Guatemala":0.1,"Guinea":0.1,"Guinea-Bissau":0.1,"Guyana":0.1,"Haiti":0.1,"Honduras":0.1,"Hungary":0.1,"Indonesia":0.1,"Iran":0.1,"Iraq":0.1,"Ireland":0.1,"Israel":0.3,"Italy":0.1,"Jamaica":0.1,"Jordan":0.2,"Kazakhstan":0.1,"Kenya":0.2,"Kiribati":0.1,"Kosovo":0.1,"Kuwait":0.2,"Kyrgyzstan":0.1,"Laos":0.1,"Latvia":0.1,"Lebanon":0.2,"Lesotho":0.1,"Liberia":0.1,"Libya":0.1,"Liechtenstein":0.1,"Lithuania":0.1,"Luxembourg":0.1,"Madagascar":0.1,"Malawi":0.1,"Malaysia":0.1,"Maldives":0.1,"Mali":0.1,"Malta":0.1,"Marshall Islands":0.1,"Mauritania":0.1,"Mauritius":0.1,"Micronesia":0.1,"Moldova":0.1,"Monaco":0.1,"Mongolia":0.1,"Montenegro":0.1,"Morocco":0.1,"Mozambique":0.1,"Myanmar":0.1,"Namibia":0.1,"Nauru":0.1,"Nepal":0.1,"Nicaragua":0.1,"Niger":0.1,"Nigeria":0.1,"North Korea":0.1,"North Macedonia":0.1,"Oman":0.2,"Pakistan":0.1,"Palau":0.1,"Panama":0.1,"Papua New Guinea":0.1,"Paraguay":0.1,"Peru":0.1,"Philippines":0.1,"Poland":0.1,"Portugal":0.1,"Qatar":0.3,"Romania":0.1,"Rwanda":0.1,"Saint Kitts and Nevis":0.1,"Saint Lucia":0.1,"Saint Vincent and the Grenadines":0.1,"Samoa":0.1,"San Marino":0.1,"São Tomé and Príncipe":0.1,"Saudi Arabia":0.2,"Senegal":0.1,"Serbia":0.1,"Seychelles":0.1,"Sierra Leone":0.1,"Singapore":0.1,"Slovakia":0.1,"Slovenia":0.1,"Solomon Islands":0.1,"Somalia":0.1,"South Sudan":0.1,"Spain":0.1,"Sri Lanka":0.1,"Sudan":0.1,"Suriname":0.1,"Syria":0.1,"Tajikistan":0.1,"Tanzania":0.1,"Thailand":0.1,"Timor-Leste":0.1,"Togo":0.1,"Tonga":0.1,"Trinidad and Tobago":0.1,"Tunisia":0.1,"Turkmenistan":0.1,"Tuvalu":0.1,"Uganda":0.1,"Ukraine":0.1,"United Arab Emirates":0.3,"Uruguay":0.1,"Uzbekistan":0.1,"Vanuatu":0.1,"Vatican City":0.1,"Venezuela":0.1,"Vietnam":0.1,"Yemen":0.1,"Zambia":0.1,"Zimbabwe":0.1,"Taiwan":0.1},
-
-  2019: {"Norway":42.4,"Netherlands":13.9,"Sweden":4.4,"Denmark":2.5,"Switzerland":3.5,"France":1.9,"United Kingdom":1.5,"Germany":1.8,"Belgium":1.0,"Austria":1.2,"Finland":1.5,"Iceland":20.0,"China":3.9,"United States":1.5,"Japan":0.5,"South Korea":1.9,"India":0.5,"Brazil":0.5,"Russia":0.5,"Turkey":0.5,"Mexico":0.5,"South Africa":0.6,"Australia":1.0,"New Zealand":1.5,"Canada":1.2,"Afghanistan":0.1,"Albania":0.1,"Algeria":0.1,"Andorra":0.1,"Angola":0.1,"Antigua and Barbuda":0.1,"Equatorial Guinea":0.1,"Argentina":0.1,"Armenia":0.1,"Azerbaijan":0.1,"Ethiopia":0.1,"Bahamas":0.1,"Bahrain":0.2,"Bangladesh":0.1,"Barbados":0.1,"Belarus":0.1,"Belize":0.1,"Benin":0.1,"Bhutan":0.1,"Bolivia":0.1,"Bosnia and Herzegovina":0.1,"Botswana":0.1,"Brunei":0.1,"Bulgaria":0.1,"Burkina Faso":0.1,"Burundi":0.1,"Cabo Verde":0.1,"Chile":0.1,"Colombia":0.1,"Comoros":0.1,"Congo (Republic)":0.1,"Congo (Democratic Republic)":0.1,"Costa Rica":0.1,"Croatia":0.1,"Cuba":0.1,"Cyprus":0.1,"Czech Republic":0.1,"Djibouti":0.1,"Dominica":0.1,"Dominican Republic":0.1,"Ecuador":0.1,"Egypt":0.2,"El Salvador":0.1,"Eritrea":0.1,"Estonia":0.1,"Eswatini":0.1,"Fiji":0.1,"Gabon":0.1,"Gambia":0.1,"Georgia":0.1,"Ghana":0.1,"Greece":0.1,"Grenada":0.1,"Guatemala":0.1,"Guinea":0.1,"Guinea-Bissau":0.1,"Guyana":0.1,"Haiti":0.1,"Honduras":0.1,"Hungary":0.1,"Indonesia":0.1,"Iran":0.1,"Iraq":0.1,"Ireland":0.1,"Israel":0.3,"Italy":0.1,"Jamaica":0.1,"Jordan":0.2,"Kazakhstan":0.1,"Kenya":0.2,"Kiribati":0.1,"Kosovo":0.1,"Kuwait":0.2,"Kyrgyzstan":0.1,"Laos":0.1,"Latvia":0.1,"Lebanon":0.2,"Lesotho":0.1,"Liberia":0.1,"Libya":0.1,"Liechtenstein":0.1,"Lithuania":0.1,"Luxembourg":0.1,"Madagascar":0.1,"Malawi":0.1,"Malaysia":0.1,"Maldives":0.1,"Mali":0.1,"Malta":0.1,"Marshall Islands":0.1,"Mauritania":0.1,"Mauritius":0.1,"Micronesia":0.1,"Moldova":0.1,"Monaco":0.1,"Mongolia":0.1,"Montenegro":0.1,"Morocco":0.1,"Mozambique":0.1,"Myanmar":0.1,"Namibia":0.1,"Nauru":0.1,"Nepal":0.1,"Nicaragua":0.1,"Niger":0.1,"Nigeria":0.1,"North Korea":0.1,"North Macedonia":0.1,"Oman":0.2,"Pakistan":0.1,"Palau":0.1,"Panama":0.1,"Papua New Guinea":0.1,"Paraguay":0.1,"Peru":0.1,"Philippines":0.1,"Poland":0.1,"Portugal":0.1,"Qatar":0.3,"Romania":0.1,"Rwanda":0.1,"Saint Kitts and Nevis":0.1,"Saint Lucia":0.1,"Saint Vincent and the Grenadines":0.1,"Samoa":0.1,"San Marino":0.1,"São Tomé and Príncipe":0.1,"Saudi Arabia":0.2,"Senegal":0.1,"Serbia":0.1,"Seychelles":0.1,"Sierra Leone":0.1,"Singapore":0.1,"Slovakia":0.1,"Slovenia":0.1,"Solomon Islands":0.1,"Somalia":0.1,"South Sudan":0.1,"Spain":0.1,"Sri Lanka":0.1,"Sudan":0.1,"Suriname":0.1,"Syria":0.1,"Tajikistan":0.1,"Tanzania":0.1,"Thailand":0.1,"Timor-Leste":0.1,"Togo":0.1,"Tonga":0.1,"Trinidad and Tobago":0.1,"Tunisia":0.1,"Turkmenistan":0.1,"Tuvalu":0.1,"Uganda":0.1,"Ukraine":0.1,"United Arab Emirates":0.3,"Uruguay":0.1,"Uzbekistan":0.1,"Vanuatu":0.1,"Vatican City":0.1,"Venezuela":0.1,"Vietnam":0.1,"Yemen":0.1,"Zambia":0.1,"Zimbabwe":0.1,"Taiwan":0.1},
-
-  2020: {"Norway":54.0,"Netherlands":20.0,"Sweden":23.0,"Denmark":5.5,"Switzerland":7.0,"France":5.5,"United Kingdom":5.5,"Germany":6.5,"Belgium":4.5,"Austria":3.0,"Finland":4.0,"Iceland":30.0,"China":4.3,"United States":1.8,"Japan":0.8,"South Korea":2.4,"India":0.6,"Brazil":0.6,"Russia":0.6,"Turkey":0.6,"Mexico":0.6,"South Africa":0.7,"Australia":1.5,"New Zealand":2.0,"Canada":2.0,"Afghanistan":0.1,"Albania":0.1,"Algeria":0.1,"Andorra":0.1,"Angola":0.1,"Antigua and Barbuda":0.1,"Equatorial Guinea":0.1,"Argentina":0.1,"Armenia":0.1,"Azerbaijan":0.1,"Ethiopia":0.1,"Bahamas":0.1,"Bahrain":0.2,"Bangladesh":0.1,"Barbados":0.1,"Belarus":0.1,"Belize":0.1,"Benin":0.1,"Bhutan":0.1,"Bolivia":0.1,"Bosnia and Herzegovina":0.1,"Botswana":0.1,"Brunei":0.1,"Bulgaria":0.1,"Burkina Faso":0.1,"Burundi":0.1,"Cabo Verde":0.1,"Chile":0.1,"Colombia":0.1,"Comoros":0.1,"Congo (Republic)":0.1,"Congo (Democratic Republic)":0.1,"Costa Rica":0.1,"Croatia":0.1,"Cuba":0.1,"Cyprus":0.1,"Czech Republic":0.1,"Djibouti":0.1,"Dominica":0.1,"Dominican Republic":0.1,"Ecuador":0.1,"Egypt":0.2,"El Salvador":0.1,"Eritrea":0.1,"Estonia":0.1,"Eswatini":0.1,"Fiji":0.1,"Gabon":0.1,"Gambia":0.1,"Georgia":0.1,"Ghana":0.1,"Greece":0.1,"Grenada":0.1,"Guatemala":0.1,"Guinea":0.1,"Guinea-Bissau":0.1,"Guyana":0.1,"Haiti":0.1,"Honduras":0.1,"Hungary":0.1,"Indonesia":0.1,"Iran":0.1,"Iraq":0.1,"Ireland":0.1,"Israel":0.3,"Italy":0.1,"Jamaica":0.1,"Jordan":0.2,"Kazakhstan":0.1,"Kenya":0.2,"Kiribati":0.1,"Kosovo":0.1,"Kuwait":0.2,"Kyrgyzstan":0.1,"Laos":0.1,"Latvia":0.1,"Lebanon":0.2,"Lesotho":0.1,"Liberia":0.1,"Libya":0.1,"Liechtenstein":0.1,"Lithuania":0.1,"Luxembourg":0.1,"Madagascar":0.1,"Malawi":0.1,"Malaysia":0.1,"Maldives":0.1,"Mali":0.1,"Malta":0.1,"Marshall Islands":0.1,"Mauritania":0.1,"Mauritius":0.1,"Micronesia":0.1,"Moldova":0.1,"Monaco":0.1,"Mongolia":0.1,"Montenegro":0.1,"Morocco":0.1,"Mozambique":0.1,"Myanmar":0.1,"Namibia":0.1,"Nauru":0.1,"Nepal":0.1,"Nicaragua":0.1,"Niger":0.1,"Nigeria":0.1,"North Korea":0.1,"North Macedonia":0.1,"Oman":0.2,"Pakistan":0.1,"Palau":0.1,"Panama":0.1,"Papua New Guinea":0.1,"Paraguay":0.1,"Peru":0.1,"Philippines":0.1,"Poland":0.1,"Portugal":0.1,"Qatar":0.3,"Romania":0.1,"Rwanda":0.1,"Saint Kitts and Nevis":0.1,"Saint Lucia":0.1,"Saint Vincent and the Grenadines":0.1,"Samoa":0.1,"San Marino":0.1,"São Tomé and Príncipe":0.1,"Saudi Arabia":0.2,"Senegal":0.1,"Serbia":0.1,"Seychelles":0.1,"Sierra Leone":0.1,"Singapore":0.1,"Slovakia":0.1,"Slovenia":0.1,"Solomon Islands":0.1,"Somalia":0.1,"South Sudan":0.1,"Spain":0.1,"Sri Lanka":0.1,"Sudan":0.1,"Suriname":0.1,"Syria":0.1,"Tajikistan":0.1,"Tanzania":0.1,"Thailand":0.1,"Timor-Leste":0.1,"Togo":0.1,"Tonga":0.1,"Trinidad and Tobago":0.1,"Tunisia":0.1,"Turkmenistan":0.1,"Tuvalu":0.1,"Uganda":0.1,"Ukraine":0.1,"United Arab Emirates":0.3,"Uruguay":0.1,"Uzbekistan":0.1,"Vanuatu":0.1,"Vatican City":0.1,"Venezuela":0.1,"Vietnam":0.1,"Yemen":0.1,"Zambia":0.1,"Zimbabwe":0.1,"Taiwan":0.1},
-
-  2021: {"Norway":72.0,"Netherlands":22.0,"Sweden":37.0,"Denmark":12.0,"Switzerland":13.5,"France":9.8,"United Kingdom":12.0,"Germany":13.5,"Belgium":8.6,"Austria":6.5,"Finland":12.0,"Iceland":35.0,"China":13.0,"United States":2.9,"Japan":0.9,"South Korea":5.7,"India":0.8,"Brazil":0.8,"Russia":0.8,"Turkey":0.8,"Mexico":0.8,"South Africa":0.8,"Australia":2.0,"New Zealand":3.0,"Canada":3.5,"Afghanistan":0.1,"Albania":0.1,"Algeria":0.1,"Andorra":0.1,"Angola":0.1,"Antigua and Barbuda":0.1,"Equatorial Guinea":0.1,"Argentina":0.1,"Armenia":0.1,"Azerbaijan":0.1,"Ethiopia":0.1,"Bahamas":0.1,"Bahrain":0.2,"Bangladesh":0.1,"Barbados":0.1,"Belarus":0.1,"Belize":0.1,"Benin":0.1,"Bhutan":0.1,"Bolivia":0.1,"Bosnia and Herzegovina":0.1,"Botswana":0.1,"Brunei":0.1,"Bulgaria":0.1,"Burkina Faso":0.1,"Burundi":0.1,"Cabo Verde":0.1,"Chile":0.1,"Colombia":0.1,"Comoros":0.1,"Congo (Republic)":0.1,"Congo (Democratic Republic)":0.1,"Costa Rica":0.1,"Croatia":0.1,"Cuba":0.1,"Cyprus":0.1,"Czech Republic":0.1,"Djibouti":0.1,"Dominica":0.1,"Dominican Republic":0.1,"Ecuador":0.1,"Egypt":0.2,"El Salvador":0.1,"Eritrea":0.1,"Estonia":0.1,"Eswatini":0.1,"Fiji":0.1,"Gabon":0.1,"Gambia":0.1,"Georgia":0.1,"Ghana":0.1,"Greece":0.1,"Grenada":0.1,"Guatemala":0.1,"Guinea":0.1,"Guinea-Bissau":0.1,"Guyana":0.1,"Haiti":0.1,"Honduras":0.1,"Hungary":0.1,"Indonesia":0.1,"Iran":0.1,"Iraq":0.1,"Ireland":0.1,"Israel":0.3,"Italy":0.1,"Jamaica":0.1,"Jordan":0.2,"Kazakhstan":0.1,"Kenya":0.2,"Kiribati":0.1,"Kosovo":0.1,"Kuwait":0.2,"Kyrgyzstan":0.1,"Laos":0.1,"Latvia":0.1,"Lebanon":0.2,"Lesotho":0.1,"Liberia":0.1,"Libya":0.1,"Liechtenstein":0.1,"Lithuania":0.1,"Luxembourg":0.1,"Madagascar":0.1,"Malawi":0.1,"Malaysia":0.1,"Maldives":0.1,"Mali":0.1,"Malta":0.1,"Marshall Islands":0.1,"Mauritania":0.1,"Mauritius":0.1,"Micronesia":0.1,"Moldova":0.1,"Monaco":0.1,"Mongolia":0.1,"Montenegro":0.1,"Morocco":0.1,"Mozambique":0.1,"Myanmar":0.1,"Namibia":0.1,"Nauru":0.1,"Nepal":0.1,"Nicaragua":0.1,"Niger":0.1,"Nigeria":0.1,"North Korea":0.1,"North Macedonia":0.1,"Oman":0.2,"Pakistan":0.1,"Palau":0.1,"Panama":0.1,"Papua New Guinea":0.1,"Paraguay":0.1,"Peru":0.1,"Philippines":0.1,"Poland":0.1,"Portugal":0.1,"Qatar":0.3,"Romania":0.1,"Rwanda":0.1,"Saint Kitts and Nevis":0.1,"Saint Lucia":0.1,"Saint Vincent and the Grenadines":0.1,"Samoa":0.1,"San Marino":0.1,"São Tomé and Príncipe":0.1,"Saudi Arabia":0.2,"Senegal":0.1,"Serbia":0.1,"Seychelles":0.1,"Sierra Leone":0.1,"Singapore":0.1,"Slovakia":0.1,"Slovenia":0.1,"Solomon Islands":0.1,"Somalia":0.1,"South Sudan":0.1,"Spain":0.1,"Sri Lanka":0.1,"Sudan":0.1,"Suriname":0.1,"Syria":0.1,"Tajikistan":0.1,"Tanzania":0.1,"Thailand":0.1,"Timor-Leste":0.1,"Togo":0.1,"Tonga":0.1,"Trinidad and Tobago":0.1,"Tunisia":0.1,"Turkmenistan":0.1,"Tuvalu":0.1,"Uganda":0.1,"Ukraine":0.1,"United Arab Emirates":0.3,"Uruguay":0.1,"Uzbekistan":0.1,"Vanuatu":0.1,"Vatican City":0.1,"Venezuela":0.1,"Vietnam":0.1,"Yemen":0.1,"Zambia":0.1,"Zimbabwe":0.1,"Taiwan":0.1},
-
-  2022: {"Norway":79.0,"Netherlands":23.0,"Sweden":32.0,"Denmark":20.5,"Switzerland":17.0,"France":13.3,"United Kingdom":16.6,"Germany":17.7,"Belgium":10.5,"Austria":9.0,"Finland":19.0,"Iceland":40.0,"China":21.0,"United States":5.8,"Japan":3.2,"South Korea":9.0,"India":1.2,"Brazil":1.2,"Russia":1.2,"Turkey":1.2,"Mexico":1.2,"South Africa":1.0,"Australia":3.0,"New Zealand":4.5,"Canada":5.5,"Afghanistan":0.1,"Albania":0.1,"Algeria":0.1,"Andorra":0.1,"Angola":0.1,"Antigua and Barbuda":0.1,"Equatorial Guinea":0.1,"Argentina":0.1,"Armenia":0.1,"Azerbaijan":0.1,"Ethiopia":0.1,"Bahamas":0.1,"Bahrain":0.2,"Bangladesh":0.1,"Barbados":0.1,"Belarus":0.1,"Belize":0.1,"Benin":0.1,"Bhutan":0.1,"Bolivia":0.1,"Bosnia and Herzegovina":0.1,"Botswana":0.1,"Brunei":0.1,"Bulgaria":0.1,"Burkina Faso":0.1,"Burundi":0.1,"Cabo Verde":0.1,"Chile":0.1,"Colombia":0.1,"Comoros":0.1,"Congo (Republic)":0.1,"Congo (Democratic Republic)":0.1,"Costa Rica":0.1,"Croatia":0.1,"Cuba":0.1,"Cyprus":0.1,"Czech Republic":0.1,"Djibouti":0.1,"Dominica":0.1,"Dominican Republic":0.1,"Ecuador":0.1,"Egypt":0.2,"El Salvador":0.1,"Eritrea":0.1,"Estonia":0.1,"Eswatini":0.1,"Fiji":0.1,"Gabon":0.1,"Gambia":0.1,"Georgia":0.1,"Ghana":0.1,"Greece":0.1,"Grenada":0.1,"Guatemala":0.1,"Guinea":0.1,"Guinea-Bissau":0.1,"Guyana":0.1,"Haiti":0.1,"Honduras":0.1,"Hungary":0.1,"Indonesia":0.1,"Iran":0.1,"Iraq":0.1,"Ireland":0.1,"Israel":0.3,"Italy":0.1,"Jamaica":0.1,"Jordan":0.2,"Kazakhstan":0.1,"Kenya":0.2,"Kiribati":0.1,"Kosovo":0.1,"Kuwait":0.2,"Kyrgyzstan":0.1,"Laos":0.1,"Latvia":0.1,"Lebanon":0.2,"Lesotho":0.1,"Liberia":0.1,"Libya":0.1,"Liechtenstein":0.1,"Lithuania":0.1,"Luxembourg":0.1,"Madagascar":0.1,"Malawi":0.1,"Malaysia":0.1,"Maldives":0.1,"Mali":0.1,"Malta":0.1,"Marshall Islands":0.1,"Mauritania":0.1,"Mauritius":0.1,"Micronesia":0.1,"Moldova":0.1,"Monaco":0.1,"Mongolia":0.1,"Montenegro":0.1,"Morocco":0.1,"Mozambique":0.1,"Myanmar":0.1,"Namibia":0.1,"Nauru":0.1,"Nepal":0.1,"Nicaragua":0.1,"Niger":0.1,"Nigeria":0.1,"North Korea":0.1,"North Macedonia":0.1,"Oman":0.2,"Pakistan":0.1,"Palau":0.1,"Panama":0.1,"Papua New Guinea":0.1,"Paraguay":0.1,"Peru":0.1,"Philippines":0.1,"Poland":0.1,"Portugal":0.1,"Qatar":0.3,"Romania":0.1,"Rwanda":0.1,"Saint Kitts and Nevis":0.1,"Saint Lucia":0.1,"Saint Vincent and the Grenadines":0.1,"Samoa":0.1,"San Marino":0.1,"São Tomé and Príncipe":0.1,"Saudi Arabia":0.2,"Senegal":0.1,"Serbia":0.1,"Seychelles":0.1,"Sierra Leone":0.1,"Singapore":0.1,"Slovakia":0.1,"Slovenia":0.1,"Solomon Islands":0.1,"Somalia":0.1,"South Sudan":0.1,"Spain":0.1,"Sri Lanka":0.1,"Sudan":0.1,"Suriname":0.1,"Syria":0.1,"Tajikistan":0.1,"Tanzania":0.1,"Thailand":0.1,"Timor-Leste":0.1,"Togo":0.1,"Tonga":0.1,"Trinidad and Tobago":0.1,"Tunisia":0.1,"Turkmenistan":0.1,"Tuvalu":0.1,"Uganda":0.1,"Ukraine":0.1,"United Arab Emirates":0.3,"Uruguay":0.1,"Uzbekistan":0.1,"Vanuatu":0.1,"Vatican City":0.1,"Venezuela":0.1,"Vietnam":0.1,"Yemen":0.1,"Zambia":0.1,"Zimbabwe":0.1,"Taiwan":0.1},
-
-  2023: {"Norway":82.0,"Netherlands":30.0,"Sweden":39.0,"Denmark":31.0,"Switzerland":18.5,"France":16.8,"United Kingdom":16.5,"Germany":18.4,"Belgium":21.0,"Austria":11.0,"Finland":22.0,"Iceland":45.0,"China":26.0,"United States":7.6,"Japan":3.2,"South Korea":9.0,"India":1.8,"Brazil":1.8,"Russia":1.8,"Turkey":1.8,"Mexico":1.8,"South Africa":1.2,"Australia":4.0,"New Zealand":6.0,"Canada":8.0,"Afghanistan":0.1,"Albania":0.1,"Algeria":0.1,"Andorra":0.1,"Angola":0.1,"Antigua and Barbuda":0.1,"Equatorial Guinea":0.1,"Argentina":0.1,"Armenia":0.1,"Azerbaijan":0.1,"Ethiopia":0.1,"Bahamas":0.1,"Bahrain":0.2,"Bangladesh":0.1,"Barbados":0.1,"Belarus":0.1,"Belize":0.1,"Benin":0.1,"Bhutan":0.1,"Bolivia":0.1,"Bosnia and Herzegovina":0.1,"Botswana":0.1,"Brunei":0.1,"Bulgaria":0.1,"Burkina Faso":0.1,"Burundi":0.1,"Cabo Verde":0.1,"Chile":0.1,"Colombia":0.1,"Comoros":0.1,"Congo (Republic)":0.1,"Congo (Democratic Republic)":0.1,"Costa Rica":0.1,"Croatia":0.1,"Cuba":0.1,"Cyprus":0.1,"Czech Republic":0.1,"Djibouti":0.1,"Dominica":0.1,"Dominican Republic":0.1,"Ecuador":0.1,"Egypt":0.2,"El Salvador":0.1,"Eritrea":0.1,"Estonia":0.1,"Eswatini":0.1,"Fiji":0.1,"Gabon":0.1,"Gambia":0.1,"Georgia":0.1,"Ghana":0.1,"Greece":0.1,"Grenada":0.1,"Guatemala":0.1,"Guinea":0.1,"Guinea-Bissau":0.1,"Guyana":0.1,"Haiti":0.1,"Honduras":0.1,"Hungary":0.1,"Indonesia":0.1,"Iran":0.1,"Iraq":0.1,"Ireland":0.1,"Israel":0.3,"Italy":0.1,"Jamaica":0.1,"Jordan":0.2,"Kazakhstan":0.1,"Kenya":0.2,"Kiribati":0.1,"Kosovo":0.1,"Kuwait":0.2,"Kyrgyzstan":0.1,"Laos":0.1,"Latvia":0.1,"Lebanon":0.2,"Lesotho":0.1,"Liberia":0.1,"Libya":0.1,"Liechtenstein":0.1,"Lithuania":0.1,"Luxembourg":0.1,"Madagascar":0.1,"Malawi":0.1,"Malaysia":0.1,"Maldives":0.1,"Mali":0.1,"Malta":0.1,"Marshall Islands":0.1,"Mauritania":0.1,"Mauritius":0.1,"Micronesia":0.1,"Moldova":0.1,"Monaco":0.1,"Mongolia":0.1,"Montenegro":0.1,"Morocco":0.1,"Mozambique":0.1,"Myanmar":0.1,"Namibia":0.1,"Nauru":0.1,"Nepal":0.1,"Nicaragua":0.1,"Niger":0.1,"Nigeria":0.1,"North Korea":0.1,"North Macedonia":0.1,"Oman":0.2,"Pakistan":0.1,"Palau":0.1,"Panama":0.1,"Papua New Guinea":0.1,"Paraguay":0.1,"Peru":0.1,"Philippines":0.1,"Poland":0.1,"Portugal":0.1,"Qatar":0.3,"Romania":0.1,"Rwanda":0.1,"Saint Kitts and Nevis":0.1,"Saint Lucia":0.1,"Saint Vincent and the Grenadines":0.1,"Samoa":0.1,"San Marino":0.1,"São Tomé and Príncipe":0.1,"Saudi Arabia":0.2,"Senegal":0.1,"Serbia":0.1,"Seychelles":0.1,"Sierra Leone":0.1,"Singapore":0.1,"Slovakia":0.1,"Slovenia":0.1,"Solomon Islands":0.1,"Somalia":0.1,"South Sudan":0.1,"Spain":0.1,"Sri Lanka":0.1,"Sudan":0.1,"Suriname":0.1,"Syria":0.1,"Tajikistan":0.1,"Tanzania":0.1,"Thailand":0.1,"Timor-Leste":0.1,"Togo":0.1,"Tonga":0.1,"Trinidad and Tobago":0.1,"Tunisia":0.1,"Turkmenistan":0.1,"Tuvalu":0.1,"Uganda":0.1,"Ukraine":0.1,"United Arab Emirates":0.3,"Uruguay":0.1,"Uzbekistan":0.1,"Vanuatu":0.1,"Vatican City":0.1,"Venezuela":0.1,"Vietnam":0.1,"Yemen":0.1,"Zambia":0.1,"Zimbabwe":0.1,"Taiwan":0.1},
-
-  2024: {"Norway":90.0,"Netherlands":35.0,"Sweden":35.0,"Denmark":40.0,"Finland":25.0,"Belgium":25.0,"Germany":13.5,"United Kingdom":19.6,"France":17.2,"Austria":12.0,"Switzerland":20.4,"Luxembourg":24.0,"Portugal":17.5,"Spain":5.1,"Italy":4.2,"Czech Republic":3.5,"Poland":3.8,"China":35.0,"United States":8.1,"Japan":3.4,"South Korea":9.0,"Australia":7.2,"Canada":9.5,"India":2.5,"Thailand":12.0,"Malaysia":1.4,"Indonesia":0.8,"Brazil":6.2,"Turkey":17.0,"Mexico":3.1,"Argentina":2.8,"South Africa":1.9,"Israel":19.0,"New Zealand":12.0,"Vietnam":6.5,"Philippines":2.0,"Taiwan":5.0,"Pakistan":0.9,"Bangladesh":0.8,"Iran":2.8,"Saudi Arabia":3.0,"United Arab Emirates":4.5,"Kazakhstan":1.5,"Afghanistan":0.6,"Albania":0.8,"Algeria":0.8,"Andorra":0.8,"Angola":0.8,"Antigua and Barbuda":0.8,"Equatorial Guinea":0.8,"Armenia":0.8,"Azerbaijan":0.8,"Ethiopia":0.8,"Bahamas":0.8,"Bahrain":1.2,"Barbados":0.8,"Belarus":1.2,"Belize":0.8,"Benin":0.8,"Bhutan":0.8,"Bolivia":0.8,"Bosnia and Herzegovina":0.8,"Botswana":0.8,"Brunei":0.8,"Bulgaria":1.0,"Burkina Faso":0.7,"Burundi":0.7,"Cabo Verde":0.8,"Chile":0.8,"Colombia":0.8,"Comoros":0.8,"Congo (Republic)":0.7,"Congo (Democratic Republic)":0.7,"Costa Rica":0.8,"Croatia":1.5,"Cuba":0.8,"Cyprus":1.2,"Djibouti":0.7,"Dominica":0.8,"Dominican Republic":0.8,"Ecuador":0.8,"Egypt":2.0,"El Salvador":0.8,"Eritrea":0.7,"Estonia":2.0,"Eswatini":0.8,"Fiji":0.8,"Gabon":1.0,"Gambia":0.7,"Georgia":1.0,"Ghana":1.0,"Greece":1.5,"Grenada":0.8,"Guatemala":0.8,"Guinea":0.7,"Guinea-Bissau":0.7,"Guyana":0.8,"Haiti":0.8,"Honduras":0.8,"Hungary":2.0,"Iceland":50.0,"Ireland":8.0,"Jamaica":0.8,"Jordan":1.5,"Kenya":1.4,"Kiribati":0.8,"Kosovo":1.0,"Kuwait":1.5,"Kyrgyzstan":1.0,"Laos":0.9,"Latvia":3.0,"Lebanon":2.0,"Lesotho":0.8,"Liberia":0.7,"Libya":0.9,"Liechtenstein":5.0,"Lithuania":4.0,"Madagascar":0.8,"Malawi":0.7,"Maldives":0.8,"Mali":0.7,"Malta":3.0,"Marshall Islands":0.8,"Mauritania":0.8,"Mauritius":1.0,"Micronesia":0.8,"Moldova":1.0,"Monaco":8.0,"Mongolia":1.0,"Montenegro":1.5,"Morocco":1.2,"Mozambique":0.8,"Myanmar":1.0,"Namibia":0.8,"Nauru":0.8,"Nepal":0.8,"Nicaragua":0.8,"Niger":0.7,"Nigeria":1.0,"North Korea":0.8,"North Macedonia":1.5,"Oman":1.2,"Palau":0.8,"Panama":0.8,"Papua New Guinea":0.8,"Paraguay":0.8,"Peru":0.8,"Philippines":2.0,"Qatar":1.5,"Romania":2.5,"Rwanda":1.0,"Saint Kitts and Nevis":0.8,"Saint Lucia":0.8,"Saint Vincent and the Grenadines":0.8,"Samoa":0.8,"San Marino":2.0,"São Tomé and Príncipe":0.8,"Senegal":1.1,"Serbia":2.0,"Seychelles":1.0,"Sierra Leone":0.7,"Singapore":5.0,"Slovakia":2.0,"Slovenia":3.0,"Solomon Islands":0.8,"Somalia":0.7,"South Sudan":0.7,"Sri Lanka":1.0,"Sudan":0.7,"Suriname":0.8,"Syria":0.8,"Tajikistan":1.0,"Tanzania":0.9,"Timor-Leste":0.8,"Togo":0.8,"Tonga":0.8,"Trinidad and Tobago":0.8,"Tunisia":1.0,"Turkmenistan":1.2,"Tuvalu":0.8,"Uganda":0.8,"Ukraine":1.5,"Uruguay":0.8,"Uzbekistan":1.4,"Vanuatu":0.8,"Vatican City":1.0,"Venezuela":0.8,"Yemen":0.8,"Zambia":0.8,"Zimbabwe":0.7},
-
-  2025: {"Norway":95.9,"Denmark":68.5,"Sweden":36.5,"Finland":37.2,"Netherlands":40.2,"Belgium":34.7,"Germany":19.1,"United Kingdom":23.4,"France":20.0,"Austria":21.3,"Switzerland":22.8,"Luxembourg":26.9,"Portugal":23.2,"Spain":8.8,"Italy":6.2,"Czech Republic":5.6,"Poland":7.2,"China":40.0,"United States":9.0,"Japan":4.0,"South Korea":10.0,"India":3.2,"Thailand":13.0,"Malaysia":2.8,"Indonesia":2.0,"Vietnam":7.0,"Philippines":2.5,"Taiwan":5.8,"Pakistan":1.0,"Bangladesh":0.9,"Iran":3.0,"Saudi Arabia":3.5,"United Arab Emirates":4.8,"Israel":11.0,"Kazakhstan":1.8,"Turkey":18.0,"Brazil":7.8,"Argentina":3.0,"Chile":6.2,"Colombia":4.1,"Peru":2.8,"Venezuela":1.1,"Bolivia":1.4,"Paraguay":1.9,"Uruguay":4.2,"Ecuador":2.5,"Guyana":0.7,"Suriname":0.4,"Afghanistan":0.8,"Albania":1.2,"Algeria":1.0,"Andorra":2.0,"Angola":1.0,"Antigua and Barbuda":1.0,"Equatorial Guinea":1.0,"Armenia":1.2,"Azerbaijan":1.0,"Ethiopia":1.0,"Bahamas":1.0,"Bahrain":1.5,"Barbados":1.0,"Belarus":1.5,"Belize":1.0,"Benin":1.1,"Bhutan":1.0,"Bosnia and Herzegovina":1.5,"Botswana":1.0,"Brunei":1.5,"Bulgaria":3.0,"Burkina Faso":1.0,"Burundi":0.9,"Cabo Verde":1.2,"Comoros":1.0,"Congo (Republic)":0.9,"Congo (Democratic Republic)":0.9,"Costa Rica":1.5,"Croatia":4.0,"Cuba":1.0,"Cyprus":3.0,"Djibouti":0.9,"Dominica":1.0,"Dominican Republic":1.2,"Egypt":2.5,"El Salvador":1.0,"Eritrea":0.9,"Estonia":6.0,"Eswatini":1.0,"Fiji":1.0,"Gabon":1.2,"Gambia":1.0,"Georgia":2.0,"Ghana":1.2,"Greece":3.5,"Grenada":1.0,"Guatemala":1.0,"Guinea":1.0,"Guinea-Bissau":1.0,"Haiti":1.0,"Honduras":1.0,"Hungary":5.0,"Iceland":57.0,"Ireland":12.0,"Jamaica":1.0,"Jordan":2.0,"Kenya":1.6,"Kiribati":1.0,"Kosovo":1.5,"Kuwait":1.8,"Kyrgyzstan":1.2,"Laos":1.1,"Latvia":5.0,"Lebanon":2.5,"Lesotho":1.0,"Liberia":1.0,"Libya":1.2,"Liechtenstein":10.0,"Lithuania":8.0,"Madagascar":1.0,"Malawi":0.9,"Maldives":1.5,"Mali":1.0,"Malta":6.0,"Marshall Islands":1.0,"Mauritania":1.1,"Mauritius":2.0,"Micronesia":1.0,"Moldova":2.0,"Monaco":15.0,"Mongolia":1.5,"Montenegro":3.0,"Morocco":2.0,"Mozambique":1.0,"Myanmar":1.2,"Namibia":1.2,"Nauru":1.0,"Nepal":1.2,"Nicaragua":1.0,"Niger":1.0,"Nigeria":1.2,"North Korea":1.0,"North Macedonia":3.0,"Oman":1.5,"Palau":1.0,"Panama":1.2,"Papua New Guinea":1.0,"Philippines":2.5,"Qatar":1.8,"Romania":6.0,"Rwanda":1.2,"Saint Kitts and Nevis":1.0,"Saint Lucia":1.0,"Saint Vincent and the Grenadines":1.0,"Samoa":1.0,"San Marino":5.0,"São Tomé and Príncipe":1.0,"Senegal":1.3,"Serbia":4.0,"Seychelles":2.0,"Sierra Leone":1.0,"Singapore":8.0,"Slovakia":4.0,"Slovenia":6.0,"Solomon Islands":1.0,"Somalia":0.9,"South Sudan":1.0,"Sri Lanka":1.5,"Sudan":1.0,"Syria":1.0,"Tajikistan":1.2,"Tanzania":1.1,"Timor-Leste":1.0,"Togo":1.1,"Tonga":1.0,"Trinidad and Tobago":1.0,"Tunisia":1.5,"Turkmenistan":1.5,"Tuvalu":1.0,"Uganda":1.0,"Ukraine":3.0,"Vatican City":2.0,"Yemen":1.0,"Zambia":1.0,"Zimbabwe":0.9},
-
-  2026: {"Norway":96.0,"Denmark":68.0,"Sweden":37.0,"Finland":38.0,"Netherlands":40.0,"Belgium":35.0,"Germany":19.0,"United Kingdom":24.0,"France":20.0,"Austria":21.0,"Switzerland":23.0,"Luxembourg":27.0,"Portugal":23.0,"Spain":8.8,"Italy":6.2,"Czech Republic":5.6,"Poland":7.2,"China":42.0,"United States":9.0,"Japan":4.5,"South Korea":11.0,"India":3.8,"Thailand":15.0,"Malaysia":3.5,"Indonesia":2.5,"Vietnam":8.5,"Philippines":2.8,"Taiwan":6.5,"Pakistan":1.2,"Bangladesh":1.0,"Iran":3.5,"Saudi Arabia":4.0,"United Arab Emirates":5.5,"Israel":12.0,"Kazakhstan":2.0,"Turkey":20.0,"Brazil":8.5,"Argentina":3.2,"Chile":6.8,"Colombia":4.5,"Peru":3.0,"Venezuela":1.2,"Bolivia":1.5,"Paraguay":2.0,"Uruguay":4.5,"Ecuador":2.8,"Guyana":0.8,"Suriname":0.5,"Afghanistan":1.0,"Albania":1.5,"Algeria":1.2,"Andorra":3.0,"Angola":1.2,"Antigua and Barbuda":1.2,"Equatorial Guinea":1.2,"Armenia":1.5,"Azerbaijan":1.2,"Ethiopia":1.2,"Bahamas":1.2,"Bahrain":1.8,"Barbados":1.2,"Belarus":1.8,"Belize":1.2,"Benin":1.3,"Bhutan":1.2,"Bosnia and Herzegovina":2.0,"Botswana":1.2,"Brunei":2.0,"Bulgaria":4.0,"Burkina Faso":1.2,"Burundi":1.1,"Cabo Verde":1.5,"Comoros":1.2,"Congo (Republic)":1.1,"Congo (Democratic Republic)":1.1,"Costa Rica":2.0,"Croatia":5.0,"Cuba":1.2,"Cyprus":4.0,"Djibouti":1.1,"Dominica":1.2,"Dominican Republic":1.5,"Egypt":2.8,"El Salvador":1.2,"Eritrea":1.1,"Estonia":7.0,"Eswatini":1.2,"Fiji":1.2,"Gabon":1.4,"Gambia":1.2,"Georgia":2.5,"Ghana":1.4,"Greece":4.5,"Grenada":1.2,"Guatemala":1.2,"Guinea":1.2,"Guinea-Bissau":1.2,"Haiti":1.2,"Honduras":1.2,"Hungary":6.0,"Iceland":60.0,"Ireland":14.0,"Jamaica":1.2,"Jordan":2.5,"Kenya":1.8,"Kiribati":1.2,"Kosovo":2.0,"Kuwait":2.0,"Kyrgyzstan":1.5,"Laos":1.3,"Latvia":6.0,"Lebanon":2.8,"Lesotho":1.2,"Liberia":1.2,"Libya":1.3,"Liechtenstein":12.0,"Lithuania":9.0,"Madagascar":1.2,"Malawi":1.1,"Maldives":2.0,"Mali":1.2,"Malta":7.0,"Marshall Islands":1.2,"Mauritania":1.3,"Mauritius":2.5,"Micronesia":1.2,"Moldova":2.5,"Monaco":18.0,"Mongolia":2.0,"Montenegro":4.0,"Morocco":2.5,"Mozambique":1.2,"Myanmar":1.4,"Namibia":1.5,"Nauru":1.2,"Nepal":1.5,"Nicaragua":1.2,"Niger":1.2,"Nigeria":1.4,"North Korea":1.2,"North Macedonia":4.0,"Oman":1.8,"Palau":1.2,"Panama":1.5,"Papua New Guinea":1.2,"Qatar":2.0,"Romania":7.0,"Rwanda":1.4,"Saint Kitts and Nevis":1.2,"Saint Lucia":1.2,"Saint Vincent and the Grenadines":1.2,"Samoa":1.2,"San Marino":6.0,"São Tomé and Príncipe":1.2,"Senegal":1.5,"Serbia":5.0,"Seychelles":2.5,"Sierra Leone":1.2,"Singapore":10.0,"Slovakia":5.0,"Slovenia":8.0,"Solomon Islands":1.2,"Somalia":1.1,"South Sudan":1.2,"Sri Lanka":2.0,"Sudan":1.2,"Syria":1.2,"Tajikistan":1.5,"Tanzania":1.3,"Timor-Leste":1.2,"Togo":1.3,"Tonga":1.2,"Trinidad and Tobago":1.2,"Tunisia":2.0,"Turkmenistan":1.8,"Tuvalu":1.2,"Uganda":1.2,"Ukraine":4.0,"Vatican City":3.0,"Yemen":1.2,"Zambia":1.2,"Zimbabwe":1.1}
+  2015: {
+    "Norway":17.1,"Iceland":2.5,"Netherlands":4.0,"Sweden":1.1,
+    "Denmark":0.5,"Switzerland":0.7,"France":0.5,"United Kingdom":0.5,
+    "Germany":0.3,"Belgium":0.2,"Austria":0.2,"Finland":0.2,
+    "China":1.0,"United States":0.6,"Japan":0.2,"South Korea":0.3,
+    "Portugal":0.1,"Spain":0.1,"Italy":0.1
+  },
+  2016: {
+    "Norway":15.7,"Iceland":5.0,"Netherlands":4.5,"Sweden":1.3,
+    "Denmark":0.8,"Switzerland":1.0,"France":0.7,"United Kingdom":0.7,
+    "Germany":0.4,"Belgium":0.3,"Austria":0.3,"Finland":0.3,
+    "Luxembourg":0.7,"China":1.5,"United States":0.9,"Japan":0.3,
+    "South Korea":0.4,"Canada":0.4,"Australia":0.1,"Portugal":0.2,
+    "Spain":0.2,"Italy":0.1,"Czech Republic":0.1
+  },
+  2017: {
+    "Norway":20.9,"Iceland":10.0,"Netherlands":1.5,"Sweden":2.5,
+    "Denmark":1.2,"Switzerland":1.5,"France":0.8,"United Kingdom":0.9,
+    "Germany":0.7,"Belgium":0.4,"Austria":0.5,"Finland":0.5,
+    "Luxembourg":0.9,"China":1.8,"United States":1.0,"Japan":0.3,
+    "South Korea":0.6,"Canada":0.5,"Australia":0.2,"Portugal":0.5,
+    "Spain":0.4,"Italy":0.3,"Czech Republic":0.1,"Poland":0.1,
+    "Hungary":0.1
+  },
+  2018: {
+    "Norway":31.0,"Iceland":17.0,"Netherlands":4.0,"Sweden":3.0,
+    "Denmark":1.5,"Switzerland":2.0,"France":1.0,"United Kingdom":1.0,
+    "Germany":1.0,"Belgium":0.5,"Austria":0.7,"Finland":0.8,
+    "Luxembourg":1.2,"China":2.6,"United States":1.3,"Japan":0.4,
+    "South Korea":0.8,"Canada":1.1,"Australia":0.3,"Portugal":0.7,
+    "Spain":0.5,"Italy":0.4,"Czech Republic":0.2,"Poland":0.2,
+    "Hungary":0.2,"Ireland":0.5,"Greece":0.2,"Slovenia":0.4,
+    "Slovakia":0.1,"Latvia":0.4,"Lithuania":0.4,"Estonia":0.8,
+    "Croatia":0.2,"Bulgaria":0.1,"Romania":0.1,"India":0.1,
+    "Brazil":0.1,"New Zealand":0.5
+  },
+  2019: {
+    "Norway":42.4,"Iceland":20.0,"Netherlands":13.9,"Sweden":4.4,
+    "Denmark":2.5,"Switzerland":3.5,"France":1.9,"United Kingdom":1.5,
+    "Germany":1.8,"Belgium":1.0,"Austria":1.2,"Finland":1.5,
+    "Luxembourg":2.0,"China":3.9,"United States":1.5,"Japan":0.5,
+    "South Korea":1.9,"Canada":1.9,"Australia":0.6,"Portugal":2.0,
+    "Spain":0.9,"Italy":0.8,"Czech Republic":0.3,"Poland":0.3,
+    "Hungary":0.3,"Ireland":1.5,"Greece":0.4,"Slovenia":0.6,
+    "Slovakia":0.2,"Latvia":0.8,"Lithuania":0.8,"Estonia":0.8,
+    "Croatia":0.3,"Bulgaria":0.1,"Romania":0.2,"Malta":0.5,
+    "Cyprus":0.3,"India":0.1,"Brazil":0.1,"New Zealand":1.5,
+    "Israel":0.5,"Russia":0.1,"Turkey":0.1,"Chile":0.2,
+    "Colombia":0.1,"Taiwan":0.5
+  },
+  2020: {
+    "Norway":54.0,"Iceland":45.0,"Netherlands":20.0,"Sweden":23.0,
+    "Denmark":5.5,"Switzerland":7.0,"France":5.5,"United Kingdom":5.5,
+    "Germany":6.5,"Belgium":4.5,"Austria":3.0,"Finland":4.0,
+    "Luxembourg":5.5,"China":4.3,"United States":1.8,"Japan":0.8,
+    "South Korea":2.4,"Canada":2.8,"Australia":0.7,"Portugal":3.5,
+    "Spain":1.7,"Italy":1.5,"Czech Republic":0.5,"Poland":0.5,
+    "Hungary":0.5,"Ireland":4.5,"Greece":0.8,"Slovenia":1.0,
+    "Slovakia":0.3,"Latvia":0.8,"Lithuania":0.8,"Estonia":1.5,
+    "Croatia":0.5,"Bulgaria":0.2,"Romania":0.3,"Malta":1.0,
+    "Cyprus":0.5,"India":0.2,"Brazil":0.3,"New Zealand":2.0,
+    "Israel":1.5,"Russia":0.2,"Turkey":0.3,"Chile":0.5,
+    "Colombia":0.2,"Taiwan":1.0,"Indonesia":0.2,"Thailand":0.2,
+    "Malaysia":0.5,"South Africa":0.2,"Mexico":0.2,"Argentina":0.1,
+    "Vietnam":0.1,"Philippines":0.1,"Pakistan":0.1,"Bangladesh":0.1,
+    "Iran":0.1,"Saudi Arabia":0.2,"United Arab Emirates":0.5,"Kazakhstan":0.1,
+    "Uruguay":0.3,"Peru":0.1,"Ecuador":0.1,"Dominican Republic":0.1,
+    "Costa Rica":0.3,"Panama":0.3,"Guatemala":0.1,"Honduras":0.1,
+    "Nicaragua":0.1,"Jamaica":0.1,"Cuba":0.1,"Bahamas":0.2,
+    "Belize":0.1,"Puerto Rico":0.3,"Bolivia":0.1,"Paraguay":0.1,
+    "Guyana":0.1,"Suriname":0.1,"Sri Lanka":0.1,"Myanmar":0.1,
+    "Cambodia":0.1,"New Caledonia":0.3,"Fiji":0.1,"Vanuatu":0.1,
+    "Solomon Islands":0.1,"French Southern Antarctic Lands":0.0,"Falkland Islands":0.0
+  },
+  2021: {
+    "Norway":72.0,"Iceland":55.0,"Netherlands":22.0,"Sweden":37.0,
+    "Denmark":12.0,"Switzerland":13.5,"France":9.8,"United Kingdom":12.0,
+    "Germany":13.5,"Belgium":8.6,"Austria":6.5,"Finland":12.0,
+    "Luxembourg":12.0,"China":13.0,"United States":2.9,"Japan":0.9,
+    "South Korea":5.7,"Canada":4.2,"Australia":2.0,"Portugal":7.5,
+    "Spain":3.3,"Italy":4.6,"Czech Republic":1.3,"Poland":1.6,
+    "Hungary":1.8,"Ireland":7.5,"Greece":2.0,"Slovenia":2.5,
+    "Slovakia":0.9,"Latvia":2.0,"Lithuania":2.2,"Estonia":3.5,
+    "Croatia":1.4,"Bulgaria":0.4,"Romania":0.6,"Malta":1.5,
+    "Cyprus":0.8,"India":0.4,"Brazil":0.5,"New Zealand":3.5,
+    "Israel":3.0,"Russia":0.4,"Turkey":0.5,"Chile":1.0,
+    "Colombia":0.5,"Taiwan":2.0,"Indonesia":0.2,"Thailand":0.4,
+    "Malaysia":0.5,"South Africa":0.3,"Mexico":0.4,"Argentina":0.2,
+    "Vietnam":0.5,"Philippines":0.2,"Pakistan":0.1,"Bangladesh":0.1,
+    "Iran":0.2,"Saudi Arabia":0.4,"United Arab Emirates":1.0,"Kazakhstan":0.2,
+    "Uruguay":0.8,"Peru":0.3,"Ecuador":0.3,"Dominican Republic":0.3,
+    "Costa Rica":0.8,"Panama":0.6,"Guatemala":0.2,"Honduras":0.2,
+    "Nicaragua":0.2,"Jamaica":0.2,"Cuba":0.1,"Bahamas":0.4,
+    "Belize":0.2,"Puerto Rico":0.8,"Bolivia":0.1,"Paraguay":0.2,
+    "Guyana":0.1,"Suriname":0.1,"Sri Lanka":0.1,"Myanmar":0.1,
+    "Cambodia":0.1,"New Caledonia":0.5,"Fiji":0.2,"Vanuatu":0.1,
+    "Solomon Islands":0.1,"French Southern Antarctic Lands":0.0,"Falkland Islands":0.0
+  },
+  2022: {
+    "Norway":79.0,"Iceland":45.0,"Netherlands":23.0,"Sweden":32.0,
+    "Denmark":20.5,"Switzerland":17.0,"France":13.3,"United Kingdom":16.6,
+    "Germany":17.7,"Belgium":10.5,"Austria":9.0,"Finland":19.0,
+    "Luxembourg":19.0,"China":21.0,"United States":5.8,"Japan":3.2,
+    "South Korea":9.0,"Canada":5.0,"Australia":3.8,"Portugal":11.2,
+    "Spain":4.6,"Italy":3.7,"Czech Republic":2.0,"Poland":2.4,
+    "Hungary":2.5,"Ireland":9.5,"Greece":3.0,"Slovenia":3.5,
+    "Slovakia":1.8,"Latvia":3.5,"Lithuania":3.0,"Estonia":5.0,
+    "Croatia":2.0,"Bulgaria":0.8,"Romania":1.5,"Malta":2.0,
+    "Cyprus":1.2,"India":0.7,"Brazil":2.5,"New Zealand":5.0,
+    "Israel":7.0,"Russia":2.3,"Turkey":1.8,"Chile":2.5,
+    "Colombia":1.0,"Taiwan":3.0,"Indonesia":0.9,"Thailand":2.0,
+    "Malaysia":0.8,"South Africa":0.4,"Mexico":0.7,"Argentina":0.3,
+    "Vietnam":1.5,"Philippines":0.5,"Pakistan":0.2,"Bangladesh":0.2,
+    "Iran":0.5,"Saudi Arabia":0.8,"United Arab Emirates":2.0,"Kazakhstan":0.5,
+    "Uruguay":1.5,"Peru":0.5,"Ecuador":0.5,"Dominican Republic":0.5,
+    "Costa Rica":1.5,"Panama":1.0,"Guatemala":0.3,"Honduras":0.3,
+    "Nicaragua":0.3,"Jamaica":0.4,"Cuba":0.2,"Bahamas":0.7,
+    "Belize":0.3,"Puerto Rico":1.5,"Bolivia":0.2,"Paraguay":0.4,
+    "Guyana":0.2,"Suriname":0.2,"Sri Lanka":0.3,"Myanmar":0.1,
+    "Cambodia":0.2,"New Caledonia":0.8,"Fiji":0.3,"Vanuatu":0.2,
+    "Solomon Islands":0.1,"French Southern Antarctic Lands":0.0,"Falkland Islands":0.0
+  },
+  2023: {
+    "Norway":82.0,"Iceland":52.0,"Netherlands":30.0,"Sweden":39.0,
+    "Denmark":31.0,"Switzerland":18.5,"France":16.8,"United Kingdom":16.5,
+    "Germany":18.4,"Belgium":21.0,"Austria":11.0,"Finland":22.0,
+    "Luxembourg":22.0,"China":26.0,"United States":7.6,"Japan":3.2,
+    "South Korea":9.0,"Canada":7.0,"Australia":7.2,"Portugal":14.5,
+    "Spain":3.6,"Italy":3.7,"Czech Republic":2.8,"Poland":3.2,
+    "Hungary":3.5,"Ireland":12.5,"Greece":4.0,"Slovenia":4.8,
+    "Slovakia":2.5,"Latvia":5.0,"Lithuania":4.5,"Estonia":7.0,
+    "Croatia":2.8,"Bulgaria":1.5,"Romania":2.0,"Malta":3.0,
+    "Cyprus":2.8,"India":2.0,"Brazil":4.1,"New Zealand":8.0,
+    "Israel":12.0,"Russia":1.7,"Turkey":4.3,"Chile":4.5,
+    "Colombia":2.5,"Taiwan":4.0,"Indonesia":1.7,"Thailand":9.5,
+    "Malaysia":1.0,"South Africa":1.1,"Mexico":1.5,"Argentina":1.5,
+    "Vietnam":4.5,"Philippines":1.0,"Pakistan":0.4,"Bangladesh":0.3,
+    "Iran":1.8,"Saudi Arabia":2.0,"United Arab Emirates":3.5,"Kazakhstan":0.8,
+    "Uruguay":2.5,"Peru":1.5,"Ecuador":1.0,"Dominican Republic":1.0,
+    "Costa Rica":2.5,"Panama":1.5,"Guatemala":0.5,"Honduras":0.5,
+    "Nicaragua":0.5,"Jamaica":0.8,"Cuba":0.3,"Bahamas":1.2,
+    "Belize":0.5,"Puerto Rico":3.0,"Bolivia":0.5,"Paraguay":0.8,
+    "Guyana":0.3,"Suriname":0.3,"Sri Lanka":0.8,"Myanmar":0.3,
+    "Cambodia":0.5,"New Caledonia":1.2,"Fiji":0.7,"Vanuatu":0.3,
+    "Solomon Islands":0.2,"French Southern Antarctic Lands":0.0,"Falkland Islands":0.0
+  },
+  2024: {
+    "Norway":90.0,"Iceland":54.0,"Sweden":35.0,"Denmark":40.0,
+    "Finland":25.0,"Netherlands":35.0,"Belgium":25.0,"Germany":13.5,
+    "United Kingdom":19.6,"France":17.2,"Austria":12.0,"Switzerland":20.4,
+    "Luxembourg":24.0,"Portugal":17.5,"Spain":5.1,"Italy":4.2,
+    "Czech Republic":3.5,"Poland":3.8,"Hungary":4.0,"Romania":2.8,
+    "Slovakia":3.0,"Slovenia":5.5,"Croatia":3.2,"Bulgaria":2.1,
+    "Latvia":6.0,"Lithuania":5.2,"Estonia":8.0,"Greece":5.0,
+    "Ireland":14.5,"Malta":4.0,"Cyprus":3.5,"China":35.0,
+    "United States":8.1,"Japan":3.4,"South Korea":9.0,"Australia":7.2,
+    "Canada":9.5,"India":2.5,"Thailand":12.0,"Malaysia":1.4,
+    "Indonesia":0.8,"Brazil":6.2,"Russia":4.8,"Turkey":17.0,
+    "Mexico":3.1,"Argentina":2.8,"South Africa":1.9,"Israel":19.0,
+    "New Zealand":12.0,"Vietnam":6.5,"Philippines":2.0,"Taiwan":5.0,
+    "Pakistan":0.9,"Bangladesh":0.8,"Iran":2.8,"Saudi Arabia":3.0,
+    "United Arab Emirates":4.5,"Kazakhstan":1.5,"Sri Lanka":1.5,"Myanmar":0.7,
+    "Cambodia":0.9,"New Caledonia":2.1,"Fiji":1.3,"Vanuatu":0.6,
+    "Solomon Islands":0.4,"Dominican Republic":1.8,"Cuba":1.2,"Bahamas":2.5,
+    "Nicaragua":0.9,"Honduras":1.1,"Guatemala":0.8,"Panama":2.4,
+    "Costa Rica":3.7,"Belize":1.3,"Jamaica":1.7,"Puerto Rico":5.0,
+    "Chile":6.5,"Colombia":4.0,"Peru":2.5,"Venezuela":1.0,
+    "Bolivia":1.2,"Paraguay":1.8,"Uruguay":4.0,"Ecuador":2.2,
+    "Guyana":0.6,"Suriname":0.4,"French Southern Antarctic Lands":0.0,"Falkland Islands":0.0
+  },
+  2025: {
+    "Norway":95.9,"Denmark":68.5,"Sweden":36.5,"Finland":37.2,
+    "Netherlands":40.2,"Belgium":34.7,"Germany":19.1,"United Kingdom":23.4,
+    "France":20.0,"Austria":21.3,"Switzerland":22.8,"Luxembourg":26.9,
+    "Portugal":23.2,"Spain":8.8,"Italy":6.2,"Czech Republic":5.6,
+    "Poland":7.2,"Ireland":18.9,"Slovenia":11.2,"Hungary":8.5,
+    "Slovakia":4.7,"Greece":6.2,"Latvia":7.1,"Lithuania":7.5,
+    "Estonia":6.6,"Croatia":1.8,"Bulgaria":4.9,"Malta":37.9,
+    "Cyprus":10.1,"Iceland":60.0,"China":40.0,"United States":9.0,
+    "Japan":4.0,"South Korea":10.0,"Australia":8.5,"Canada":11.5,
+    "Brazil":8.5,"Turkey":18.0,"India":3.2,"Thailand":13.0,
+    "Malaysia":2.8,"Indonesia":2.0,"Vietnam":7.0,"Philippines":2.5,
+    "Taiwan":5.8,"Pakistan":1.0,"Bangladesh":0.9,"Iran":3.0,
+    "Saudi Arabia":3.5,"United Arab Emirates":4.8,"Israel":11.0,"Kazakhstan":1.8,
+    "New Zealand":14.0,"Russia":5.5,"Mexico":4.0,"Argentina":3.5,
+    "South Africa":2.5,"Chile":6.2,"Colombia":4.1,"Peru":2.8,
+    "Venezuela":1.1,"Bolivia":1.4,"Paraguay":1.9,"Uruguay":4.2,
+    "Ecuador":2.5,"Guyana":0.7,"Suriname":0.4,"Sri Lanka":1.6,
+    "Myanmar":0.8,"Cambodia":1.0,"New Caledonia":2.3,"Fiji":1.4,
+    "Vanuatu":0.7,"Solomon Islands":0.5,"Dominican Republic":1.9,"Cuba":1.3,
+    "Bahamas":2.8,"Nicaragua":1.0,"Honduras":1.2,"Guatemala":0.9,
+    "Panama":2.6,"Costa Rica":3.9,"Belize":1.4,"Jamaica":1.8,
+    "Puerto Rico":5.2,"French Southern Antarctic Lands":0.0,"Falkland Islands":0.0
+  },
+  2026: {
+    "Norway":96.0,"Denmark":68.0,"Sweden":37.0,"Finland":38.0,
+    "Netherlands":40.0,"Belgium":35.0,"Germany":19.0,"United Kingdom":24.0,
+    "France":20.0,"Austria":21.0,"Switzerland":23.0,"Luxembourg":27.0,
+    "Portugal":23.0,"Spain":8.8,"Italy":6.2,"Czech Republic":5.6,
+    "Poland":7.2,"Ireland":19.0,"Slovenia":11.2,"Hungary":8.5,
+    "Slovakia":4.7,"Greece":6.2,"Latvia":7.1,"Lithuania":7.5,
+    "Estonia":6.6,"Croatia":1.8,"Bulgaria":4.9,"Malta":38.0,
+    "Cyprus":10.1,"Iceland":62.0,"China":42.0,"United States":9.0,
+    "Japan":4.5,"South Korea":11.0,"Australia":8.0,"Canada":11.0,
+    "Brazil":8.0,"Turkey":20.0,"India":3.8,"Thailand":15.0,
+    "Malaysia":3.5,"Indonesia":2.5,"Vietnam":8.5,"Philippines":2.8,
+    "Taiwan":6.5,"Pakistan":1.2,"Bangladesh":1.0,"Iran":3.5,
+    "Saudi Arabia":4.0,"United Arab Emirates":5.5,"Israel":12.0,"Kazakhstan":2.0,
+    "New Zealand":15.0,"Russia":5.5,"Mexico":4.5,"Argentina":4.0,
+    "South Africa":2.8,"Chile":6.8,"Colombia":4.5,"Peru":3.0,
+    "Venezuela":1.2,"Bolivia":1.5,"Paraguay":2.0,"Uruguay":4.5,
+    "Ecuador":2.8,"Guyana":0.8,"Suriname":0.5,"Sri Lanka":1.8,
+    "Myanmar":0.9,"Cambodia":1.2,"New Caledonia":2.5,"Fiji":1.5,
+    "Vanuatu":0.8,"Solomon Islands":0.6,"Dominican Republic":2.1,"Cuba":1.4,
+    "Bahamas":3.0,"Nicaragua":1.1,"Honduras":1.3,"Guatemala":1.0,
+    "Panama":2.8,"Costa Rica":4.2,"Belize":1.5,"Jamaica":2.0,
+    "Puerto Rico":5.5,"French Southern Antarctic Lands":0.0,"Falkland Islands":0.0
+  }
 };
 
-// ==================== FILE_MAP ====================
 const FILE_MAP = {
+  // EU/EEA — monthly data via ECB/Eurostat workflow
   "Austria":"austria","Belgium":"belgium","Bulgaria":"bulgaria","Cyprus":"cyprus",
   "Czech Republic":"czech_republic","Germany":"germany","Denmark":"denmark",
   "Estonia":"estonia","Greece":"greece","Spain":"spain","Finland":"finland",
@@ -620,6 +669,7 @@ const FILE_MAP = {
   "Malta":"malta","Netherlands":"netherlands","Poland":"poland","Portugal":"portugal",
   "Romania":"romania","Sweden":"sweden","Slovenia":"slovenia","Slovakia":"slovakia",
   "Norway":"norway","Switzerland":"switzerland","United Kingdom":"united_kingdom",
+  // Non-EU — annual powertrain data, IEA/OICA sources
   "China":"china","United States":"united_states","Japan":"japan",
   "South Korea":"south_korea","Australia":"australia","Canada":"canada",
   "Brazil":"brazil","Turkey":"turkey","Russia":"russia","India":"india",
@@ -627,66 +677,65 @@ const FILE_MAP = {
   "Indonesia":"indonesia","Thailand":"thailand","Malaysia":"malaysia","Iran":"iran"
 };
 
-// ==================== HELPER FUNCTIONS ====================
-function normName(n){ return NAME_MAP[n] || n; }
+const NAME_MAP = {
+  "United States of America":"United States",
+  "Republic of Korea":"South Korea",
+  "Czechia":"Czech Republic",
+  "United Arab Emirates":"UAE",
+  "Iran (Islamic Republic of)":"Iran",
+  "Russian Federation":"Russia",
+  "United Kingdom of Great Britain and Northern Ireland":"United Kingdom",
+  "Viet Nam":"Vietnam",
+  "Korea, Republic of":"South Korea",
+  "Iran, Islamic Republic of":"Iran",
+  "Türkiye":"Turkey"
+};
+function normName(n){return NAME_MAP[n]||n;}
 function fmt(n){
-  if(!n && n !== 0) return "—";
-  if(n >= 1e6) return (n/1e6).toFixed(2).replace(".",",") + " M";
-  if(n >= 1e3) return Math.round(n/1e3).toLocaleString("en") + " k";
+  if(!n&&n!==0)return"\u2014";
+  if(n>=1e6)return(n/1e6).toFixed(2).replace(".",",")+"\u00a0M";
+  if(n>=1e3)return Math.round(n/1e3).toLocaleString("en")+"\u00a0k";
   return n.toLocaleString("en");
 }
 
-// ==================== GLOBALS ====================
-let currentYear = 2024, selectedCountry = null, colorScale;
-let chartM = null, chartA = null, modalData = null, ptMode = "absolute";
-const svg = d3.select("#map-svg");
-const proj = d3.geoNaturalEarth1().scale(153).translate([480, 270]);
-const pathGen = d3.geoPath().projection(proj);
-const COLORS = {
-  bev:{line:"#00e5ff",fill:"rgba(0,229,255,0.12)"},phev:{line:"#4ade80",fill:"rgba(74,222,128,0.10)"},
-  hybrid:{line:"#facc15",fill:"rgba(250,204,21,0.08)"},petrol:{line:"#f87171",fill:"rgba(248,113,113,0.08)"},
-  diesel:{line:"#94a3b8",fill:"rgba(148,163,184,0.08)"},other:{line:"#c084fc",fill:"rgba(192,132,252,0.08)"}
-};
-const LABELS = {bev:"BEV",phev:"PHEV",hybrid:"Hybrid (non-plug)",petrol:"Petrol / Gasoline",diesel:"Diesel",other:"Other / LPG"};
-const CB = {
-  responsive:true,maintainAspectRatio:false,
-  interaction:{mode:"index",intersect:false},
-  plugins:{
-    legend:{position:"top",labels:{color:"#94a3b8",font:{family:"DM Mono",size:11},boxWidth:14,padding:14}},
-    tooltip:{backgroundColor:"rgba(10,14,23,0.95)",borderColor:"rgba(0,229,255,0.3)",borderWidth:1,titleColor:"#fff",bodyColor:"#94a3b8"}
-  },
-  scales:{
-    x:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#64748b",font:{family:"DM Mono",size:9},maxTicksLimit:20}},
-    y:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#64748b",font:{family:"DM Mono",size:9}}}
-  }
-};
-function buildScale(){
-  return d3.scaleLinear().domain([0,5,20,50,100]).range(["#1a2030","#7c6700","#0d7377","#14a085","#00e5a0"]).clamp(true);
-}
-function resetW(id, cid){
-  const w = document.getElementById(id);
-  if(w) w.innerHTML = `<canvas id="${cid}"></canvas>`;
-}
+// ── Map ───────────────────────────────────────────────────────────────────────
+let currentYear=2024,selectedCountry=null,colorScale;
+const svg=d3.select("#map-svg");
+const proj=d3.geoNaturalEarth1().scale(153).translate([480,270]);
+const pathGen=d3.geoPath().projection(proj);
 
-// ==================== RENDER FUNCTIONS ====================
+function buildScale(){
+  return d3.scaleLinear()
+    .domain([0,5,20,50,100])
+    .range(["#1a2030","#7c6700","#0d7377","#14a085","#00e5a0"])
+    .clamp(true);
+}
 function renderMap(year){
-  colorScale = buildScale();
-  const ev = EV_SHARE[year] || {};
-  svg.selectAll(".country-path").attr("fill", d => {
-    const k = normName(d.properties.name);
-    const s = ev[k];
-    return s != null ? colorScale(s) : "#1a2030";
+  colorScale=buildScale();
+  const ev=EV_SHARE[year]||{};
+  svg.selectAll(".country-path").attr("fill",d=>{
+    const k=normName(d.properties.name);
+    const s=ev[k];
+    return s!=null?colorScale(s):"#1a2030";
   });
   renderTopList(year);
-  document.getElementById("top-year").textContent = year;
-  document.getElementById("last-update").textContent = "BEV share " + year + " · ACEA/IEA";
+  document.getElementById("top-year").textContent=year;
+  document.querySelectorAll(".top-year-ref").forEach(el=>el.textContent=year);
+  // Keep panel title in sync with active list
+  const activeTop = document.getElementById("top-btn-share").classList.contains("active") ? "share" : "volume";
+  const titleEl = document.getElementById("top-panel-title");
+  if(titleEl) titleEl.innerHTML = activeTop==="share"
+    ? `Top 10 &middot; BEV Share % <span id="top-year">${year}</span>`
+    : `Top 10 &middot; BEV Volume <span id="top-year">${year}</span>`;
+  document.getElementById("last-update").textContent="BEV share "+year+" \u00b7 ACEA/IEA";
 }
 
 function renderTopList(year){
-  const ev = EV_SHARE[year] || {};
-  const se = Object.entries(ev).sort((a,b) => b[1]-a[1]).slice(0,10);
-  const ms = se[0]?.[1] || 100;
-  document.getElementById("top-share-list").innerHTML = se.map(([n,p],i) => `
+  const ev=EV_SHARE[year]||{};
+  // Share
+  const se=Object.entries(ev).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const ms=se[0]?.[1]||100;
+  document.getElementById("top-share-list").innerHTML=se.map(([n,p],i)=>`
     <div class="top-item" onclick="selectByName('${n.replace(/'/g,"\\'")}')">
       <span class="top-rank">${i+1}</span>
       <div class="top-bar-wrap">
@@ -695,12 +744,13 @@ function renderTopList(year){
       </div>
       <span class="top-value">${p.toFixed(1)}%</span>
     </div>`).join("");
-  const ve = Object.entries(ev).map(([n,p]) => {
-    const t = (DATA[year][n] || [])[0];
-    return t ? [n, Math.round(t * p / 100)] : null;
-  }).filter(Boolean).sort((a,b) => b[1]-a[1]).slice(0,10);
-  const mv = ve[0]?.[1] || 1;
-  document.getElementById("top-volume-list").innerHTML = ve.map(([n,b],i) => `
+  // Volume
+  const ve=Object.entries(ev).map(([n,p])=>{
+    const t=(DATA[year][n]||[])[0];
+    return t?[n,Math.round(t*p/100)]:null;
+  }).filter(Boolean).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const mv=ve[0]?.[1]||1;
+  document.getElementById("top-volume-list").innerHTML=ve.map(([n,b],i)=>`
     <div class="top-item" onclick="selectByName('${n.replace(/'/g,"\\'")}')">
       <span class="top-rank">${i+1}</span>
       <div class="top-bar-wrap">
@@ -711,74 +761,95 @@ function renderTopList(year){
     </div>`).join("");
 }
 
-function showDetail(rawName, year){
-  const name = normName(rawName);
-  const d = DATA[year]?.[name];
-  const panel = document.getElementById("detail-content");
-  if(!d){
-    panel.innerHTML = `<span style="color:var(--muted)">No data for <b style="color:var(--text)">${rawName}</b> in ${year}.</span>`;
-    return;
-  }
-  const perK = (d[0] / (d[1] * 1000)).toFixed(1);
-  const sorted = Object.entries(DATA[year]).sort((a,b) => b[1][0] - a[1][0]);
-  const rank = sorted.findIndex(([k]) => k === name) + 1;
-  const ev = (EV_SHARE[year] || {})[name];
-  const hasChart = !!FILE_MAP[name];
-  panel.innerHTML = `
+function showDetail(rawName,year){
+  const name=normName(rawName);
+  const d=DATA[year]?.[name];
+  const panel=document.getElementById("detail-content");
+  if(!d){panel.innerHTML=`<span style="color:var(--muted)">No data for <b style="color:var(--text)">${rawName}</b> in ${year}.</span>`;return;}
+  const perK=(d[0]/(d[1]*1000)).toFixed(1);
+  const sorted=Object.entries(DATA[year]).sort((a,b)=>b[1][0]-a[1][0]);
+  const rank=sorted.findIndex(([k])=>k===name)+1;
+  const ev=(EV_SHARE[year]||{})[name];
+  const hasChart=!!FILE_MAP[name];
+  panel.innerHTML=`
     <div class="country-name">${rawName}</div>
     <div class="stat-row"><span class="stat-label">Registrations ${year}</span><span class="stat-value hl">${d[0].toLocaleString("en")}</span></div>
-    ${ev != null ? `<div class="stat-row"><span class="stat-label">BEV share</span><span class="stat-value hl">${ev.toFixed(1)}%</span></div>` : ""}
+    ${ev!=null?`<div class="stat-row"><span class="stat-label">BEV share</span><span class="stat-value hl">${ev.toFixed(1)}%</span></div>`:""}
     <div class="stat-row"><span class="stat-label">Per 1,000 pop.</span><span class="stat-value">${perK}</span></div>
-    <div class="stat-row"><span class="stat-label">Population</span><span class="stat-value">${d[1]} M</span></div>
+    <div class="stat-row"><span class="stat-label">Population</span><span class="stat-value">${d[1]}\u00a0M</span></div>
     <div class="stat-row"><span class="stat-label">World rank</span><span class="stat-value">#${rank} of ${sorted.length}</span></div>
     <div class="stat-row"><span class="stat-label">Source</span><span class="stat-value" style="font-size:.65rem">${d[2]}</span></div>
-    ${hasChart ? `<button class="open-chart-btn" onclick="openModal('${name}')">Monthly & powertrain chart →</button>` : `<div style="margin-top:10px;font-size:.65rem;color:var(--muted)">Chart available for EU/EEA countries only</div>`}`;
+    ${hasChart
+      ?`<button class="open-chart-btn" onclick="openModal('${name}')">&#x1F4CA; Monthly &amp; powertrain chart \u2192</button>`
+      :`<div style="margin-top:10px;font-size:.65rem;color:var(--muted)">&#x1F4ED; Chart available for EU/EEA countries only</div>`}`;
 }
-
-window.selectByName = function(name){
-  selectedCountry = name;
-  showDetail(name, currentYear);
-  svg.selectAll(".country-path").classed("selected", d => normName(d.properties.name) === name);
+window.selectByName=function(name){
+  selectedCountry=name;
+  showDetail(name,currentYear);
+  svg.selectAll(".country-path").classed("selected",d=>normName(d.properties.name)===name);
 };
 
-const tooltip = document.getElementById("tooltip");
-function showTip(e, rawName, year){
-  const k = normName(rawName);
-  const d = DATA[year]?.[k];
-  const ev = (EV_SHARE[year] || {})[k];
-  document.getElementById("tt-name").textContent = rawName;
-  document.getElementById("tt-reg").textContent = ev != null ? ev.toFixed(1) + "%" : "—";
-  document.getElementById("tt-per").textContent = d ? fmt(d[0]) : "—";
-  document.getElementById("tt-src").textContent = d ? d[2] : "—";
-  tooltip.style.display = "block";
-  tooltip.style.left = Math.min(e.clientX + 14, window.innerWidth - 230) + "px";
-  tooltip.style.top = Math.max(e.clientY - 44, 0) + "px";
+const tooltip=document.getElementById("tooltip");
+function showTip(e,rawName,year){
+  const k=normName(rawName);
+  const d=DATA[year]?.[k];
+  const ev=(EV_SHARE[year]||{})[k];
+  document.getElementById("tt-name").textContent=rawName;
+  document.getElementById("tt-reg").textContent=ev!=null?ev.toFixed(1)+"%":"—";
+  document.getElementById("tt-per").textContent=d?fmt(d[0]):"—";
+  document.getElementById("tt-src").textContent=d?d[2]:"—";
+  tooltip.style.display="block";
+  tooltip.style.left=Math.min(e.clientX+14,window.innerWidth-230)+"px";
+  tooltip.style.top=Math.max(e.clientY-44,0)+"px";
 }
 
-// ==================== MODAL & CHARTS ====================
-window.openModal = async function(cn){
-  const ov = document.getElementById("modal-overlay"), ct = document.getElementById("modal-content"),
-        nd = document.getElementById("modal-nodata"), ld = document.getElementById("modal-loading");
-  document.getElementById("modal-title").textContent = cn;
+// ── Chart modal ───────────────────────────────────────────────────────────────
+let chartM=null,chartA=null,modalData=null,ptMode="absolute";
+
+const COLORS={
+  bev:{line:"#00e5ff",fill:"rgba(0,229,255,0.12)"},phev:{line:"#4ade80",fill:"rgba(74,222,128,0.10)"},
+  hybrid:{line:"#facc15",fill:"rgba(250,204,21,0.08)"},petrol:{line:"#f87171",fill:"rgba(248,113,113,0.08)"},
+  diesel:{line:"#94a3b8",fill:"rgba(148,163,184,0.08)"},other:{line:"#c084fc",fill:"rgba(192,132,252,0.08)"},
+};
+const LABELS={bev:"BEV",phev:"PHEV",hybrid:"Hybrid (non-plug)",petrol:"Petrol / Gasoline",diesel:"Diesel",other:"Other / LPG"};
+const CB={
+  responsive:true,maintainAspectRatio:false,
+  interaction:{mode:"index",intersect:false},
+  plugins:{
+    legend:{position:"top",labels:{color:"#94a3b8",font:{family:"DM Mono",size:11},boxWidth:14,padding:14}},
+    tooltip:{backgroundColor:"rgba(10,14,23,0.95)",borderColor:"rgba(0,229,255,0.3)",borderWidth:1,titleColor:"#fff",bodyColor:"#94a3b8"}
+  },
+  scales:{
+    x:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#64748b",font:{family:"DM Mono",size:9},maxTicksLimit:20}},
+    y:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#64748b",font:{family:"DM Mono",size:9},callback:v=>v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v}}
+  }
+};
+
+function resetW(id,cid){const w=document.getElementById(id);if(w)w.innerHTML=`<canvas id="${cid}"></canvas>`;}
+
+window.openModal=async function(cn){
+  const ov=document.getElementById("modal-overlay"),ct=document.getElementById("modal-content"),
+        nd=document.getElementById("modal-nodata"),ld=document.getElementById("modal-loading");
+  document.getElementById("modal-title").textContent=cn;
   ov.classList.add("open");
-  ld.style.display = "block"; ct.style.display = "none"; nd.style.display = "none";
+  ld.style.display="block";ct.style.display="none";nd.style.display="none";
   if(chartM){chartM.destroy();chartM=null;}
   if(chartA){chartA.destroy();chartA=null;}
-  const fk = FILE_MAP[cn];
+  const fk=FILE_MAP[cn];
   if(!fk){ld.style.display="none";nd.style.display="block";return;}
   try{
-    const r = await fetch("data/countries/"+fk+".json?v="+Date.now());
+    const r=await fetch("data/countries/"+fk+".json?v="+Date.now());
     if(!r.ok)throw new Error("HTTP "+r.status);
-    modalData = await r.json();
+    modalData=await r.json();
     if(modalData.last_updated){
-      const d = new Date(modalData.last_updated);
-      document.getElementById("modal-subtitle").textContent = "Updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
+      const d=new Date(modalData.last_updated);
+      document.getElementById("modal-subtitle").textContent="Updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
     }
-    document.getElementById("modal-source").textContent = "Monthly: "+(modalData.source_monthly||"ECB/ACEA")+" · Annual: Eurostat";
-    const hm = !!(modalData.monthly&&modalData.monthly.labels&&modalData.monthly.labels.length);
-    const im = hm && String(modalData.monthly.labels[0]).includes("-");
-    document.getElementById("sec-monthly-title").innerHTML = (im?"Monthly":"Yearly")+" total registrations";
-    ptMode = "absolute";
+    document.getElementById("modal-source").textContent="Monthly: "+(modalData.source_monthly||"ECB/ACEA")+"  \u00b7  Annual: Eurostat";
+    const hm=!!(modalData.monthly&&modalData.monthly.labels&&modalData.monthly.labels.length);
+    const im=hm&&String(modalData.monthly.labels[0]).includes("-");
+    document.getElementById("sec-monthly-title").innerHTML=(im?"&#x1F4C5; Monthly":"&#x1F4C5; Yearly")+" total registrations";
+    ptMode="absolute";
     document.getElementById("pt-absolute").classList.add("active");
     document.getElementById("pt-share").classList.remove("active");
     resetW("wrap-monthly","chart-monthly");
@@ -786,21 +857,19 @@ window.openModal = async function(cn){
     renderMonthly(modalData);
     renderAnnual(modalData,"absolute");
     renderSummary(modalData);
-    ld.style.display = "none"; ct.style.display = "block";
+    ld.style.display="none";ct.style.display="block";
   }catch(e){console.error(e);ld.style.display="none";nd.style.display="block";}
 };
-
-window.closeModal = function(){
+window.closeModal=function(){
   document.getElementById("modal-overlay").classList.remove("open");
   if(chartM){chartM.destroy();chartM=null;}
   if(chartA){chartA.destroy();chartA=null;}
 };
-
 document.getElementById("modal-overlay").addEventListener("click",function(e){if(e.target===this)closeModal();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
 
-window.switchPowertrain = function(mode,btn){
-  ptMode = mode;
+window.switchPowertrain=function(mode,btn){
+  ptMode=mode;
   document.getElementById("pt-absolute").classList.toggle("active",mode==="absolute");
   document.getElementById("pt-share").classList.toggle("active",mode==="share");
   if(chartA){chartA.destroy();chartA=null;}
@@ -809,74 +878,82 @@ window.switchPowertrain = function(mode,btn){
 };
 
 function renderMonthly(data){
-  const m = data.monthly, w = document.getElementById("wrap-monthly");
-  if(!m || !m.labels || !m.labels.length){
-    w.innerHTML = '<div style="height:280px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem;flex-direction:column;gap:8px"><span style="font-size:1.4rem">📅</span>Monthly data not yet available</div>';
+  const m=data.monthly,w=document.getElementById("wrap-monthly");
+  if(!m||!m.labels||!m.labels.length){
+    w.innerHTML='<div style="height:280px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem;flex-direction:column;gap:8px"><span style="font-size:1.4rem">&#x1F4C5;</span>Monthly data not yet available</div>';
     return;
   }
-  const ctx = document.getElementById("chart-monthly").getContext("2d");
-  chartM = new Chart(ctx,{type:"line",data:{labels:m.labels,datasets:[{label:"Total registrations",data:m.total,borderColor:"#00e5ff",backgroundColor:"rgba(0,229,255,0.08)",borderWidth:2,tension:0.3,fill:true,pointRadius:0,pointHoverRadius:5}]},options:CB});
+  const ctx=document.getElementById("chart-monthly").getContext("2d");
+  chartM=new Chart(ctx,{type:"line",data:{labels:m.labels,datasets:[{
+    label:"Total registrations",data:m.total,borderColor:"#00e5ff",backgroundColor:"rgba(0,229,255,0.08)",
+    borderWidth:2,tension:0.3,fill:true,pointRadius:0,pointHoverRadius:5
+  }]},options:{...CB,plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,callbacks:{label:c=>" "+c.parsed.y.toLocaleString("en")+" vehicles"}}},
+    scales:{...CB.scales,y:{...CB.scales.y,title:{display:true,text:"Registrations",color:"#64748b",font:{family:"DM Mono",size:9}}}}}});
 }
 
 function renderAnnual(data,mode){
-  const a = data.annual, w = document.getElementById("wrap-annual");
-  if(!a || !a.labels || !a.labels.length){
-    w.innerHTML = '<div style="height:280px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem">No annual data available</div>';
+  const a=data.annual,w=document.getElementById("wrap-annual");
+  if(!a||!a.labels||!a.labels.length){
+    w.innerHTML='<div style="height:280px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem">No annual data available</div>';
     return;
   }
-  const keys = ["bev","phev","hybrid","petrol","diesel","other"];
+  const keys=["bev","phev","hybrid","petrol","diesel","other"];
   let ds;
   if(mode==="share"){
-    const tot = a.labels.map((_,i)=>keys.reduce((s,k)=>s+(a[k]?a[k][i]:0),0));
-    ds = keys.map(k=>({label:LABELS[k],data:(a[k]||[]).map((v,i)=>tot[i]?+((v/tot[i])*100).toFixed(1):0),
+    const tot=a.labels.map((_,i)=>keys.reduce((s,k)=>s+(a[k]?a[k][i]:0),0));
+    ds=keys.map(k=>({label:LABELS[k],data:(a[k]||[]).map((v,i)=>tot[i]?+((v/tot[i])*100).toFixed(1):0),
       borderColor:COLORS[k].line,backgroundColor:COLORS[k].fill,borderWidth:2,tension:0.3,fill:false,pointRadius:4,pointHoverRadius:7}));
   }else{
-    ds = keys.map(k=>({label:LABELS[k],data:a[k]||[],
+    ds=keys.map(k=>({label:LABELS[k],data:a[k]||[],
       borderColor:COLORS[k].line,backgroundColor:COLORS[k].fill,borderWidth:2,tension:0.3,fill:false,pointRadius:4,pointHoverRadius:7}));
   }
-  const ctx = document.getElementById("chart-annual").getContext("2d");
-  chartA = new Chart(ctx,{type:"line",data:{labels:a.labels,datasets:ds},options:CB});
+  const ctx=document.getElementById("chart-annual").getContext("2d");
+  chartA=new Chart(ctx,{type:"line",data:{labels:a.labels,datasets:ds},options:{...CB,
+    plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,callbacks:{label:c=>" "+c.dataset.label+": "+(mode==="share"?c.parsed.y.toFixed(1)+"%":c.parsed.y.toLocaleString("en"))}}},
+    scales:{...CB.scales,y:{...CB.scales.y,ticks:{...CB.scales.y.ticks,callback:v=>mode==="share"?v+"%":v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v},
+      title:{display:true,text:mode==="share"?"Market share (%)":"Annual registrations",color:"#64748b",font:{family:"DM Mono",size:9}}}}}});
 }
 
 function renderSummary(data){
-  const a = data.annual, g = document.getElementById("summary-grid");
-  if(!a || !a.labels || !a.labels.length){g.innerHTML="";return;}
-  const keys = ["bev","phev","hybrid","petrol","diesel","other"];
-  const last = a.labels.length-1, ly = a.labels[last];
-  const tot = keys.reduce((s,k)=>s+((a[k]&&a[k][last])||0),0);
-  g.innerHTML = keys.map(k=>{const v=(a[k]&&a[k][last])||0;const p=tot?((v/tot)*100).toFixed(1):0;
+  const a=data.annual,g=document.getElementById("summary-grid");
+  if(!a||!a.labels||!a.labels.length){g.innerHTML="";return;}
+  const keys=["bev","phev","hybrid","petrol","diesel","other"];
+  const last=a.labels.length-1,ly=a.labels[last];
+  const tot=keys.reduce((s,k)=>s+((a[k]&&a[k][last])||0),0);
+  g.innerHTML=keys.map(k=>{const v=(a[k]&&a[k][last])||0;const p=tot?((v/tot)*100).toFixed(1):0;
     return`<div class="summary-card"><div class="sc-val" style="color:${COLORS[k].line}">${fmt(v)}</div><div class="sc-label">${LABELS[k]}</div><div class="sc-pct">${p}% (${ly})</div></div>`;
   }).join("");
 }
 
-window.switchTopList = function(mode,btn){
+// ── Top list toggle ───────────────────────────────────────────────────────────
+window.switchTopList=function(mode,btn){
   document.getElementById("top-btn-share").classList.toggle("active",mode==="share");
   document.getElementById("top-btn-volume").classList.toggle("active",mode==="volume");
-  document.getElementById("top-share-list").style.display = mode==="share"?"flex":"none";
-  document.getElementById("top-volume-list").style.display = mode==="volume"?"flex":"none";
-  const yr = document.getElementById("top-year").textContent || currentYear;
-  const titleEl = document.getElementById("top-panel-title");
-  if(titleEl) titleEl.innerHTML = mode==="share"
-    ?`Top 10 · BEV Share % <span id="top-year">${yr}</span>`
-    :`Top 10 · BEV Volume <span id="top-year">${yr}</span>`;
+  document.getElementById("top-share-list").style.display=mode==="share"?"flex":"none";
+  document.getElementById("top-volume-list").style.display=mode==="volume"?"flex":"none";
+  const yr=document.getElementById("top-year").textContent||currentYear;
+  const titleEl=document.getElementById("top-panel-title");
+  if(titleEl) titleEl.innerHTML=mode==="share"
+    ?`Top 10 &middot; BEV Share % <span id="top-year">${yr}</span>`
+    :`Top 10 &middot; BEV Volume <span id="top-year">${yr}</span>`;
 };
 
-// Search
+// ── Search with map highlight ─────────────────────────────────────────────────
 (function(){
-  const inp = document.getElementById("country-search"), res = document.getElementById("search-results");
-  function all(){return Array.from(new Set([...Object.keys(DATA[currentYear]||{}), ...Object.keys(FILE_MAP)])).sort();}
+  const inp=document.getElementById("country-search"),res=document.getElementById("search-results");
+  function all(){return Array.from(new Set([...Object.keys(DATA[currentYear]),...Object.keys(FILE_MAP)])).sort();}
   function hl(set){svg.selectAll(".country-path").classed("search-highlighted",d=>set&&set.has(normName(d.properties.name))).classed("search-dim",d=>set&&set.size>0&&!set.has(normName(d.properties.name)));}
   function clr(){svg.selectAll(".country-path").classed("search-highlighted",false).classed("search-dim",false);}
   inp.addEventListener("input",function(){
-    const q = this.value.trim().toLowerCase(); res.innerHTML = "";
+    const q=this.value.trim().toLowerCase();res.innerHTML="";
     if(!q){clr();return;}
-    const m = all().filter(n=>n.toLowerCase().includes(q)).slice(0,8);
-    if(!m.length){clr(); res.innerHTML = `<div style="font-size:.68rem;color:var(--muted);padding:6px 10px">No results</div>`;return;}
+    const m=all().filter(n=>n.toLowerCase().includes(q)).slice(0,8);
+    if(!m.length){clr();res.innerHTML=`<div style="font-size:.68rem;color:var(--muted);padding:6px 10px">No results</div>`;return;}
     hl(new Set(m));
     m.forEach(name=>{
-      const ev = (EV_SHARE[currentYear]||{})[name], tot = (DATA[currentYear][name]||[])[0];
-      const item = document.createElement("div"); item.className = "search-result-item";
-      item.innerHTML = `<span class="sr-name">${name}</span><span class="sr-share">${ev != null ? ev.toFixed(1)+"% BEV" : tot ? fmt(tot) : ""}</span>`;
+      const ev=(EV_SHARE[currentYear]||{})[name],tot=(DATA[currentYear][name]||[])[0];
+      const item=document.createElement("div");item.className="search-result-item";
+      item.innerHTML=`<span class="sr-name">${name}</span><span class="sr-share">${ev!=null?ev.toFixed(1)+"% BEV":tot?fmt(tot):""}</span>`;
       item.addEventListener("mouseenter",()=>hl(new Set([name])));
       item.addEventListener("mouseleave",()=>hl(new Set(m)));
       item.addEventListener("click",()=>{inp.value="";res.innerHTML="";clr();selectByName(name);openModal(name);});
@@ -885,19 +962,19 @@ window.switchTopList = function(mode,btn){
   });
   document.addEventListener("click",function(e){if(!e.target.closest(".search-wrap")&&!e.target.closest(".search-results")){res.innerHTML="";clr();}});
   inp.addEventListener("keydown",function(e){
-    const items = res.querySelectorAll(".search-result-item");if(!items.length)return;
+    const items=res.querySelectorAll(".search-result-item");if(!items.length)return;
     if(e.key==="Enter")items[0].click();
     if(e.key==="Escape"){inp.value="";res.innerHTML="";clr();}
   });
 })();
 
-// ==================== MAP INIT ====================
+// ── Map init ──────────────────────────────────────────────────────────────────
 async function init(){
   try{
-    const world = await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
-    const countries = topojson.feature(world, world.objects.countries);
-    const NN = {4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",40:"Austria",50:"Bangladesh",56:"Belgium",68:"Bolivia",76:"Brazil",100:"Bulgaria",120:"Cameroon",124:"Canada",144:"Sri Lanka",152:"Chile",156:"China",170:"Colombia",203:"Czech Republic",208:"Denmark",218:"Ecuador",818:"Egypt",231:"Ethiopia",246:"Finland",250:"France",276:"Germany",288:"Ghana",300:"Greece",320:"Guatemala",340:"Honduras",348:"Hungary",356:"India",360:"Indonesia",364:"Iran",368:"Iraq",372:"Ireland",376:"Israel",380:"Italy",392:"Japan",398:"Kazakhstan",400:"Jordan",404:"Kenya",408:"North Korea",410:"South Korea",414:"Kuwait",417:"Kyrgyzstan",418:"Laos",422:"Lebanon",426:"Lesotho",428:"Latvia",430:"Liberia",434:"Libya",438:"Liechtenstein",440:"Lithuania",442:"Luxembourg",450:"Madagascar",454:"Malawi",458:"Malaysia",462:"Maldives",466:"Mali",470:"Malta",474:"Martinique",478:"Mauritania",480:"Mauritius",484:"Mexico",492:"Monaco",496:"Mongolia",498:"Moldova",499:"Montenegro",500:"Montserrat",504:"Morocco",508:"Mozambique",512:"Oman",516:"Namibia",520:"Nauru",524:"Nepal",528:"Netherlands",530:"Netherlands Antilles",533:"Aruba",540:"New Caledonia",548:"Vanuatu",554:"New Zealand",558:"Nicaragua",562:"Niger",566:"Nigeria",570:"Niue",574:"Norfolk Island",578:"Norway",580:"Northern Mariana Islands",581:"Guam",583:"Federated States of Micronesia",584:"Marshall Islands",585:"Palau",586:"Pakistan",591:"Panama",598:"Papua New Guinea",600:"Paraguay",604:"Peru",608:"Philippines",612:"Pitcairn Islands",616:"Poland",620:"Portugal",624:"Guinea-Bissau",626:"Timor-Leste",630:"Puerto Rico",634:"Qatar",638:"Réunion",642:"Romania",643:"Russia",646:"Rwanda",652:"Saint Barthélemy",654:"Saint Helena",659:"Saint Kitts and Nevis",660:"Saint Lucia",662:"Saint Martin",666:"Saint Pierre and Miquelon",670:"Saint Vincent and the Grenadines",674:"San Marino",678:"São Tomé and Príncipe",682:"Saudi Arabia",686:"Senegal",688:"Serbia",690:"Seychelles",694:"Sierra Leone",702:"Singapore",703:"Slovakia",704:"Vietnam",705:"Slovenia",706:"Somalia",710:"South Africa",716:"Zimbabwe",724:"Spain",728:"South Sudan",729:"Sudan",732:"Western Sahara",740:"Suriname",744:"Svalbard",748:"Eswatini",752:"Sweden",756:"Switzerland",760:"Syria",762:"Tajikistan",764:"Thailand",768:"Togo",772:"Tokelau",776:"Tonga",780:"Trinidad and Tobago",784:"UAE",788:"Tunisia",792:"Turkey",795:"Turkmenistan",796:"Turks and Caicos Islands",798:"Tuvalu",800:"Uganda",804:"Ukraine",807:"North Macedonia",818:"Egypt",826:"United Kingdom",831:"Guernsey",832:"Jersey",833:"Isle of Man",834:"Tanzania",840:"United States",850:"United States Virgin Islands",854:"Burkina Faso",858:"Uruguay",860:"Uzbekistan",862:"Venezuela",876:"Wallis and Futuna",882:"Samoa",887:"Yemen",894:"Zambia",716:"Zimbabwe"};
-    countries.features.forEach(f=>{f.properties.name = NN[parseInt(f.id)] || f.properties.name || String(f.id);});
+    const world=await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
+    const countries=topojson.feature(world,world.objects.countries);
+    const NN={4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",40:"Austria",50:"Bangladesh",56:"Belgium",68:"Bolivia",76:"Brazil",100:"Bulgaria",120:"Cameroon",124:"Canada",144:"Sri Lanka",152:"Chile",156:"China",170:"Colombia",203:"Czech Republic",208:"Denmark",218:"Ecuador",818:"Egypt",231:"Ethiopia",246:"Finland",250:"France",276:"Germany",288:"Ghana",300:"Greece",320:"Guatemala",340:"Honduras",348:"Hungary",356:"India",360:"Indonesia",364:"Iran",368:"Iraq",372:"Ireland",376:"Israel",380:"Italy",392:"Japan",398:"Kazakhstan",404:"Kenya",408:"North Korea",410:"South Korea",414:"Kuwait",422:"Lebanon",434:"Libya",442:"Luxembourg",484:"Mexico",504:"Morocco",528:"Netherlands",554:"New Zealand",566:"Nigeria",578:"Norway",586:"Pakistan",604:"Peru",608:"Philippines",616:"Poland",620:"Portugal",634:"Qatar",642:"Romania",643:"Russia",682:"Saudi Arabia",703:"Slovakia",710:"South Africa",724:"Spain",752:"Sweden",756:"Switzerland",764:"Thailand",792:"Turkey",804:"Ukraine",784:"UAE",826:"United Kingdom",840:"United States",858:"Uruguay",862:"Venezuela",704:"Vietnam",887:"Yemen",894:"Zambia",458:"Malaysia",233:"Estonia",428:"Latvia",440:"Lithuania"};
+    countries.features.forEach(f=>{f.properties.name=NN[parseInt(f.id)]||f.properties.name||String(f.id);});
     svg.append("path").datum({type:"Sphere"}).attr("d",pathGen).attr("fill","#0d1520");
     svg.append("path").datum(d3.geoGraticule()()).attr("d",pathGen).attr("fill","none").attr("stroke","rgba(0,229,255,0.04)").attr("stroke-width","0.3");
     svg.selectAll(".country-path").data(countries.features).join("path")
@@ -906,18 +983,15 @@ async function init(){
       .on("mouseleave",()=>tooltip.style.display="none")
       .on("click",(event,d)=>{const n=normName(d.properties.name);selectByName(n);openModal(n);});
     renderMap(currentYear);
-    document.getElementById("map-loading").style.display = "none";
+    document.getElementById("map-loading").style.display="none";
   }catch(err){
-    document.getElementById("map-loading").innerHTML = `<p style="color:#ff6b35;text-align:center">Error loading map.<br><small>${err.message}</small></p>`;
+    document.getElementById("map-loading").innerHTML=`<p style="color:#ff6b35;text-align:center">Error loading map.<br><small>${err.message}</small></p>`;
   }
 }
-
 document.getElementById("year-select").addEventListener("change",function(){
-  currentYear = parseInt(this.value);
-  renderMap(currentYear);
-  if(selectedCountry) showDetail(selectedCountry, currentYear);
+  currentYear=parseInt(this.value);renderMap(currentYear);
+  if(selectedCountry)showDetail(selectedCountry,currentYear);
 });
-
 init();
 </script>
 </body>
