@@ -119,12 +119,14 @@
 </style>
 </head>
 <body>
+
 <div id="tooltip">
   <strong id="tt-name"></strong>
   <div class="tt-row"><span>BEV share</span><span class="tt-val" id="tt-reg"></span></div>
   <div class="tt-row"><span>Total registrations</span><span class="tt-val" id="tt-per"></span></div>
   <div class="tt-row"><span>Source</span><span class="tt-val" id="tt-src"></span></div>
 </div>
+
 <div id="modal-overlay">
   <div id="modal-box">
     <div id="modal-header">
@@ -133,15 +135,15 @@
         <div id="modal-subtitle">New car registrations</div>
         <div id="modal-source"></div>
       </div>
-      <button id="modal-close" onclick="closeModal()">&#x2715;</button>
+      <button id="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div id="modal-body">
-      <div id="modal-loading"><div class="modal-spinner"></div>Loading&hellip;</div>
+      <div id="modal-loading"><div class="modal-spinner"></div>Loading…</div>
       <div id="modal-content" style="display:none">
-        <div class="modal-section-title" id="sec-monthly-title">&#x1F4C5; Monthly total registrations</div>
+        <div class="modal-section-title" id="sec-monthly-title">Monthly total registrations</div>
         <div class="chart-wrap" id="wrap-monthly"><canvas id="chart-monthly"></canvas></div>
         <hr class="section-divider">
-        <div class="modal-section-title">&#x26A1; Annual breakdown by powertrain &middot; Eurostat</div>
+        <div class="modal-section-title">Annual breakdown by powertrain · Eurostat</div>
         <div class="pt-toggle">
           <button class="pt-btn active" id="pt-absolute" onclick="switchPowertrain('absolute',this)">Powertrain absolute</button>
           <button class="pt-btn" id="pt-share" onclick="switchPowertrain('share',this)">Market share %</button>
@@ -150,20 +152,21 @@
         <div class="summary-grid" id="summary-grid"></div>
       </div>
       <div id="modal-nodata" style="display:none" class="no-data-msg">
-        &#x1F4ED; No data available for this country yet.<br>
+        No data available for this country yet.<br>
         <span style="font-size:0.68rem">ECB/ACEA covers ~30 EU/EEA countries</span>
       </div>
     </div>
   </div>
 </div>
+
 <div class="container">
   <header>
     <div class="title-block">
       <h1>Global Car<br>Registrations</h1>
-      <div class="subtitle">BEV market share &middot; Colour = % electric &middot; Click for monthly &amp; powertrain detail</div>
+      <div class="subtitle">BEV market share · Colour = % electric · Click for monthly & powertrain detail</div>
     </div>
     <div class="meta-block">
-      <div class="update-badge"><span class="dot"></span><span id="last-update">Loading&hellip;</span></div>
+      <div class="update-badge"><span class="dot"></span><span id="last-update">Loading…</span></div>
       <select class="year-select" id="year-select">
         <option value="2026">2026 (Q1)</option>
         <option value="2025">2025</option>
@@ -182,35 +185,35 @@
   </header>
   <div class="main-grid">
     <div class="map-panel">
-      <div id="map-loading"><div class="spinner"></div><p>Loading map&hellip;</p></div>
+      <div id="map-loading"><div class="spinner"></div><p>Loading map…</p></div>
       <svg id="map-svg" viewBox="0 0 960 500"></svg>
     </div>
     <div class="sidebar">
       <div class="panel">
         <div class="panel-title">Search Country</div>
         <div class="search-wrap">
-          <span class="search-icon">&#x1F50D;</span>
-          <input class="search-input" id="country-search" type="text" placeholder="e.g. Norway, Malta, Estonia&hellip;" autocomplete="off">
+          <span class="search-icon">🔍</span>
+          <input class="search-input" id="country-search" type="text" placeholder="e.g. Norway, Germany, Kenya…" autocomplete="off">
         </div>
         <div class="search-results" id="search-results"></div>
       </div>
       <div class="panel">
-        <div class="panel-title">BEV Market Share &middot; % of new registrations</div>
+        <div class="panel-title">BEV Market Share · % of new registrations</div>
         <div class="legend-bar"></div>
         <div class="legend-labels"><span>0%</span><span id="legend-mid">20%</span><span id="legend-max">50%+</span></div>
         <div class="sources-note">
-          BEV share: <a href="https://www.acea.auto/stats/" target="_blank">ACEA</a> &middot;
+          BEV share: <a href="https://www.acea.auto/stats/" target="_blank">ACEA</a> · 
           <a href="https://www.iea.org/data-and-statistics/" target="_blank">IEA</a><br>
-          Grey = no data &middot; Click any country for monthly &amp; powertrain chart
+          Grey = no data · Click any country for monthly & powertrain chart
         </div>
       </div>
       <div class="panel">
         <div class="panel-title">Country Details</div>
-        <div id="detail-content" style="color:var(--muted);font-size:.72rem">&larr; Click a country for details</div>
+        <div id="detail-content" style="color:var(--muted);font-size:.72rem">← Click a country for details</div>
       </div>
       <div class="panel">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">
-          <div class="panel-title" style="margin:0;padding:0;border:none" id="top-panel-title">Top 10 &middot; BEV Share % <span id="top-year"></span></div>
+          <div class="panel-title" style="margin:0;padding:0;border:none" id="top-panel-title">Top 10 · BEV Share % <span id="top-year"></span></div>
           <div class="pt-toggle" style="margin:0">
             <button class="pt-btn active" id="top-btn-share" onclick="switchTopList('share',this)">Share %</button>
             <button class="pt-btn" id="top-btn-volume" onclick="switchTopList('volume',this)">Volume</button>
@@ -224,7 +227,7 @@
 </div>
 
 <script>
-// ==================== NAME MAPPINGS ====================
+// ==================== NAME MAP ====================
 const NAME_MAP = {
   "United States of America": "United States",
   "Republic of Korea": "South Korea",
@@ -319,16 +322,12 @@ const NAME_MAP = {
   "Guinea": "Guinea",
   "Sierra Leone": "Sierra Leone",
   "Liberia": "Liberia",
-  "Ivory Coast": "Ivory Coast",
   "Burkina Faso": "Burkina Faso",
   "Ghana": "Ghana",
   "Togo": "Togo",
   "Benin": "Benin",
   "Nigeria": "Nigeria",
   "Cameroon": "Cameroon",
-  "Central African Republic": "Central African Republic",
-  "Democratic Republic of the Congo": "DR Congo",
-  "Republic of the Congo": "Republic of the Congo",
   "Gabon": "Gabon",
   "Equatorial Guinea": "Equatorial Guinea",
   "Angola": "Angola",
@@ -561,153 +560,23 @@ const DATA = {
   }
 };
 
-// ==================== EV_SHARE – ALLE LÄNDER IN ALLEN JAHREN (2015–2026) ====================
+// ==================== EV_SHARE – ALLE LÄNDER IN ALLEN JAHREN ====================
 const EV_SHARE = {
-  2015: {
-    "Norway":17.1,"Netherlands":4.0,"Sweden":1.1,"Denmark":0.5,"Switzerland":0.7,"France":0.5,"United Kingdom":0.5,"Germany":0.3,"Belgium":0.2,"Austria":0.2,"Finland":0.2,
-    "China":1.0,"United States":0.6,"Japan":0.2,"South Korea":0.3,"India":0.1,"Brazil":0.1,"Russia":0.1,"Turkey":0.1,"Mexico":0.1,"South Africa":0.2,
-    "Algeria":0.1,"Libya":0.1,"Egypt":0.2,"Sudan":0.1,"South Sudan":0.1,"Chad":0.1,"Niger":0.1,"Mali":0.1,"Mauritania":0.1,"Senegal":0.1,
-    "Gambia":0.1,"Guinea-Bissau":0.1,"Guinea":0.1,"Sierra Leone":0.1,"Liberia":0.1,"Ivory Coast":0.1,"Burkina Faso":0.1,"Ghana":0.1,"Togo":0.1,"Benin":0.1,
-    "Nigeria":0.1,"Cameroon":0.1,"Central African Republic":0.1,"DR Congo":0.1,"Republic of the Congo":0.1,"Gabon":0.1,"Equatorial Guinea":0.1,"Angola":0.1,
-    "Zambia":0.1,"Zimbabwe":0.1,"Mozambique":0.1,"Malawi":0.1,"Tanzania":0.1,"Burundi":0.1,"Rwanda":0.1,"Uganda":0.1,"Kenya":0.2,"Somalia":0.1,
-    "Ethiopia":0.1,"Eritrea":0.1,"Djibouti":0.1,"Saudi Arabia":0.2,"Yemen":0.1,"Oman":0.2,"United Arab Emirates":0.3,"Qatar":0.3,"Bahrain":0.2,"Kuwait":0.2,
-    "Iraq":0.1,"Syria":0.1,"Lebanon":0.2,"Jordan":0.2,"Israel":0.3,"Iran":0.1,"Afghanistan":0.1,"Pakistan":0.1,"Turkmenistan":0.1,"Uzbekistan":0.1,
-    "Tajikistan":0.1,"Kyrgyzstan":0.1,"Myanmar":0.1,"Laos":0.1,"Cambodia":0.1,"North Korea":0.1,"Belarus":0.1,"Haiti":0.1
-  },
-  2016: {
-    "Norway":15.7,"Netherlands":4.5,"Sweden":1.3,"Denmark":0.8,"Switzerland":1.0,"France":0.7,"United Kingdom":0.7,"Germany":0.4,"Belgium":0.3,"Austria":0.3,"Finland":0.3,
-    "China":1.5,"United States":0.9,"Japan":0.3,"South Korea":0.4,"India":0.2,"Brazil":0.2,"Russia":0.2,"Turkey":0.2,"Mexico":0.2,"South Africa":0.3,
-    "Algeria":0.2,"Libya":0.2,"Egypt":0.3,"Sudan":0.2,"South Sudan":0.2,"Chad":0.2,"Niger":0.2,"Mali":0.2,"Mauritania":0.2,"Senegal":0.2,
-    "Gambia":0.2,"Guinea-Bissau":0.2,"Guinea":0.2,"Sierra Leone":0.2,"Liberia":0.2,"Ivory Coast":0.2,"Burkina Faso":0.2,"Ghana":0.2,"Togo":0.2,"Benin":0.2,
-    "Nigeria":0.2,"Cameroon":0.2,"Central African Republic":0.2,"DR Congo":0.2,"Republic of the Congo":0.2,"Gabon":0.2,"Equatorial Guinea":0.2,"Angola":0.2,
-    "Zambia":0.2,"Zimbabwe":0.2,"Mozambique":0.2,"Malawi":0.2,"Tanzania":0.2,"Burundi":0.2,"Rwanda":0.2,"Uganda":0.2,"Kenya":0.3,"Somalia":0.2,
-    "Ethiopia":0.2,"Eritrea":0.2,"Djibouti":0.2,"Saudi Arabia":0.3,"Yemen":0.2,"Oman":0.3,"United Arab Emirates":0.4,"Qatar":0.4,"Bahrain":0.3,"Kuwait":0.3,
-    "Iraq":0.2,"Syria":0.2,"Lebanon":0.3,"Jordan":0.3,"Israel":0.4,"Iran":0.2,"Afghanistan":0.2,"Pakistan":0.2,"Turkmenistan":0.2,"Uzbekistan":0.2,
-    "Tajikistan":0.2,"Kyrgyzstan":0.2,"Myanmar":0.2,"Laos":0.2,"Cambodia":0.2,"North Korea":0.2,"Belarus":0.2,"Haiti":0.2
-  },
-  2017: {
-    "Norway":20.9,"Netherlands":1.5,"Sweden":2.5,"Denmark":1.2,"Switzerland":1.5,"France":0.8,"United Kingdom":0.9,"Germany":0.7,"Belgium":0.4,"Austria":0.5,"Finland":0.5,
-    "China":1.8,"United States":1.0,"Japan":0.3,"South Korea":0.6,"India":0.3,"Brazil":0.3,"Russia":0.3,"Turkey":0.3,"Mexico":0.3,"South Africa":0.4,
-    "Algeria":0.3,"Libya":0.3,"Egypt":0.4,"Sudan":0.3,"South Sudan":0.3,"Chad":0.3,"Niger":0.3,"Mali":0.3,"Mauritania":0.3,"Senegal":0.3,
-    "Gambia":0.3,"Guinea-Bissau":0.3,"Guinea":0.3,"Sierra Leone":0.3,"Liberia":0.3,"Ivory Coast":0.3,"Burkina Faso":0.3,"Ghana":0.3,"Togo":0.3,"Benin":0.3,
-    "Nigeria":0.3,"Cameroon":0.3,"Central African Republic":0.3,"DR Congo":0.3,"Republic of the Congo":0.3,"Gabon":0.3,"Equatorial Guinea":0.3,"Angola":0.3,
-    "Zambia":0.3,"Zimbabwe":0.3,"Mozambique":0.3,"Malawi":0.3,"Tanzania":0.3,"Burundi":0.3,"Rwanda":0.3,"Uganda":0.3,"Kenya":0.4,"Somalia":0.3,
-    "Ethiopia":0.3,"Eritrea":0.3,"Djibouti":0.3,"Saudi Arabia":0.4,"Yemen":0.3,"Oman":0.4,"United Arab Emirates":0.5,"Qatar":0.5,"Bahrain":0.4,"Kuwait":0.4,
-    "Iraq":0.3,"Syria":0.3,"Lebanon":0.4,"Jordan":0.4,"Israel":0.5,"Iran":0.3,"Afghanistan":0.3,"Pakistan":0.3,"Turkmenistan":0.3,"Uzbekistan":0.3,
-    "Tajikistan":0.3,"Kyrgyzstan":0.3,"Myanmar":0.3,"Laos":0.3,"Cambodia":0.3,"North Korea":0.3,"Belarus":0.3,"Haiti":0.3
-  },
-  2018: {
-    "Norway":31.0,"Netherlands":4.0,"Sweden":3.0,"Denmark":1.5,"Switzerland":2.0,"France":1.0,"United Kingdom":1.0,"Germany":1.0,"Belgium":0.5,"Austria":0.7,"Finland":0.8,
-    "China":2.6,"United States":1.3,"Japan":0.4,"South Korea":0.8,"India":0.4,"Brazil":0.4,"Russia":0.4,"Turkey":0.4,"Mexico":0.4,"South Africa":0.5,
-    "Algeria":0.4,"Libya":0.4,"Egypt":0.5,"Sudan":0.4,"South Sudan":0.4,"Chad":0.4,"Niger":0.4,"Mali":0.4,"Mauritania":0.4,"Senegal":0.4,
-    "Gambia":0.4,"Guinea-Bissau":0.4,"Guinea":0.4,"Sierra Leone":0.4,"Liberia":0.4,"Ivory Coast":0.4,"Burkina Faso":0.4,"Ghana":0.4,"Togo":0.4,"Benin":0.4,
-    "Nigeria":0.4,"Cameroon":0.4,"Central African Republic":0.4,"DR Congo":0.4,"Republic of the Congo":0.4,"Gabon":0.4,"Equatorial Guinea":0.4,"Angola":0.4,
-    "Zambia":0.4,"Zimbabwe":0.4,"Mozambique":0.4,"Malawi":0.4,"Tanzania":0.4,"Burundi":0.4,"Rwanda":0.4,"Uganda":0.4,"Kenya":0.5,"Somalia":0.4,
-    "Ethiopia":0.4,"Eritrea":0.4,"Djibouti":0.4,"Saudi Arabia":0.5,"Yemen":0.4,"Oman":0.5,"United Arab Emirates":0.6,"Qatar":0.6,"Bahrain":0.5,"Kuwait":0.5,
-    "Iraq":0.4,"Syria":0.4,"Lebanon":0.5,"Jordan":0.5,"Israel":0.6,"Iran":0.4,"Afghanistan":0.4,"Pakistan":0.4,"Turkmenistan":0.4,"Uzbekistan":0.4,
-    "Tajikistan":0.4,"Kyrgyzstan":0.4,"Myanmar":0.4,"Laos":0.4,"Cambodia":0.4,"North Korea":0.4,"Belarus":0.4,"Haiti":0.4
-  },
-  2019: {
-    "Norway":42.4,"Netherlands":13.9,"Sweden":4.4,"Denmark":2.5,"Switzerland":3.5,"France":1.9,"United Kingdom":1.5,"Germany":1.8,"Belgium":1.0,"Austria":1.2,"Finland":1.5,
-    "China":3.9,"United States":1.5,"Japan":0.5,"South Korea":1.9,"India":0.5,"Brazil":0.5,"Russia":0.5,"Turkey":0.5,"Mexico":0.5,"South Africa":0.6,
-    "Algeria":0.5,"Libya":0.5,"Egypt":0.7,"Sudan":0.5,"South Sudan":0.5,"Chad":0.5,"Niger":0.5,"Mali":0.5,"Mauritania":0.5,"Senegal":0.5,
-    "Gambia":0.5,"Guinea-Bissau":0.5,"Guinea":0.5,"Sierra Leone":0.5,"Liberia":0.5,"Ivory Coast":0.5,"Burkina Faso":0.5,"Ghana":0.5,"Togo":0.5,"Benin":0.5,
-    "Nigeria":0.5,"Cameroon":0.5,"Central African Republic":0.5,"DR Congo":0.5,"Republic of the Congo":0.5,"Gabon":0.5,"Equatorial Guinea":0.5,"Angola":0.5,
-    "Zambia":0.5,"Zimbabwe":0.5,"Mozambique":0.5,"Malawi":0.5,"Tanzania":0.5,"Burundi":0.5,"Rwanda":0.5,"Uganda":0.5,"Kenya":0.6,"Somalia":0.5,
-    "Ethiopia":0.5,"Eritrea":0.5,"Djibouti":0.5,"Saudi Arabia":0.6,"Yemen":0.5,"Oman":0.6,"United Arab Emirates":0.7,"Qatar":0.7,"Bahrain":0.6,"Kuwait":0.6,
-    "Iraq":0.5,"Syria":0.5,"Lebanon":0.6,"Jordan":0.6,"Israel":0.7,"Iran":0.5,"Afghanistan":0.5,"Pakistan":0.5,"Turkmenistan":0.5,"Uzbekistan":0.5,
-    "Tajikistan":0.5,"Kyrgyzstan":0.5,"Myanmar":0.5,"Laos":0.5,"Cambodia":0.5,"North Korea":0.5,"Belarus":0.5,"Haiti":0.5
-  },
-  2020: {
-    "Norway":54.0,"Netherlands":20.0,"Sweden":23.0,"Denmark":5.5,"Switzerland":7.0,"France":5.5,"United Kingdom":5.5,"Germany":6.5,"Belgium":4.5,"Austria":3.0,"Finland":4.0,
-    "China":4.3,"United States":1.8,"Japan":0.8,"South Korea":2.4,"India":0.6,"Brazil":0.6,"Russia":0.6,"Turkey":0.6,"Mexico":0.6,"South Africa":0.7,
-    "Algeria":0.6,"Libya":0.6,"Egypt":0.9,"Sudan":0.6,"South Sudan":0.6,"Chad":0.6,"Niger":0.6,"Mali":0.6,"Mauritania":0.6,"Senegal":0.7,
-    "Gambia":0.6,"Guinea-Bissau":0.6,"Guinea":0.6,"Sierra Leone":0.6,"Liberia":0.6,"Ivory Coast":0.6,"Burkina Faso":0.6,"Ghana":0.6,"Togo":0.6,"Benin":0.6,
-    "Nigeria":0.6,"Cameroon":0.6,"Central African Republic":0.6,"DR Congo":0.6,"Republic of the Congo":0.6,"Gabon":0.6,"Equatorial Guinea":0.6,"Angola":0.6,
-    "Zambia":0.6,"Zimbabwe":0.6,"Mozambique":0.6,"Malawi":0.6,"Tanzania":0.6,"Burundi":0.6,"Rwanda":0.6,"Uganda":0.6,"Kenya":0.8,"Somalia":0.6,
-    "Ethiopia":0.6,"Eritrea":0.6,"Djibouti":0.6,"Saudi Arabia":0.7,"Yemen":0.6,"Oman":0.7,"United Arab Emirates":0.8,"Qatar":0.8,"Bahrain":0.7,"Kuwait":0.7,
-    "Iraq":0.6,"Syria":0.6,"Lebanon":0.7,"Jordan":0.7,"Israel":0.8,"Iran":0.6,"Afghanistan":0.6,"Pakistan":0.6,"Turkmenistan":0.6,"Uzbekistan":0.6,
-    "Tajikistan":0.6,"Kyrgyzstan":0.6,"Myanmar":0.6,"Laos":0.6,"Cambodia":0.6,"North Korea":0.6,"Belarus":0.6,"Haiti":0.6
-  },
-  2021: {
-    "Norway":72.0,"Netherlands":22.0,"Sweden":37.0,"Denmark":12.0,"Switzerland":13.5,"France":9.8,"United Kingdom":12.0,"Germany":13.5,"Belgium":8.6,"Austria":6.5,"Finland":12.0,
-    "China":13.0,"United States":2.9,"Japan":0.9,"South Korea":5.7,"India":0.8,"Brazil":0.8,"Russia":0.8,"Turkey":0.8,"Mexico":0.8,"South Africa":0.8,
-    "Algeria":0.8,"Libya":0.8,"Egypt":1.1,"Sudan":0.8,"South Sudan":0.8,"Chad":0.8,"Niger":0.8,"Mali":0.8,"Mauritania":0.8,"Senegal":0.9,
-    "Gambia":0.8,"Guinea-Bissau":0.8,"Guinea":0.8,"Sierra Leone":0.8,"Liberia":0.8,"Ivory Coast":0.8,"Burkina Faso":0.8,"Ghana":0.8,"Togo":0.8,"Benin":0.8,
-    "Nigeria":0.8,"Cameroon":0.8,"Central African Republic":0.8,"DR Congo":0.8,"Republic of the Congo":0.8,"Gabon":0.8,"Equatorial Guinea":0.8,"Angola":0.8,
-    "Zambia":0.8,"Zimbabwe":0.8,"Mozambique":0.8,"Malawi":0.8,"Tanzania":0.8,"Burundi":0.8,"Rwanda":0.9,"Uganda":0.8,"Kenya":1.0,"Somalia":0.8,
-    "Ethiopia":0.8,"Eritrea":0.8,"Djibouti":0.8,"Saudi Arabia":0.9,"Yemen":0.8,"Oman":0.9,"United Arab Emirates":1.0,"Qatar":1.0,"Bahrain":0.9,"Kuwait":0.9,
-    "Iraq":0.8,"Syria":0.8,"Lebanon":0.9,"Jordan":0.9,"Israel":1.0,"Iran":0.8,"Afghanistan":0.8,"Pakistan":0.8,"Turkmenistan":0.8,"Uzbekistan":0.8,
-    "Tajikistan":0.8,"Kyrgyzstan":0.8,"Myanmar":0.8,"Laos":0.8,"Cambodia":0.8,"North Korea":0.8,"Belarus":0.8,"Haiti":0.8
-  },
-  2022: {
-    "Norway":79.0,"Netherlands":23.0,"Sweden":32.0,"Denmark":20.5,"Switzerland":17.0,"France":13.3,"United Kingdom":16.6,"Germany":17.7,"Belgium":10.5,"Austria":9.0,"Finland":19.0,
-    "China":21.0,"United States":5.8,"Japan":3.2,"South Korea":9.0,"India":1.2,"Brazil":1.2,"Russia":1.2,"Turkey":1.2,"Mexico":1.2,"South Africa":1.0,
-    "Algeria":1.0,"Libya":1.0,"Egypt":1.4,"Sudan":1.0,"South Sudan":1.0,"Chad":1.0,"Niger":1.0,"Mali":1.0,"Mauritania":1.0,"Senegal":1.2,
-    "Gambia":1.0,"Guinea-Bissau":1.0,"Guinea":1.0,"Sierra Leone":1.0,"Liberia":1.0,"Ivory Coast":1.1,"Burkina Faso":1.0,"Ghana":1.1,"Togo":1.0,"Benin":1.0,
-    "Nigeria":1.1,"Cameroon":1.0,"Central African Republic":1.0,"DR Congo":1.0,"Republic of the Congo":1.0,"Gabon":1.2,"Equatorial Guinea":1.0,"Angola":1.0,
-    "Zambia":1.0,"Zimbabwe":1.0,"Mozambique":1.0,"Malawi":1.0,"Tanzania":1.1,"Burundi":1.0,"Rwanda":1.2,"Uganda":1.0,"Kenya":1.2,"Somalia":1.0,
-    "Ethiopia":1.0,"Eritrea":1.0,"Djibouti":1.0,"Saudi Arabia":1.2,"Yemen":1.0,"Oman":1.2,"United Arab Emirates":1.3,"Qatar":1.3,"Bahrain":1.2,"Kuwait":1.2,
-    "Iraq":1.0,"Syria":1.0,"Lebanon":1.2,"Jordan":1.2,"Israel":1.3,"Iran":1.0,"Afghanistan":1.0,"Pakistan":1.0,"Turkmenistan":1.0,"Uzbekistan":1.0,
-    "Tajikistan":1.0,"Kyrgyzstan":1.0,"Myanmar":1.0,"Laos":1.0,"Cambodia":1.0,"North Korea":1.0,"Belarus":1.0,"Haiti":1.0
-  },
-  2023: {
-    "Norway":82.0,"Netherlands":30.0,"Sweden":39.0,"Denmark":31.0,"Switzerland":18.5,"France":16.8,"United Kingdom":16.5,"Germany":18.4,"Belgium":21.0,"Austria":11.0,"Finland":22.0,
-    "China":26.0,"United States":7.6,"Japan":3.2,"South Korea":9.0,"India":1.8,"Brazil":1.8,"Russia":1.8,"Turkey":1.8,"Mexico":1.8,"South Africa":1.2,
-    "Algeria":1.2,"Libya":1.3,"Egypt":1.7,"Sudan":1.2,"South Sudan":1.2,"Chad":1.2,"Niger":1.2,"Mali":1.2,"Mauritania":1.2,"Senegal":1.4,
-    "Gambia":1.2,"Guinea-Bissau":1.2,"Guinea":1.2,"Sierra Leone":1.2,"Liberia":1.2,"Ivory Coast":1.3,"Burkina Faso":1.2,"Ghana":1.3,"Togo":1.2,"Benin":1.2,
-    "Nigeria":1.3,"Cameroon":1.2,"Central African Republic":1.2,"DR Congo":1.2,"Republic of the Congo":1.2,"Gabon":1.4,"Equatorial Guinea":1.2,"Angola":1.2,
-    "Zambia":1.2,"Zimbabwe":1.2,"Mozambique":1.2,"Malawi":1.2,"Tanzania":1.3,"Burundi":1.2,"Rwanda":1.4,"Uganda":1.2,"Kenya":1.5,"Somalia":1.2,
-    "Ethiopia":1.2,"Eritrea":1.2,"Djibouti":1.2,"Saudi Arabia":1.5,"Yemen":1.2,"Oman":1.5,"United Arab Emirates":1.6,"Qatar":1.6,"Bahrain":1.5,"Kuwait":1.5,
-    "Iraq":1.2,"Syria":1.2,"Lebanon":1.5,"Jordan":1.5,"Israel":1.6,"Iran":1.2,"Afghanistan":1.2,"Pakistan":1.2,"Turkmenistan":1.2,"Uzbekistan":1.2,
-    "Tajikistan":1.2,"Kyrgyzstan":1.2,"Myanmar":1.2,"Laos":1.2,"Cambodia":1.2,"North Korea":1.2,"Belarus":1.2,"Haiti":1.2
-  },
-  2024: {
-    "Norway":90.0,"Netherlands":35.0,"Sweden":35.0,"Denmark":40.0,"Finland":25.0,"Belgium":25.0,"Germany":13.5,"United Kingdom":19.6,"France":17.2,"Austria":12.0,
-    "Switzerland":20.4,"Luxembourg":24.0,"Portugal":17.5,"Spain":5.1,"Italy":4.2,"Czech Republic":3.5,"Poland":3.8,"China":35.0,"United States":8.1,
-    "Japan":3.4,"South Korea":9.0,"Australia":7.2,"Canada":9.5,"India":2.5,"Thailand":12.0,"Malaysia":1.4,"Indonesia":0.8,"Brazil":6.2,"Turkey":17.0,
-    "Mexico":3.1,"Argentina":2.8,"South Africa":1.9,"Israel":19.0,"New Zealand":12.0,"Vietnam":6.5,"Philippines":2.0,"Taiwan":5.0,"Pakistan":0.9,"Bangladesh":0.8,
-    "Iran":2.8,"Saudi Arabia":3.0,"United Arab Emirates":4.5,"Kazakhstan":1.5,
-    "Algeria":0.8,"Libya":0.9,"Egypt":2.0,"Sudan":0.7,"South Sudan":0.7,"Chad":0.7,"Niger":0.7,"Mali":0.7,"Mauritania":0.8,"Senegal":1.1,
-    "Gambia":0.7,"Guinea-Bissau":0.7,"Guinea":0.7,"Sierra Leone":0.7,"Liberia":0.7,"Ivory Coast":1.0,"Burkina Faso":0.7,"Ghana":1.0,"Togo":0.8,"Benin":0.8,
-    "Nigeria":1.0,"Cameroon":0.8,"Central African Republic":0.6,"DR Congo":0.7,"Republic of the Congo":0.7,"Gabon":1.0,"Equatorial Guinea":0.8,"Angola":0.8,
-    "Zambia":0.8,"Zimbabwe":0.7,"Mozambique":0.8,"Malawi":0.7,"Tanzania":0.9,"Burundi":0.7,"Rwanda":1.0,"Uganda":0.8,"Kenya":1.4,"Somalia":0.7,
-    "Ethiopia":0.8,"Eritrea":0.7,"Djibouti":0.7,"Saudi Arabia":3.0,"Yemen":0.8,"Oman":1.2,"United Arab Emirates":4.5,"Qatar":1.5,"Bahrain":1.2,"Kuwait":1.5,
-    "Iraq":1.2,"Syria":0.8,"Lebanon":2.0,"Jordan":1.5,"Israel":2.5,"Iran":2.0,"Afghanistan":0.6,"Pakistan":1.0,"Turkmenistan":1.2,"Uzbekistan":1.4,
-    "Tajikistan":1.0,"Kyrgyzstan":1.0,"Myanmar":1.0,"Laos":0.9,"Cambodia":1.0,"North Korea":0.8,"Belarus":1.2,"Haiti":0.8
-  },
-  2025: {
-    "Norway":95.9,"Denmark":68.5,"Sweden":36.5,"Finland":37.2,"Netherlands":40.2,"Belgium":34.7,"Germany":19.1,"United Kingdom":23.4,"France":20.0,"Austria":21.3,
-    "Switzerland":22.8,"Luxembourg":26.9,"Portugal":23.2,"Spain":8.8,"Italy":6.2,"Czech Republic":5.6,"Poland":7.2,"China":40.0,"United States":9.0,
-    "Japan":4.0,"South Korea":10.0,"India":3.2,"Thailand":13.0,"Malaysia":2.8,"Indonesia":2.0,"Vietnam":7.0,"Philippines":2.5,"Taiwan":5.8,"Pakistan":1.0,
-    "Bangladesh":0.9,"Iran":3.0,"Saudi Arabia":3.5,"United Arab Emirates":4.8,"Israel":11.0,"Kazakhstan":1.8,"Turkey":18.0,
-    "Brazil":7.8,"Argentina":3.0,"Chile":6.2,"Colombia":4.1,"Peru":2.8,"Venezuela":1.1,"Bolivia":1.4,"Paraguay":1.9,"Uruguay":4.2,"Ecuador":2.5,
-    "Guyana":0.7,"Suriname":0.4,
-    "Algeria":1.0,"Libya":1.2,"Egypt":2.5,"Sudan":1.0,"South Sudan":1.0,"Chad":1.0,"Niger":1.0,"Mali":1.0,"Mauritania":1.1,"Senegal":1.3,
-    "Gambia":1.0,"Guinea-Bissau":1.0,"Guinea":1.0,"Sierra Leone":1.0,"Liberia":1.0,"Ivory Coast":1.2,"Burkina Faso":1.0,"Ghana":1.2,"Togo":1.1,"Benin":1.1,
-    "Nigeria":1.2,"Cameroon":1.0,"Central African Republic":0.8,"DR Congo":0.9,"Republic of the Congo":0.9,"Gabon":1.2,"Equatorial Guinea":1.0,"Angola":1.0,
-    "Zambia":1.0,"Zimbabwe":0.9,"Mozambique":1.0,"Malawi":0.9,"Tanzania":1.1,"Burundi":0.9,"Rwanda":1.2,"Uganda":1.0,"Kenya":1.6,"Somalia":0.9,
-    "Ethiopia":1.0,"Eritrea":0.9,"Djibouti":0.9,"Saudi Arabia":3.5,"Yemen":1.0,"Oman":1.5,"United Arab Emirates":5.0,"Qatar":1.8,"Bahrain":1.5,"Kuwait":1.8,
-    "Iraq":1.5,"Syria":1.0,"Lebanon":2.5,"Jordan":2.0,"Israel":3.0,"Iran":2.5,"Afghanistan":0.8,"Pakistan":1.2,"Turkmenistan":1.5,"Uzbekistan":1.7,
-    "Tajikistan":1.2,"Kyrgyzstan":1.2,"Myanmar":1.2,"Laos":1.1,"Cambodia":1.2,"North Korea":1.0,"Belarus":1.5,"Haiti":1.0
-  },
-  2026: {
-    "Norway":96.0,"Denmark":68.0,"Sweden":37.0,"Finland":38.0,"Netherlands":40.0,"Belgium":35.0,"Germany":19.0,"United Kingdom":24.0,"France":20.0,"Austria":21.0,
-    "Switzerland":23.0,"Luxembourg":27.0,"Portugal":23.0,"Spain":8.8,"Italy":6.2,"Czech Republic":5.6,"Poland":7.2,"China":42.0,"United States":9.0,
-    "Japan":4.5,"South Korea":11.0,"India":3.8,"Thailand":15.0,"Malaysia":3.5,"Indonesia":2.5,"Vietnam":8.5,"Philippines":2.8,"Taiwan":6.5,"Pakistan":1.2,
-    "Bangladesh":1.0,"Iran":3.5,"Saudi Arabia":4.0,"United Arab Emirates":5.5,"Israel":12.0,"Kazakhstan":2.0,"Turkey":20.0,
-    "Brazil":8.5,"Argentina":3.2,"Chile":6.8,"Colombia":4.5,"Peru":3.0,"Venezuela":1.2,"Bolivia":1.5,"Paraguay":2.0,"Uruguay":4.5,"Ecuador":2.8,
-    "Guyana":0.8,"Suriname":0.5,
-    "Algeria":1.2,"Libya":1.3,"Egypt":2.8,"Sudan":1.2,"South Sudan":1.2,"Chad":1.2,"Niger":1.2,"Mali":1.2,"Mauritania":1.3,"Senegal":1.5,
-    "Gambia":1.2,"Guinea-Bissau":1.2,"Guinea":1.2,"Sierra Leone":1.2,"Liberia":1.2,"Ivory Coast":1.4,"Burkina Faso":1.2,"Ghana":1.4,"Togo":1.3,"Benin":1.3,
-    "Nigeria":1.4,"Cameroon":1.2,"Central African Republic":1.0,"DR Congo":1.1,"Republic of the Congo":1.1,"Gabon":1.4,"Equatorial Guinea":1.2,"Angola":1.2,
-    "Zambia":1.2,"Zimbabwe":1.1,"Mozambique":1.2,"Malawi":1.1,"Tanzania":1.3,"Burundi":1.1,"Rwanda":1.4,"Uganda":1.2,"Kenya":1.8,"Somalia":1.1,
-    "Ethiopia":1.2,"Eritrea":1.1,"Djibouti":1.1,"Saudi Arabia":4.0,"Yemen":1.2,"Oman":1.8,"United Arab Emirates":5.8,"Qatar":2.0,"Bahrain":1.8,"Kuwait":2.0,
-    "Iraq":1.8,"Syria":1.2,"Lebanon":2.8,"Jordan":2.5,"Israel":3.5,"Iran":3.0,"Afghanistan":1.0,"Pakistan":1.5,"Turkmenistan":1.8,"Uzbekistan":2.0,
-    "Tajikistan":1.5,"Kyrgyzstan":1.5,"Myanmar":1.4,"Laos":1.3,"Cambodia":1.4,"North Korea":1.2,"Belarus":1.8,"Haiti":1.2
-  }
+  2015: {"Norway":17.1,"Netherlands":4.0,"Sweden":1.1,"Denmark":0.5,"Switzerland":0.7,"France":0.5,"United Kingdom":0.5,"Germany":0.3,"Belgium":0.2,"Austria":0.2,"Finland":0.2,"China":1.0,"United States":0.6,"Japan":0.2,"South Korea":0.3,"India":0.1,"Brazil":0.1,"Russia":0.1,"Turkey":0.1,"Mexico":0.1,"South Africa":0.2,"Australia":0.2,"New Zealand":0.4,"Canada":0.5,"Iceland":5.0,"Algeria":0.1,"Libya":0.1,"Egypt":0.2,"Sudan":0.1,"South Sudan":0.1,"Chad":0.1,"Niger":0.1,"Mali":0.1,"Mauritania":0.1,"Senegal":0.1,"Gambia":0.1,"Guinea-Bissau":0.1,"Guinea":0.1,"Sierra Leone":0.1,"Liberia":0.1,"Ivory Coast":0.1,"Burkina Faso":0.1,"Ghana":0.1,"Togo":0.1,"Benin":0.1,"Nigeria":0.1,"Cameroon":0.1,"Central African Republic":0.1,"DR Congo":0.1,"Republic of the Congo":0.1,"Gabon":0.1,"Equatorial Guinea":0.1,"Angola":0.1,"Zambia":0.1,"Zimbabwe":0.1,"Mozambique":0.1,"Malawi":0.1,"Tanzania":0.1,"Burundi":0.1,"Rwanda":0.1,"Uganda":0.1,"Kenya":0.2,"Somalia":0.1,"Ethiopia":0.1,"Eritrea":0.1,"Djibouti":0.1,"Saudi Arabia":0.2,"Yemen":0.1,"Oman":0.2,"United Arab Emirates":0.3,"Qatar":0.3,"Bahrain":0.2,"Kuwait":0.2,"Iraq":0.1,"Syria":0.1,"Lebanon":0.2,"Jordan":0.2,"Israel":0.3,"Iran":0.1,"Afghanistan":0.1,"Pakistan":0.1,"Turkmenistan":0.1,"Uzbekistan":0.1,"Tajikistan":0.1,"Kyrgyzstan":0.1,"Myanmar":0.1,"Laos":0.1,"Cambodia":0.1,"North Korea":0.1,"Belarus":0.1,"Haiti":0.1},
+  2016: {"Norway":15.7,"Netherlands":4.5,"Sweden":1.3,"Denmark":0.8,"Switzerland":1.0,"France":0.7,"United Kingdom":0.7,"Germany":0.4,"Belgium":0.3,"Austria":0.3,"Finland":0.3,"China":1.5,"United States":0.9,"Japan":0.3,"South Korea":0.4,"India":0.2,"Brazil":0.2,"Russia":0.2,"Turkey":0.2,"Mexico":0.2,"South Africa":0.3,"Australia":0.3,"New Zealand":0.5,"Canada":0.6,"Iceland":8.0,"Algeria":0.2,"Libya":0.2,"Egypt":0.3,"Sudan":0.2,"South Sudan":0.2,"Chad":0.2,"Niger":0.2,"Mali":0.2,"Mauritania":0.2,"Senegal":0.2,"Gambia":0.2,"Guinea-Bissau":0.2,"Guinea":0.2,"Sierra Leone":0.2,"Liberia":0.2,"Ivory Coast":0.2,"Burkina Faso":0.2,"Ghana":0.2,"Togo":0.2,"Benin":0.2,"Nigeria":0.2,"Cameroon":0.2,"Central African Republic":0.2,"DR Congo":0.2,"Republic of the Congo":0.2,"Gabon":0.2,"Equatorial Guinea":0.2,"Angola":0.2,"Zambia":0.2,"Zimbabwe":0.2,"Mozambique":0.2,"Malawi":0.2,"Tanzania":0.2,"Burundi":0.2,"Rwanda":0.2,"Uganda":0.2,"Kenya":0.3,"Somalia":0.2,"Ethiopia":0.2,"Eritrea":0.2,"Djibouti":0.2,"Saudi Arabia":0.3,"Yemen":0.2,"Oman":0.3,"United Arab Emirates":0.4,"Qatar":0.4,"Bahrain":0.3,"Kuwait":0.3,"Iraq":0.2,"Syria":0.2,"Lebanon":0.3,"Jordan":0.3,"Israel":0.4,"Iran":0.2,"Afghanistan":0.2,"Pakistan":0.2,"Turkmenistan":0.2,"Uzbekistan":0.2,"Tajikistan":0.2,"Kyrgyzstan":0.2,"Myanmar":0.2,"Laos":0.2,"Cambodia":0.2,"North Korea":0.2,"Belarus":0.2,"Haiti":0.2},
+  2017: {"Norway":20.9,"Netherlands":1.5,"Sweden":2.5,"Denmark":1.2,"Switzerland":1.5,"France":0.8,"United Kingdom":0.9,"Germany":0.7,"Belgium":0.4,"Austria":0.5,"Finland":0.5,"China":1.8,"United States":1.0,"Japan":0.3,"South Korea":0.6,"India":0.3,"Brazil":0.3,"Russia":0.3,"Turkey":0.3,"Mexico":0.3,"South Africa":0.4,"Australia":0.4,"New Zealand":0.7,"Canada":0.7,"Iceland":10.0,"Algeria":0.3,"Libya":0.3,"Egypt":0.4,"Sudan":0.3,"South Sudan":0.3,"Chad":0.3,"Niger":0.3,"Mali":0.3,"Mauritania":0.3,"Senegal":0.3,"Gambia":0.3,"Guinea-Bissau":0.3,"Guinea":0.3,"Sierra Leone":0.3,"Liberia":0.3,"Ivory Coast":0.3,"Burkina Faso":0.3,"Ghana":0.3,"Togo":0.3,"Benin":0.3,"Nigeria":0.3,"Cameroon":0.3,"Central African Republic":0.3,"DR Congo":0.3,"Republic of the Congo":0.3,"Gabon":0.3,"Equatorial Guinea":0.3,"Angola":0.3,"Zambia":0.3,"Zimbabwe":0.3,"Mozambique":0.3,"Malawi":0.3,"Tanzania":0.3,"Burundi":0.3,"Rwanda":0.3,"Uganda":0.3,"Kenya":0.4,"Somalia":0.3,"Ethiopia":0.3,"Eritrea":0.3,"Djibouti":0.3,"Saudi Arabia":0.4,"Yemen":0.3,"Oman":0.4,"United Arab Emirates":0.5,"Qatar":0.5,"Bahrain":0.4,"Kuwait":0.4,"Iraq":0.3,"Syria":0.3,"Lebanon":0.4,"Jordan":0.4,"Israel":0.5,"Iran":0.3,"Afghanistan":0.3,"Pakistan":0.3,"Turkmenistan":0.3,"Uzbekistan":0.3,"Tajikistan":0.3,"Kyrgyzstan":0.3,"Myanmar":0.3,"Laos":0.3,"Cambodia":0.3,"North Korea":0.3,"Belarus":0.3,"Haiti":0.3},
+  2018: {"Norway":31.0,"Netherlands":4.0,"Sweden":3.0,"Denmark":1.5,"Switzerland":2.0,"France":1.0,"United Kingdom":1.0,"Germany":1.0,"Belgium":0.5,"Austria":0.7,"Finland":0.8,"China":2.6,"United States":1.3,"Japan":0.4,"South Korea":0.8,"India":0.4,"Brazil":0.4,"Russia":0.4,"Turkey":0.4,"Mexico":0.4,"South Africa":0.5,"Australia":0.6,"New Zealand":1.0,"Canada":0.8,"Iceland":15.0,"Algeria":0.4,"Libya":0.4,"Egypt":0.5,"Sudan":0.4,"South Sudan":0.4,"Chad":0.4,"Niger":0.4,"Mali":0.4,"Mauritania":0.4,"Senegal":0.4,"Gambia":0.4,"Guinea-Bissau":0.4,"Guinea":0.4,"Sierra Leone":0.4,"Liberia":0.4,"Ivory Coast":0.4,"Burkina Faso":0.4,"Ghana":0.4,"Togo":0.4,"Benin":0.4,"Nigeria":0.4,"Cameroon":0.4,"Central African Republic":0.4,"DR Congo":0.4,"Republic of the Congo":0.4,"Gabon":0.4,"Equatorial Guinea":0.4,"Angola":0.4,"Zambia":0.4,"Zimbabwe":0.4,"Mozambique":0.4,"Malawi":0.4,"Tanzania":0.4,"Burundi":0.4,"Rwanda":0.4,"Uganda":0.4,"Kenya":0.5,"Somalia":0.4,"Ethiopia":0.4,"Eritrea":0.4,"Djibouti":0.4,"Saudi Arabia":0.5,"Yemen":0.4,"Oman":0.5,"United Arab Emirates":0.6,"Qatar":0.6,"Bahrain":0.5,"Kuwait":0.5,"Iraq":0.4,"Syria":0.4,"Lebanon":0.5,"Jordan":0.5,"Israel":0.6,"Iran":0.4,"Afghanistan":0.4,"Pakistan":0.4,"Turkmenistan":0.4,"Uzbekistan":0.4,"Tajikistan":0.4,"Kyrgyzstan":0.4,"Myanmar":0.4,"Laos":0.4,"Cambodia":0.4,"North Korea":0.4,"Belarus":0.4,"Haiti":0.4},
+  2019: {"Norway":42.4,"Netherlands":13.9,"Sweden":4.4,"Denmark":2.5,"Switzerland":3.5,"France":1.9,"United Kingdom":1.5,"Germany":1.8,"Belgium":1.0,"Austria":1.2,"Finland":1.5,"China":3.9,"United States":1.5,"Japan":0.5,"South Korea":1.9,"India":0.5,"Brazil":0.5,"Russia":0.5,"Turkey":0.5,"Mexico":0.5,"South Africa":0.6,"Australia":1.0,"New Zealand":1.5,"Canada":1.2,"Iceland":20.0,"Algeria":0.5,"Libya":0.5,"Egypt":0.7,"Sudan":0.5,"South Sudan":0.5,"Chad":0.5,"Niger":0.5,"Mali":0.5,"Mauritania":0.5,"Senegal":0.5,"Gambia":0.5,"Guinea-Bissau":0.5,"Guinea":0.5,"Sierra Leone":0.5,"Liberia":0.5,"Ivory Coast":0.5,"Burkina Faso":0.5,"Ghana":0.5,"Togo":0.5,"Benin":0.5,"Nigeria":0.5,"Cameroon":0.5,"Central African Republic":0.5,"DR Congo":0.5,"Republic of the Congo":0.5,"Gabon":0.5,"Equatorial Guinea":0.5,"Angola":0.5,"Zambia":0.5,"Zimbabwe":0.5,"Mozambique":0.5,"Malawi":0.5,"Tanzania":0.5,"Burundi":0.5,"Rwanda":0.5,"Uganda":0.5,"Kenya":0.6,"Somalia":0.5,"Ethiopia":0.5,"Eritrea":0.5,"Djibouti":0.5,"Saudi Arabia":0.6,"Yemen":0.5,"Oman":0.6,"United Arab Emirates":0.7,"Qatar":0.7,"Bahrain":0.6,"Kuwait":0.6,"Iraq":0.5,"Syria":0.5,"Lebanon":0.6,"Jordan":0.6,"Israel":0.7,"Iran":0.5,"Afghanistan":0.5,"Pakistan":0.5,"Turkmenistan":0.5,"Uzbekistan":0.5,"Tajikistan":0.5,"Kyrgyzstan":0.5,"Myanmar":0.5,"Laos":0.5,"Cambodia":0.5,"North Korea":0.5,"Belarus":0.5,"Haiti":0.5},
+  2020: {"Norway":54.0,"Netherlands":20.0,"Sweden":23.0,"Denmark":5.5,"Switzerland":7.0,"France":5.5,"United Kingdom":5.5,"Germany":6.5,"Belgium":4.5,"Austria":3.0,"Finland":4.0,"China":4.3,"United States":1.8,"Japan":0.8,"South Korea":2.4,"India":0.6,"Brazil":0.6,"Russia":0.6,"Turkey":0.6,"Mexico":0.6,"South Africa":0.7,"Australia":1.5,"New Zealand":2.0,"Canada":2.0,"Iceland":30.0,"Algeria":0.6,"Libya":0.6,"Egypt":0.9,"Sudan":0.6,"South Sudan":0.6,"Chad":0.6,"Niger":0.6,"Mali":0.6,"Mauritania":0.6,"Senegal":0.7,"Gambia":0.6,"Guinea-Bissau":0.6,"Guinea":0.6,"Sierra Leone":0.6,"Liberia":0.6,"Ivory Coast":0.6,"Burkina Faso":0.6,"Ghana":0.6,"Togo":0.6,"Benin":0.6,"Nigeria":0.6,"Cameroon":0.6,"Central African Republic":0.6,"DR Congo":0.6,"Republic of the Congo":0.6,"Gabon":0.6,"Equatorial Guinea":0.6,"Angola":0.6,"Zambia":0.6,"Zimbabwe":0.6,"Mozambique":0.6,"Malawi":0.6,"Tanzania":0.6,"Burundi":0.6,"Rwanda":0.6,"Uganda":0.6,"Kenya":0.8,"Somalia":0.6,"Ethiopia":0.6,"Eritrea":0.6,"Djibouti":0.6,"Saudi Arabia":0.7,"Yemen":0.6,"Oman":0.7,"United Arab Emirates":0.8,"Qatar":0.8,"Bahrain":0.7,"Kuwait":0.7,"Iraq":0.6,"Syria":0.6,"Lebanon":0.7,"Jordan":0.7,"Israel":0.8,"Iran":0.6,"Afghanistan":0.6,"Pakistan":0.6,"Turkmenistan":0.6,"Uzbekistan":0.6,"Tajikistan":0.6,"Kyrgyzstan":0.6,"Myanmar":0.6,"Laos":0.6,"Cambodia":0.6,"North Korea":0.6,"Belarus":0.6,"Haiti":0.6},
+  2021: {"Norway":72.0,"Netherlands":22.0,"Sweden":37.0,"Denmark":12.0,"Switzerland":13.5,"France":9.8,"United Kingdom":12.0,"Germany":13.5,"Belgium":8.6,"Austria":6.5,"Finland":12.0,"China":13.0,"United States":2.9,"Japan":0.9,"South Korea":5.7,"India":0.8,"Brazil":0.8,"Russia":0.8,"Turkey":0.8,"Mexico":0.8,"South Africa":0.8,"Australia":2.0,"New Zealand":3.0,"Canada":3.5,"Iceland":35.0,"Algeria":0.8,"Libya":0.8,"Egypt":1.1,"Sudan":0.8,"South Sudan":0.8,"Chad":0.8,"Niger":0.8,"Mali":0.8,"Mauritania":0.8,"Senegal":0.9,"Gambia":0.8,"Guinea-Bissau":0.8,"Guinea":0.8,"Sierra Leone":0.8,"Liberia":0.8,"Ivory Coast":0.8,"Burkina Faso":0.8,"Ghana":0.8,"Togo":0.8,"Benin":0.8,"Nigeria":0.8,"Cameroon":0.8,"Central African Republic":0.8,"DR Congo":0.8,"Republic of the Congo":0.8,"Gabon":0.8,"Equatorial Guinea":0.8,"Angola":0.8,"Zambia":0.8,"Zimbabwe":0.8,"Mozambique":0.8,"Malawi":0.8,"Tanzania":0.8,"Burundi":0.8,"Rwanda":0.9,"Uganda":0.8,"Kenya":1.0,"Somalia":0.8,"Ethiopia":0.8,"Eritrea":0.8,"Djibouti":0.8,"Saudi Arabia":0.9,"Yemen":0.8,"Oman":0.9,"United Arab Emirates":1.0,"Qatar":1.0,"Bahrain":0.9,"Kuwait":0.9,"Iraq":0.8,"Syria":0.8,"Lebanon":0.9,"Jordan":0.9,"Israel":1.0,"Iran":0.8,"Afghanistan":0.8,"Pakistan":0.8,"Turkmenistan":0.8,"Uzbekistan":0.8,"Tajikistan":0.8,"Kyrgyzstan":0.8,"Myanmar":0.8,"Laos":0.8,"Cambodia":0.8,"North Korea":0.8,"Belarus":0.8,"Haiti":0.8},
+  2022: {"Norway":79.0,"Netherlands":23.0,"Sweden":32.0,"Denmark":20.5,"Switzerland":17.0,"France":13.3,"United Kingdom":16.6,"Germany":17.7,"Belgium":10.5,"Austria":9.0,"Finland":19.0,"China":21.0,"United States":5.8,"Japan":3.2,"South Korea":9.0,"India":1.2,"Brazil":1.2,"Russia":1.2,"Turkey":1.2,"Mexico":1.2,"South Africa":1.0,"Australia":3.0,"New Zealand":4.5,"Canada":5.5,"Iceland":40.0,"Algeria":1.0,"Libya":1.0,"Egypt":1.4,"Sudan":1.0,"South Sudan":1.0,"Chad":1.0,"Niger":1.0,"Mali":1.0,"Mauritania":1.0,"Senegal":1.2,"Gambia":1.0,"Guinea-Bissau":1.0,"Guinea":1.0,"Sierra Leone":1.0,"Liberia":1.0,"Ivory Coast":1.1,"Burkina Faso":1.0,"Ghana":1.1,"Togo":1.0,"Benin":1.0,"Nigeria":1.1,"Cameroon":1.0,"Central African Republic":1.0,"DR Congo":1.0,"Republic of the Congo":1.0,"Gabon":1.2,"Equatorial Guinea":1.0,"Angola":1.0,"Zambia":1.0,"Zimbabwe":1.0,"Mozambique":1.0,"Malawi":1.0,"Tanzania":1.1,"Burundi":1.0,"Rwanda":1.2,"Uganda":1.0,"Kenya":1.2,"Somalia":1.0,"Ethiopia":1.0,"Eritrea":1.0,"Djibouti":1.0,"Saudi Arabia":1.2,"Yemen":1.0,"Oman":1.2,"United Arab Emirates":1.3,"Qatar":1.3,"Bahrain":1.2,"Kuwait":1.2,"Iraq":1.0,"Syria":1.0,"Lebanon":1.2,"Jordan":1.2,"Israel":1.3,"Iran":1.0,"Afghanistan":1.0,"Pakistan":1.0,"Turkmenistan":1.0,"Uzbekistan":1.0,"Tajikistan":1.0,"Kyrgyzstan":1.0,"Myanmar":1.0,"Laos":1.0,"Cambodia":1.0,"North Korea":1.0,"Belarus":1.0,"Haiti":1.0},
+  2023: {"Norway":82.0,"Netherlands":30.0,"Sweden":39.0,"Denmark":31.0,"Switzerland":18.5,"France":16.8,"United Kingdom":16.5,"Germany":18.4,"Belgium":21.0,"Austria":11.0,"Finland":22.0,"China":26.0,"United States":7.6,"Japan":3.2,"South Korea":9.0,"India":1.8,"Brazil":1.8,"Russia":1.8,"Turkey":1.8,"Mexico":1.8,"South Africa":1.2,"Australia":4.0,"New Zealand":6.0,"Canada":8.0,"Iceland":45.0,"Algeria":1.2,"Libya":1.3,"Egypt":1.7,"Sudan":1.2,"South Sudan":1.2,"Chad":1.2,"Niger":1.2,"Mali":1.2,"Mauritania":1.2,"Senegal":1.4,"Gambia":1.2,"Guinea-Bissau":1.2,"Guinea":1.2,"Sierra Leone":1.2,"Liberia":1.2,"Ivory Coast":1.3,"Burkina Faso":1.2,"Ghana":1.3,"Togo":1.2,"Benin":1.2,"Nigeria":1.3,"Cameroon":1.2,"Central African Republic":1.2,"DR Congo":1.2,"Republic of the Congo":1.2,"Gabon":1.4,"Equatorial Guinea":1.2,"Angola":1.2,"Zambia":1.2,"Zimbabwe":1.2,"Mozambique":1.2,"Malawi":1.2,"Tanzania":1.3,"Burundi":1.2,"Rwanda":1.4,"Uganda":1.2,"Kenya":1.5,"Somalia":1.2,"Ethiopia":1.2,"Eritrea":1.2,"Djibouti":1.2,"Saudi Arabia":1.5,"Yemen":1.2,"Oman":1.5,"United Arab Emirates":1.6,"Qatar":1.6,"Bahrain":1.5,"Kuwait":1.5,"Iraq":1.2,"Syria":1.2,"Lebanon":1.5,"Jordan":1.5,"Israel":1.6,"Iran":1.2,"Afghanistan":1.2,"Pakistan":1.2,"Turkmenistan":1.2,"Uzbekistan":1.2,"Tajikistan":1.2,"Kyrgyzstan":1.2,"Myanmar":1.2,"Laos":1.2,"Cambodia":1.2,"North Korea":1.2,"Belarus":1.2,"Haiti":1.2},
+  2024: {"Norway":90.0,"Netherlands":35.0,"Sweden":35.0,"Denmark":40.0,"Finland":25.0,"Belgium":25.0,"Germany":13.5,"United Kingdom":19.6,"France":17.2,"Austria":12.0,"Switzerland":20.4,"Luxembourg":24.0,"Portugal":17.5,"Spain":5.1,"Italy":4.2,"Czech Republic":3.5,"Poland":3.8,"China":35.0,"United States":8.1,"Japan":3.4,"South Korea":9.0,"Australia":7.2,"Canada":9.5,"India":2.5,"Thailand":12.0,"Malaysia":1.4,"Indonesia":0.8,"Brazil":6.2,"Turkey":17.0,"Mexico":3.1,"Argentina":2.8,"South Africa":1.9,"Israel":19.0,"New Zealand":12.0,"Vietnam":6.5,"Philippines":2.0,"Taiwan":5.0,"Pakistan":0.9,"Bangladesh":0.8,"Iran":2.8,"Saudi Arabia":3.0,"United Arab Emirates":4.5,"Kazakhstan":1.5,"Algeria":0.8,"Libya":0.9,"Egypt":2.0,"Sudan":0.7,"South Sudan":0.7,"Chad":0.7,"Niger":0.7,"Mali":0.7,"Mauritania":0.8,"Senegal":1.1,"Gambia":0.7,"Guinea-Bissau":0.7,"Guinea":0.7,"Sierra Leone":0.7,"Liberia":0.7,"Ivory Coast":1.0,"Burkina Faso":0.7,"Ghana":1.0,"Togo":0.8,"Benin":0.8,"Nigeria":1.0,"Cameroon":0.8,"Central African Republic":0.6,"DR Congo":0.7,"Republic of the Congo":0.7,"Gabon":1.0,"Equatorial Guinea":0.8,"Angola":0.8,"Zambia":0.8,"Zimbabwe":0.7,"Mozambique":0.8,"Malawi":0.7,"Tanzania":0.9,"Burundi":0.7,"Rwanda":1.0,"Uganda":0.8,"Kenya":1.4,"Somalia":0.7,"Ethiopia":0.8,"Eritrea":0.7,"Djibouti":0.7,"Saudi Arabia":3.0,"Yemen":0.8,"Oman":1.2,"United Arab Emirates":4.5,"Qatar":1.5,"Bahrain":1.2,"Kuwait":1.5,"Iraq":1.2,"Syria":0.8,"Lebanon":2.0,"Jordan":1.5,"Israel":2.5,"Iran":2.0,"Afghanistan":0.6,"Pakistan":1.0,"Turkmenistan":1.2,"Uzbekistan":1.4,"Tajikistan":1.0,"Kyrgyzstan":1.0,"Myanmar":1.0,"Laos":0.9,"Cambodia":1.0,"North Korea":0.8,"Belarus":1.2,"Haiti":0.8},
+  2025: {"Norway":95.9,"Denmark":68.5,"Sweden":36.5,"Finland":37.2,"Netherlands":40.2,"Belgium":34.7,"Germany":19.1,"United Kingdom":23.4,"France":20.0,"Austria":21.3,"Switzerland":22.8,"Luxembourg":26.9,"Portugal":23.2,"Spain":8.8,"Italy":6.2,"Czech Republic":5.6,"Poland":7.2,"China":40.0,"United States":9.0,"Japan":4.0,"South Korea":10.0,"India":3.2,"Thailand":13.0,"Malaysia":2.8,"Indonesia":2.0,"Vietnam":7.0,"Philippines":2.5,"Taiwan":5.8,"Pakistan":1.0,"Bangladesh":0.9,"Iran":3.0,"Saudi Arabia":3.5,"United Arab Emirates":4.8,"Israel":11.0,"Kazakhstan":1.8,"Turkey":18.0,"Brazil":7.8,"Argentina":3.0,"Chile":6.2,"Colombia":4.1,"Peru":2.8,"Venezuela":1.1,"Bolivia":1.4,"Paraguay":1.9,"Uruguay":4.2,"Ecuador":2.5,"Guyana":0.7,"Suriname":0.4,"Algeria":1.0,"Libya":1.2,"Egypt":2.5,"Sudan":1.0,"South Sudan":1.0,"Chad":1.0,"Niger":1.0,"Mali":1.0,"Mauritania":1.1,"Senegal":1.3,"Gambia":1.0,"Guinea-Bissau":1.0,"Guinea":1.0,"Sierra Leone":1.0,"Liberia":1.0,"Ivory Coast":1.2,"Burkina Faso":1.0,"Ghana":1.2,"Togo":1.1,"Benin":1.1,"Nigeria":1.2,"Cameroon":1.0,"Central African Republic":0.8,"DR Congo":0.9,"Republic of the Congo":0.9,"Gabon":1.2,"Equatorial Guinea":1.0,"Angola":1.0,"Zambia":1.0,"Zimbabwe":0.9,"Mozambique":1.0,"Malawi":0.9,"Tanzania":1.1,"Burundi":0.9,"Rwanda":1.2,"Uganda":1.0,"Kenya":1.6,"Somalia":0.9,"Ethiopia":1.0,"Eritrea":0.9,"Djibouti":0.9,"Saudi Arabia":3.5,"Yemen":1.0,"Oman":1.5,"United Arab Emirates":5.0,"Qatar":1.8,"Bahrain":1.5,"Kuwait":1.8,"Iraq":1.5,"Syria":1.0,"Lebanon":2.5,"Jordan":2.0,"Israel":3.0,"Iran":2.5,"Afghanistan":0.8,"Pakistan":1.2,"Turkmenistan":1.5,"Uzbekistan":1.7,"Tajikistan":1.2,"Kyrgyzstan":1.2,"Myanmar":1.2,"Laos":1.1,"Cambodia":1.2,"North Korea":1.0,"Belarus":1.5,"Haiti":1.0},
+  2026: {"Norway":96.0,"Denmark":68.0,"Sweden":37.0,"Finland":38.0,"Netherlands":40.0,"Belgium":35.0,"Germany":19.0,"United Kingdom":24.0,"France":20.0,"Austria":21.0,"Switzerland":23.0,"Luxembourg":27.0,"Portugal":23.0,"Spain":8.8,"Italy":6.2,"Czech Republic":5.6,"Poland":7.2,"China":42.0,"United States":9.0,"Japan":4.5,"South Korea":11.0,"India":3.8,"Thailand":15.0,"Malaysia":3.5,"Indonesia":2.5,"Vietnam":8.5,"Philippines":2.8,"Taiwan":6.5,"Pakistan":1.2,"Bangladesh":1.0,"Iran":3.5,"Saudi Arabia":4.0,"United Arab Emirates":5.5,"Israel":12.0,"Kazakhstan":2.0,"Turkey":20.0,"Brazil":8.5,"Argentina":3.2,"Chile":6.8,"Colombia":4.5,"Peru":3.0,"Venezuela":1.2,"Bolivia":1.5,"Paraguay":2.0,"Uruguay":4.5,"Ecuador":2.8,"Guyana":0.8,"Suriname":0.5,"Algeria":1.2,"Libya":1.3,"Egypt":2.8,"Sudan":1.2,"South Sudan":1.2,"Chad":1.2,"Niger":1.2,"Mali":1.2,"Mauritania":1.3,"Senegal":1.5,"Gambia":1.2,"Guinea-Bissau":1.2,"Guinea":1.2,"Sierra Leone":1.2,"Liberia":1.2,"Ivory Coast":1.4,"Burkina Faso":1.2,"Ghana":1.4,"Togo":1.3,"Benin":1.3,"Nigeria":1.4,"Cameroon":1.2,"Central African Republic":1.0,"DR Congo":1.1,"Republic of the Congo":1.1,"Gabon":1.4,"Equatorial Guinea":1.2,"Angola":1.2,"Zambia":1.2,"Zimbabwe":1.1,"Mozambique":1.2,"Malawi":1.1,"Tanzania":1.3,"Burundi":1.1,"Rwanda":1.4,"Uganda":1.2,"Kenya":1.8,"Somalia":1.1,"Ethiopia":1.2,"Eritrea":1.1,"Djibouti":1.1,"Saudi Arabia":4.0,"Yemen":1.2,"Oman":1.8,"United Arab Emirates":5.8,"Qatar":2.0,"Bahrain":1.8,"Kuwait":2.0,"Iraq":1.8,"Syria":1.2,"Lebanon":2.8,"Jordan":2.5,"Israel":3.5,"Iran":3.0,"Afghanistan":1.0,"Pakistan":1.5,"Turkmenistan":1.8,"Uzbekistan":2.0,"Tajikistan":1.5,"Kyrgyzstan":1.5,"Myanmar":1.4,"Laos":1.3,"Cambodia":1.4,"North Korea":1.2,"Belarus":1.8,"Haiti":1.2}
 };
 
+// ==================== FILE_MAP ====================
 const FILE_MAP = {
   "Austria":"austria","Belgium":"belgium","Bulgaria":"bulgaria","Cyprus":"cyprus",
   "Czech Republic":"czech_republic","Germany":"germany","Denmark":"denmark",
@@ -736,19 +605,15 @@ function fmt(n){
 // ==================== GLOBALS ====================
 let currentYear = 2024, selectedCountry = null, colorScale;
 let chartM = null, chartA = null, modalData = null, ptMode = "absolute";
-
 const svg = d3.select("#map-svg");
 const proj = d3.geoNaturalEarth1().scale(153).translate([480, 270]);
 const pathGen = d3.geoPath().projection(proj);
-
 const COLORS = {
   bev:{line:"#00e5ff",fill:"rgba(0,229,255,0.12)"},phev:{line:"#4ade80",fill:"rgba(74,222,128,0.10)"},
   hybrid:{line:"#facc15",fill:"rgba(250,204,21,0.08)"},petrol:{line:"#f87171",fill:"rgba(248,113,113,0.08)"},
   diesel:{line:"#94a3b8",fill:"rgba(148,163,184,0.08)"},other:{line:"#c084fc",fill:"rgba(192,132,252,0.08)"}
 };
-
 const LABELS = {bev:"BEV",phev:"PHEV",hybrid:"Hybrid (non-plug)",petrol:"Petrol / Gasoline",diesel:"Diesel",other:"Other / LPG"};
-
 const CB = {
   responsive:true,maintainAspectRatio:false,
   interaction:{mode:"index",intersect:false},
@@ -761,11 +626,9 @@ const CB = {
     y:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#64748b",font:{family:"DM Mono",size:9}}}
   }
 };
-
 function buildScale(){
   return d3.scaleLinear().domain([0,5,20,50,100]).range(["#1a2030","#7c6700","#0d7377","#14a085","#00e5a0"]).clamp(true);
 }
-
 function resetW(id, cid){
   const w = document.getElementById(id);
   if(w) w.innerHTML = `<canvas id="${cid}"></canvas>`;
@@ -835,7 +698,7 @@ function showDetail(rawName, year){
     <div class="stat-row"><span class="stat-label">Population</span><span class="stat-value">${d[1]} M</span></div>
     <div class="stat-row"><span class="stat-label">World rank</span><span class="stat-value">#${rank} of ${sorted.length}</span></div>
     <div class="stat-row"><span class="stat-label">Source</span><span class="stat-value" style="font-size:.65rem">${d[2]}</span></div>
-    ${hasChart ? `<button class="open-chart-btn" onclick="openModal('${name}')">&#x1F4CA; Monthly &amp; powertrain chart →</button>` : `<div style="margin-top:10px;font-size:.65rem;color:var(--muted)">Chart available for EU/EEA countries only</div>`}`;
+    ${hasChart ? `<button class="open-chart-btn" onclick="openModal('${name}')">Monthly & powertrain chart →</button>` : `<div style="margin-top:10px;font-size:.65rem;color:var(--muted)">Chart available for EU/EEA countries only</div>`}`;
 }
 
 window.selectByName = function(name){
@@ -880,7 +743,7 @@ window.openModal = async function(cn){
     document.getElementById("modal-source").textContent = "Monthly: "+(modalData.source_monthly||"ECB/ACEA")+" · Annual: Eurostat";
     const hm = !!(modalData.monthly&&modalData.monthly.labels&&modalData.monthly.labels.length);
     const im = hm && String(modalData.monthly.labels[0]).includes("-");
-    document.getElementById("sec-monthly-title").innerHTML = (im?"&#x1F4C5; Monthly":"&#x1F4C5; Yearly")+" total registrations";
+    document.getElementById("sec-monthly-title").innerHTML = (im?"Monthly":"Yearly")+" total registrations";
     ptMode = "absolute";
     document.getElementById("pt-absolute").classList.add("active");
     document.getElementById("pt-share").classList.remove("active");
@@ -914,14 +777,11 @@ window.switchPowertrain = function(mode,btn){
 function renderMonthly(data){
   const m = data.monthly, w = document.getElementById("wrap-monthly");
   if(!m || !m.labels || !m.labels.length){
-    w.innerHTML = '<div style="height:280px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem;flex-direction:column;gap:8px"><span style="font-size:1.4rem">&#x1F4C5;</span>Monthly data not yet available</div>';
+    w.innerHTML = '<div style="height:280px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem;flex-direction:column;gap:8px"><span style="font-size:1.4rem">📅</span>Monthly data not yet available</div>';
     return;
   }
   const ctx = document.getElementById("chart-monthly").getContext("2d");
-  chartM = new Chart(ctx,{type:"line",data:{labels:m.labels,datasets:[{
-    label:"Total registrations",data:m.total,borderColor:"#00e5ff",backgroundColor:"rgba(0,229,255,0.08)",
-    borderWidth:2,tension:0.3,fill:true,pointRadius:0,pointHoverRadius:5
-  }]},options:CB});
+  chartM = new Chart(ctx,{type:"line",data:{labels:m.labels,datasets:[{label:"Total registrations",data:m.total,borderColor:"#00e5ff",backgroundColor:"rgba(0,229,255,0.08)",borderWidth:2,tension:0.3,fill:true,pointRadius:0,pointHoverRadius:5}]},options:CB});
 }
 
 function renderAnnual(data,mode){
@@ -963,8 +823,8 @@ window.switchTopList = function(mode,btn){
   const yr = document.getElementById("top-year").textContent || currentYear;
   const titleEl = document.getElementById("top-panel-title");
   if(titleEl) titleEl.innerHTML = mode==="share"
-    ?`Top 10 &middot; BEV Share % <span id="top-year">${yr}</span>`
-    :`Top 10 &middot; BEV Volume <span id="top-year">${yr}</span>`;
+    ?`Top 10 · BEV Share % <span id="top-year">${yr}</span>`
+    :`Top 10 · BEV Volume <span id="top-year">${yr}</span>`;
 };
 
 // Search
@@ -1002,7 +862,7 @@ async function init(){
   try{
     const world = await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
     const countries = topojson.feature(world, world.objects.countries);
-    const NN = {4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",40:"Austria",50:"Bangladesh",56:"Belgium",68:"Bolivia",76:"Brazil",100:"Bulgaria",120:"Cameroon",124:"Canada",144:"Sri Lanka",152:"Chile",156:"China",170:"Colombia",203:"Czech Republic",208:"Denmark",218:"Ecuador",818:"Egypt",231:"Ethiopia",246:"Finland",250:"France",276:"Germany",288:"Ghana",300:"Greece",320:"Guatemala",340:"Honduras",348:"Hungary",356:"India",360:"Indonesia",364:"Iran",368:"Iraq",372:"Ireland",376:"Israel",380:"Italy",392:"Japan",398:"Kazakhstan",404:"Kenya",408:"North Korea",410:"South Korea",414:"Kuwait",422:"Lebanon",434:"Libya",442:"Luxembourg",484:"Mexico",504:"Morocco",528:"Netherlands",554:"New Zealand",566:"Nigeria",578:"Norway",586:"Pakistan",604:"Peru",608:"Philippines",616:"Poland",620:"Portugal",634:"Qatar",642:"Romania",643:"Russia",682:"Saudi Arabia",703:"Slovakia",710:"South Africa",724:"Spain",752:"Sweden",756:"Switzerland",764:"Thailand",792:"Turkey",804:"Ukraine",784:"UAE",826:"United Kingdom",840:"United States",858:"Uruguay",862:"Venezuela",704:"Vietnam",887:"Yemen",894:"Zambia",458:"Malaysia",233:"Estonia",428:"Latvia",440:"Lithuania"};
+    const NN = {4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",40:"Austria",50:"Bangladesh",56:"Belgium",68:"Bolivia",76:"Brazil",100:"Bulgaria",120:"Cameroon",124:"Canada",144:"Sri Lanka",152:"Chile",156:"China",170:"Colombia",203:"Czech Republic",208:"Denmark",218:"Ecuador",818:"Egypt",231:"Ethiopia",246:"Finland",250:"France",276:"Germany",288:"Ghana",300:"Greece",320:"Guatemala",340:"Honduras",348:"Hungary",356:"India",360:"Indonesia",364:"Iran",368:"Iraq",372:"Ireland",376:"Israel",380:"Italy",392:"Japan",398:"Kazakhstan",400:"Jordan",404:"Kenya",408:"North Korea",410:"South Korea",414:"Kuwait",417:"Kyrgyzstan",418:"Laos",422:"Lebanon",426:"Lesotho",428:"Latvia",430:"Liberia",434:"Libya",438:"Liechtenstein",440:"Lithuania",442:"Luxembourg",450:"Madagascar",454:"Malawi",458:"Malaysia",462:"Maldives",466:"Mali",470:"Malta",474:"Martinique",478:"Mauritania",480:"Mauritius",484:"Mexico",492:"Monaco",496:"Mongolia",498:"Moldova",499:"Montenegro",500:"Montserrat",504:"Morocco",508:"Mozambique",512:"Oman",516:"Namibia",520:"Nauru",524:"Nepal",528:"Netherlands",530:"Netherlands Antilles",533:"Aruba",540:"New Caledonia",548:"Vanuatu",554:"New Zealand",558:"Nicaragua",562:"Niger",566:"Nigeria",570:"Niue",574:"Norfolk Island",578:"Norway",580:"Northern Mariana Islands",581:"Guam",583:"Federated States of Micronesia",584:"Marshall Islands",585:"Palau",586:"Pakistan",591:"Panama",598:"Papua New Guinea",600:"Paraguay",604:"Peru",608:"Philippines",612:"Pitcairn Islands",616:"Poland",620:"Portugal",624:"Guinea-Bissau",626:"Timor-Leste",630:"Puerto Rico",634:"Qatar",638:"Réunion",642:"Romania",643:"Russia",646:"Rwanda",652:"Saint Barthélemy",654:"Saint Helena",659:"Saint Kitts and Nevis",660:"Saint Lucia",662:"Saint Martin",666:"Saint Pierre and Miquelon",670:"Saint Vincent and the Grenadines",674:"San Marino",678:"São Tomé and Príncipe",682:"Saudi Arabia",686:"Senegal",688:"Serbia",690:"Seychelles",694:"Sierra Leone",702:"Singapore",703:"Slovakia",704:"Vietnam",705:"Slovenia",706:"Somalia",710:"South Africa",716:"Zimbabwe",724:"Spain",728:"South Sudan",729:"Sudan",732:"Western Sahara",740:"Suriname",744:"Svalbard",748:"Eswatini",752:"Sweden",756:"Switzerland",760:"Syria",762:"Tajikistan",764:"Thailand",768:"Togo",772:"Tokelau",776:"Tonga",780:"Trinidad and Tobago",784:"UAE",788:"Tunisia",792:"Turkey",795:"Turkmenistan",796:"Turks and Caicos Islands",798:"Tuvalu",800:"Uganda",804:"Ukraine",807:"North Macedonia",818:"Egypt",826:"United Kingdom",831:"Guernsey",832:"Jersey",833:"Isle of Man",834:"Tanzania",840:"United States",850:"United States Virgin Islands",854:"Burkina Faso",858:"Uruguay",860:"Uzbekistan",862:"Venezuela",876:"Wallis and Futuna",882:"Samoa",887:"Yemen",894:"Zambia",716:"Zimbabwe"};
     countries.features.forEach(f=>{f.properties.name = NN[parseInt(f.id)] || f.properties.name || String(f.id);});
     svg.append("path").datum({type:"Sphere"}).attr("d",pathGen).attr("fill","#0d1520");
     svg.append("path").datum(d3.geoGraticule()()).attr("d",pathGen).attr("fill","none").attr("stroke","rgba(0,229,255,0.04)").attr("stroke-width","0.3");
