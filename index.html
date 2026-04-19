@@ -438,7 +438,6 @@ const DATA = {
   }
 };
 
-// ==================== EV_SHARE – realistische Daten für alle deine Länder ====================
 const EV_SHARE = {
   2015: {
     "Norway":17.1,"Iceland":2.5,"Netherlands":4.0,"Sweden":1.1,
@@ -659,7 +658,7 @@ const EV_SHARE = {
     "Puerto Rico":5.5,"French Southern Antarctic Lands":0.0,"Falkland Islands":0.0
   }
 };
-  
+
 const FILE_MAP = {
   // EU/EEA — monthly data via ECB/Eurostat workflow
   "Austria":"austria","Belgium":"belgium","Bulgaria":"bulgaria","Cyprus":"cyprus",
@@ -675,7 +674,15 @@ const FILE_MAP = {
   "South Korea":"south_korea","Australia":"australia","Canada":"canada",
   "Brazil":"brazil","Turkey":"turkey","Russia":"russia","India":"india",
   "Mexico":"mexico","Argentina":"argentina","South Africa":"south_africa",
-  "Indonesia":"indonesia","Thailand":"thailand","Malaysia":"malaysia","Iran":"iran"
+  "Indonesia":"indonesia","Thailand":"thailand","Malaysia":"malaysia","Iran":"iran",
+  // Additional countries — annual data from national authorities
+  "Iceland":"iceland","New Zealand":"new_zealand","Taiwan":"taiwan",
+  "Vietnam":"vietnam","Philippines":"philippines","Chile":"chile",
+  "Colombia":"colombia","Peru":"peru","Saudi Arabia":"saudi_arabia",
+  "UAE":"united_arab_emirates","United Arab Emirates":"united_arab_emirates",
+  "Morocco":"morocco","Egypt":"egypt","Tunisia":"tunisia",
+  "Kenya":"kenya","Nigeria":"nigeria","Pakistan":"pakistan",
+  "Venezuela":"venezuela","Bangladesh":"bangladesh"
 };
 
 const NAME_MAP = {
@@ -974,7 +981,7 @@ async function init(){
   try{
     const world=await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
     const countries=topojson.feature(world,world.objects.countries);
-    const NN={4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",40:"Austria",50:"Bangladesh",56:"Belgium",68:"Bolivia",76:"Brazil",100:"Bulgaria",120:"Cameroon",124:"Canada",144:"Sri Lanka",152:"Chile",156:"China",170:"Colombia",203:"Czech Republic",208:"Denmark",218:"Ecuador",818:"Egypt",231:"Ethiopia",246:"Finland",250:"France",276:"Germany",288:"Ghana",300:"Greece",320:"Guatemala",340:"Honduras",348:"Hungary",356:"India",360:"Indonesia",364:"Iran",368:"Iraq",372:"Ireland",376:"Israel",380:"Italy",392:"Japan",398:"Kazakhstan",404:"Kenya",408:"North Korea",410:"South Korea",414:"Kuwait",422:"Lebanon",434:"Libya",442:"Luxembourg",484:"Mexico",504:"Morocco",528:"Netherlands",554:"New Zealand",566:"Nigeria",578:"Norway",586:"Pakistan",604:"Peru",608:"Philippines",616:"Poland",620:"Portugal",634:"Qatar",642:"Romania",643:"Russia",682:"Saudi Arabia",703:"Slovakia",710:"South Africa",724:"Spain",752:"Sweden",756:"Switzerland",764:"Thailand",792:"Turkey",804:"Ukraine",784:"UAE",826:"United Kingdom",840:"United States",858:"Uruguay",862:"Venezuela",704:"Vietnam",887:"Yemen",894:"Zambia",458:"Malaysia",233:"Estonia",428:"Latvia",440:"Lithuania"};
+    const NN={4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",40:"Austria",50:"Bangladesh",56:"Belgium",68:"Bolivia",76:"Brazil",100:"Bulgaria",120:"Cameroon",124:"Canada",144:"Sri Lanka",152:"Chile",156:"China",158:"Taiwan",170:"Colombia",203:"Czech Republic",208:"Denmark",218:"Ecuador",818:"Egypt",231:"Ethiopia",246:"Finland",250:"France",276:"Germany",288:"Ghana",300:"Greece",320:"Guatemala",340:"Honduras",348:"Hungary",352:"Iceland",356:"India",360:"Indonesia",364:"Iran",368:"Iraq",372:"Ireland",376:"Israel",380:"Italy",392:"Japan",398:"Kazakhstan",404:"Kenya",408:"North Korea",410:"South Korea",414:"Kuwait",422:"Lebanon",434:"Libya",442:"Luxembourg",484:"Mexico",504:"Morocco",528:"Netherlands",554:"New Zealand",566:"Nigeria",578:"Norway",586:"Pakistan",604:"Peru",608:"Philippines",616:"Poland",620:"Portugal",634:"Qatar",642:"Romania",643:"Russia",682:"Saudi Arabia",703:"Slovakia",710:"South Africa",724:"Spain",752:"Sweden",756:"Switzerland",764:"Thailand",788:"Tunisia",792:"Turkey",804:"Ukraine",784:"UAE",826:"United Kingdom",840:"United States",858:"Uruguay",862:"Venezuela",704:"Vietnam",887:"Yemen",894:"Zambia",458:"Malaysia",233:"Estonia",428:"Latvia",440:"Lithuania"};
     countries.features.forEach(f=>{f.properties.name=NN[parseInt(f.id)]||f.properties.name||String(f.id);});
     svg.append("path").datum({type:"Sphere"}).attr("d",pathGen).attr("fill","#0d1520");
     svg.append("path").datum(d3.geoGraticule()()).attr("d",pathGen).attr("fill","none").attr("stroke","rgba(0,229,255,0.04)").attr("stroke-width","0.3");
