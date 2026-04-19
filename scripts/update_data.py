@@ -1,151 +1,342 @@
-# scripts/update_data.py
-# Version: v65 - GitHub Actions optimiert (einmaliger Lauf pro Workflow)
+"""
+scripts/update_data.py  —  v9 STABLE
+=====================================
+Data sources:
+  ECB STS  → monthly totals 2015–2022 (confirmed working key)
+  ECB CAR  → monthly totals 2023–present (new dataset, tries multiple keys)
+  Eurostat → annual powertrain breakdown 2015–2024
 
-import json
-import os
-import re
+Why not ACEA PDFs?
+  ACEA publishes PDFs/Excel but has no stable URL pattern — their
+  press release links change format regularly and the PDF layout
+  changes too, making parsing unreliable for automated use.
+  The ECB/Eurostat approach is stable and officially supported.
+
+Note on monthly data post-2022:
+  The ECB STS dataset was discontinued end-2022. The new CAR dataset
+  covers 2023+. If the CAR key fails, monthly data shows 2015-2022
+  and the annual chart shows full 2015-2024 coverage.
+"""
+
+import csv, io, json, os, sys, time, urllib.error, urllib.request
 from datetime import datetime, timezone
-import requests
-from bs4 import BeautifulSoup
+from pathlib import Path
 
-DATA_DIR = "data/countries"
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT  = os.environ.get("TELEGRAM_CHAT_ID", "")
+REPO_ROOT      = Path(__file__).resolve().parent.parent
+DATA_DIR       = REPO_ROOT / "data" / "countries"
+NOW            = datetime.now(timezone.utc)
 
-# ==================== KONFIGURATION ====================
 COUNTRIES = {
-    "DE": ("germany", "Germany"), "FR": ("france", "France"), "IT": ("italy", "Italy"),
-    "ES": ("spain", "Spain"), "NL": ("netherlands", "Netherlands"), "BE": ("belgium", "Belgium"),
-    "AT": ("austria", "Austria"), "CH": ("switzerland", "Switzerland"), "PL": ("poland", "Poland"),
-    "CZ": ("czech_republic", "Czech Republic"), "SK": ("slovakia", "Slovakia"),
-    "HU": ("hungary", "Hungary"), "RO": ("romania", "Romania"), "BG": ("bulgaria", "Bulgaria"),
-    "HR": ("croatia", "Croatia"), "SI": ("slovenia", "Slovenia"), "GR": ("greece", "Greece"),
-    "PT": ("portugal", "Portugal"), "IE": ("ireland", "Ireland"), "LU": ("luxembourg", "Luxembourg"),
-    "FI": ("finland", "Finland"), "SE": ("sweden", "Sweden"), "DK": ("denmark", "Denmark"),
-    "NO": ("norway", "Norway"), "MT": ("malta", "Malta"), "CY": ("cyprus", "Cyprus"),
-    "EE": ("estonia", "Estonia"), "LV": ("latvia", "Latvia"), "LT": ("lithuania", "Lithuania"),
-    "IS": ("iceland", "Iceland"), "GB": ("united_kingdom", "United Kingdom"),
-    "IN": ("india", "India"), "TH": ("thailand", "Thailand"), "MY": ("malaysia", "Malaysia"),
-    "ID": ("indonesia", "Indonesia"), "AU": ("australia", "Australia"), "NZ": ("new_zealand", "New Zealand"),
-    "JP": ("japan", "Japan"), "KR": ("south_korea", "South Korea"), "CN": ("china", "China"),
-    "CA": ("canada", "Canada"), "US": ("united_states", "United States"), "BR": ("brazil", "Brazil"),
-    "RU": ("russia", "Russia"), "TR": ("turkey", "Turkey"), "MX": ("mexico", "Mexico"),
-    "AR": ("argentina", "Argentina"), "CL": ("chile", "Chile"), "IR": ("iran", "Iran"),
-    "SA": ("saudi_arabia", "Saudi Arabia"), "ZA": ("south_africa", "South Africa"),
-    "VN": ("vietnam", "Vietnam"), "TW": ("taiwan", "Taiwan"), "PH": ("philippines", "Philippines"),
-    "EG": ("egypt", "Egypt"), "AE": ("united_arab_emirates", "United Arab Emirates"),
-    "PK": ("pakistan", "Pakistan"), "NG": ("nigeria", "Nigeria"), "KE": ("kenya", "Kenya"),
-    "BD": ("bangladesh", "Bangladesh"), "ET": ("ethiopia", "Ethiopia"), "CO": ("colombia", "Colombia"),
-    "PE": ("peru", "Peru"), "VE": ("venezuela", "Venezuela"),
-    # Afrikanische Länder
-    "DZ": ("algeria", "Algeria"), "AO": ("angola", "Angola"), "GQ": ("equatorial_guinea", "Equatorial Guinea"),
-    "BJ": ("benin", "Benin"), "BW": ("botswana", "Botswana"), "BF": ("burkina_faso", "Burkina Faso"),
-    "BI": ("burundi", "Burundi"), "DJ": ("djibouti", "Djibouti"), "CI": ("ivory_coast", "Ivory Coast"),
-    "ER": ("eritrea", "Eritrea"), "SZ": ("eswatini", "Eswatini"), "GA": ("gabon", "Gabon"),
-    "GM": ("gambia", "Gambia"), "GH": ("ghana", "Ghana"), "GN": ("guinea", "Guinea"),
-    "GW": ("guinea_bissau", "Guinea-Bissau"), "CM": ("cameroon", "Cameroon"), "CV": ("cape_verde", "Cape Verde"),
-    "KM": ("comoros", "Comoros"), "CD": ("democratic_republic_of_the_congo", "DR Congo"),
-    "CG": ("republic_of_the_congo", "Congo"), "LS": ("lesotho", "Lesotho"), "LR": ("liberia", "Liberia"),
-    "LY": ("libya", "Libya"), "MG": ("madagascar", "Madagascar"), "MW": ("malawi", "Malawi"),
-    "ML": ("mali", "Mali"), "MA": ("morocco", "Morocco"), "MR": ("mauritania", "Mauritania"),
-    "MU": ("mauritius", "Mauritius"), "MZ": ("mozambique", "Mozambique"), "NA": ("namibia", "Namibia"),
-    "NE": ("niger", "Niger"), "RW": ("rwanda", "Rwanda"), "ST": ("sao_tome_and_principe", "São Tomé and Príncipe"),
-    "SN": ("senegal", "Senegal"), "SC": ("seychelles", "Seychelles"), "SL": ("sierra_leone", "Sierra Leone"),
-    "ZW": ("zimbabwe", "Zimbabwe"), "SD": ("sudan", "Sudan"), "SS": ("south_sudan", "South Sudan"),
-    "TZ": ("tanzania", "Tanzania"), "TG": ("togo", "Togo"), "TD": ("chad", "Chad"),
-    "TN": ("tunisia", "Tunisia"), "UG": ("uganda", "Uganda"), "CF": ("central_african_republic", "Central African Republic"),
+    "AT": ("Austria",        "AT",  9.1),
+    "BE": ("Belgium",        "BE", 11.6),
+    "BG": ("Bulgaria",       "BG",  6.5),
+    "CY": ("Cyprus",         "CY",  1.2),
+    "CZ": ("Czech Republic", "CZ", 10.9),
+    "DE": ("Germany",        "DE", 84.4),
+    "DK": ("Denmark",        "DK",  5.9),
+    "EE": ("Estonia",        "EE",  1.4),
+    "EL": ("Greece",         "EL", 10.4),
+    "ES": ("Spain",          "ES", 47.4),
+    "FI": ("Finland",        "FI",  5.6),
+    "FR": ("France",         "FR", 68.1),
+    "HR": ("Croatia",        "HR",  3.9),
+    "HU": ("Hungary",        "HU",  9.7),
+    "IE": ("Ireland",        "IE",  5.1),
+    "IT": ("Italy",          "IT", 59.1),
+    "LT": ("Lithuania",      "LT",  2.8),
+    "LU": ("Luxembourg",     "LU",  0.7),
+    "LV": ("Latvia",         "LV",  1.8),
+    "MT": ("Malta",          "MT",  0.5),
+    "NL": ("Netherlands",    "NL", 17.9),
+    "PL": ("Poland",         "PL", 37.6),
+    "PT": ("Portugal",       "PT", 10.3),
+    "RO": ("Romania",        "RO", 19.0),
+    "SE": ("Sweden",         "SE", 10.5),
+    "SI": ("Slovenia",       "SI",  2.1),
+    "SK": ("Slovakia",       "SK",  5.5),
+    "NO": ("Norway",         "NO",  5.5),
+    "CH": ("Switzerland",    "CH",  8.8),
+    "GB": ("United Kingdom", "UK", 67.4),
 }
 
-TE_SLUGS = {k: v[0].replace("_", "-") for k, v in COUNTRIES.items()}
-
-YEARLY_ONLY = {"EG", "TW", "PH", "DZ", "AO", "GQ", "BJ", "BW", "BF", "BI", "DJ", "CI", "ER", "SZ",
-               "GA", "GM", "GH", "GN", "GW", "CM", "CV", "KM", "CD", "CG", "LS", "LR", "LY", "MG",
-               "MW", "ML", "MA", "MR", "MU", "MZ", "NA", "NE", "RW", "ST", "SN", "SC", "SL", "ZW",
-               "SD", "SS", "TZ", "TG", "TD", "TN", "UG", "CF"}
-
-MONTH_MAP = {
-    "jan": "01", "feb": "02", "mar": "03", "apr": "04", "may": "05", "jun": "06",
-    "jul": "07", "aug": "08", "sep": "09", "oct": "10", "nov": "11", "dec": "12"
+FUEL_MAP_GRANULAR = {
+    "ELC": "bev", "ELC_PET_PI": "phev", "ELC_DIE_PI": "phev",
+    "ELC_PET_HYB": "hybrid", "ELC_DIE_HYB": "hybrid",
+    "PET_X_HYB": "petrol", "DIE_X_HYB": "diesel",
+    "LPG": "other", "GAS": "other", "HYD_FCELL": "other",
+    "BIOETH": "other", "BIODIE": "other", "BIFUEL": "other", "OTH": "other",
+}
+FUEL_MAP_FALLBACK = {
+    "ELC": "bev", "PET": "petrol", "DIE": "diesel",
+    "LPG": "other", "GAS": "other", "OTH": "other",
 }
 
-AFRICA_YEARLY_FALLBACK = {
-    "EG": {2015:220000,2016:240000,2017:260000,2018:280000,2019:300000,2020:180000,2021:220000,2022:240000,2023:250000,2024:260000,2025:250000},
-    "TW": {2015:380000,2016:390000,2017:410000,2018:430000,2019:420000,2020:380000,2021:400000,2022:410000,2023:430000,2024:440000,2025:450000},
-    # Weitere Fallbacks können bei Bedarf ergänzt werden
-}
+def http_get(url, timeout=30):
+    req = urllib.request.Request(
+        url,
+        headers={"User-Agent": "EV-Map-Bot/9.0 (github.com/Altair02/EV-adoption-worldmap)"}
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.read()
 
-def fetch_latest_te(country_code):
-    slug = TE_SLUGS.get(country_code)
-    if not slug:
-        return None, None, None
-    
-    url = f"https://tradingeconomics.com/{slug}/car-registrations"
+def parse_csv(raw):
+    result = {}
     try:
-        headers = {"User-Agent": "Mozilla/5.0 (compatible; CarUpdateBot/1.0)"}
-        r = requests.get(url, headers=headers, timeout=15)
-        r.raise_for_status()
-        soup = BeautifulSoup(r.text, "lxml")
-        text = soup.get_text()
+        reader = csv.DictReader(io.StringIO(raw))
+        for row in reader:
+            row_u  = {k.upper(): v for k, v in row.items()}
+            period = row_u.get("TIME_PERIOD", "").strip()
+            value  = row_u.get("OBS_VALUE",   "").strip()
+            if period and value:
+                try:
+                    v = int(float(value))
+                    if v > 0:
+                        result[period] = v
+                except ValueError:
+                    pass
+    except Exception:
+        pass
+    return result
 
-        match = re.search(r"Car Registrations.*?to\s+([\d,]+)\s*(?:Thousand|Units?)?\s+in\s+([A-Za-z]+)\s+(\d{4})",
-                         text, re.IGNORECASE | re.DOTALL)
-        
-        if match:
-            value_str = match.group(1).replace(",", "")
-            month_name = match.group(2).lower()[:3]
-            year = match.group(3)
-            month = MONTH_MAP.get(month_name)
-            if month:
-                label = f"{year}-{month}"
-                value = int(value_str) * 1000 if "thousand" in text.lower() else int(value_str)
-                return label, value, url
-        return None, None, url
+def ecb_fetch(dataset, key_tmpl, geo, start):
+    key = key_tmpl.replace("XX", geo)
+    url = (f"https://data-api.ecb.europa.eu/service/data/{dataset}/{key}"
+           f"?format=csvdata&startPeriod={start}&detail=dataonly")
+    try:
+        raw = http_get(url, timeout=20).decode("utf-8")
+        if "TIME_PERIOD" not in raw.upper():
+            return {}
+        return parse_csv(raw)
+    except Exception:
+        return {}
+
+# ── ECB monthly ───────────────────────────────────────────────────────────────
+def fetch_ecb_monthly():
+    # STS: historical monthly data 2015-2022 (discontinued Dec 2022)
+    STS_KEYS = [
+        "M.XX.N.CREG.PC0000.3.ABS",   # confirmed working in previous runs
+        "M.XX.W.CREG.PC0000.3.ABS",
+    ]
+    # CAR: new dataset 2023-present
+    CAR_KEYS = [
+        "M.XX.N.CREG.PC0000.3.ABS",
+        "M.XX.N.CREG.PC0000..ABS",
+        "M.XX..CREG.PC0000.3.ABS",
+        "M.XX.N.NEWCARS.N",
+        "M.XX.N.NEWCARS.NSA",
+        "M.XX..NEWCARS.N",
+        "M.XX....",
+        "M.XX...",
+    ]
+
+    print("[ECB] Finding working STS key (test: Germany 2020+)…")
+    sts_key = None
+    for k in STS_KEYS:
+        d = ecb_fetch("STS", k, "DE", "2020-01")
+        if d:
+            sts_key = k
+            print(f"[ECB] STS key found: {k} → {len(d)} months, latest={max(d.keys())}")
+            break
+        print(f"[ECB]   STS {k} → no data")
+
+    print("[ECB] Finding working CAR key (test: Germany 2023+)…")
+    car_key = None
+    for k in CAR_KEYS:
+        d = ecb_fetch("CAR", k, "DE", "2023-01")
+        if d:
+            car_key = k
+            print(f"[ECB] CAR key found: {k} → {len(d)} months, latest={max(d.keys())}")
+            break
+        print(f"[ECB]   CAR {k} → no data")
+
+    if not sts_key and not car_key:
+        print("[ECB] No working key found — skipping monthly data")
+        return {}
+
+    if not car_key:
+        print("[ECB] NOTE: CAR key not found — monthly data will only cover 2015-2022")
+    if not sts_key:
+        print("[ECB] NOTE: STS key not found — historical data unavailable")
+
+    print(f"\n[ECB] Fetching {len(COUNTRIES)} countries…")
+    results = {}
+    for geo in COUNTRIES:
+        merged = {}
+        if sts_key:
+            merged.update(ecb_fetch("STS", sts_key, geo, "2015-01"))
+        if car_key:
+            merged.update(ecb_fetch("CAR", car_key, geo, "2023-01"))
+        if merged:
+            months = sorted(merged.keys())
+            results[geo] = {"labels": months, "total": [merged[m] for m in months]}
+            print(f"[ECB]   {geo}: {len(months)} months ({months[0]}→{months[-1]})")
+        time.sleep(0.2)
+
+    ok = len(results)
+    recent = sum(1 for v in results.values() if any(l >= "2023" for l in v["labels"]))
+    print(f"[ECB] Done — {ok} countries, {recent} with data from 2023+")
+    return results
+
+# ── Eurostat annual ───────────────────────────────────────────────────────────
+def fetch_eurostat_annual():
+    url = ("https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/"
+           "road_eqr_carpda?format=JSON&lang=EN&unit=NR")
+    print(f"\n[Eurostat] Fetching annual powertrain breakdown…")
+    try:
+        raw = json.loads(http_get(url, timeout=60).decode("utf-8"))
     except Exception as e:
-        print(f"[{datetime.now():%H:%M:%S}] Fehler bei {country_code}: {e}")
-        return None, None, None
+        print(f"[Eurostat] Error: {e}")
+        return {}
 
-def update_single_country(country_code):
-    display_name = COUNTRIES[country_code][1]
-    print(f"[{datetime.now():%H:%M:%S}] Prüfe {display_name} ...")
-    
-    label, value, url = fetch_latest_te(country_code)
-    filename = os.path.join(DATA_DIR, f"{COUNTRIES[country_code][0]}.json")
-    os.makedirs(DATA_DIR, exist_ok=True)
+    dims      = raw.get("dimension", {})
+    values    = raw.get("value", {})
+    dim_order = raw.get("id",   [])
+    dim_sizes = raw.get("size", [])
 
-    if os.path.exists(filename):
-        with open(filename, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    else:
-        data = {"monthly": {"labels": [], "total": []}, "last_updated": None, "source_monthly": None}
+    def idx(d): return dims.get(d, {}).get("category", {}).get("index", {})
+    geo_idx = idx("geo"); time_idx = idx("time"); mot_idx = idx("mot_nrg")
 
-    monthly = data["monthly"]
-    changed = False
+    strides = {}
+    for i, d in enumerate(dim_order):
+        s = 1
+        for j in range(i+1, len(dim_order)): s *= dim_sizes[j]
+        strides[d] = s
 
-    if label and value is not None and label not in monthly["labels"]:
-        monthly["labels"].append(label)
-        monthly["total"].append(value)
-        changed = True
-        print(f" → NEUER EINTRAG: {label} → {value:,} Fahrzeuge")
+    years = sorted([y for y in time_idx if int(y) >= 2015])
+    estat_to_ecb = {v[1]: k for k, v in COUNTRIES.items()}
 
+    def get_val(g, t, fuel):
+        f = mot_idx.get(fuel)
+        if f is None: return 0
+        linear = g*strides.get("geo",1) + t*strides.get("time",1) + f*strides.get("mot_nrg",1)
+        v = values.get(str(linear)) or values.get(linear)
+        return int(v) if v is not None else 0
+
+    result = {}
+    for estat_geo, g_pos in geo_idx.items():
+        ecb_key = estat_to_ecb.get(estat_geo)
+        if not ecb_key: continue
+        country_data = {}
+        for year in years:
+            t_pos = time_idx.get(year)
+            if t_pos is None: continue
+            yv = {f: 0 for f in ["bev","phev","hybrid","petrol","diesel","other"]}
+            for fuel_code, field in FUEL_MAP_GRANULAR.items():
+                yv[field] += get_val(g_pos, t_pos, fuel_code)
+            if yv["petrol"] == 0 and yv["diesel"] == 0:
+                for fuel_code, field in FUEL_MAP_FALLBACK.items():
+                    v = get_val(g_pos, t_pos, fuel_code)
+                    if v > 0: yv[field] += v
+            country_data[year] = yv
+        if country_data: result[ecb_key] = country_data
+
+    if "DE" in result and "2023" in result["DE"]:
+        de = result["DE"]["2023"]
+        print(f"[Eurostat] DE 2023: BEV={de['bev']:,} PHEV={de['phev']:,} "
+              f"Hybrid={de['hybrid']:,} Petrol={de['petrol']:,} Diesel={de['diesel']:,}")
+    print(f"[Eurostat] Done — {len(result)} countries, {years[0]}–{years[-1]}")
+    return result
+
+# ── Write JSON files ──────────────────────────────────────────────────────────
+def write_files(monthly, annual):
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    changed = []
+    for ecb_code, (name, estat_code, pop) in COUNTRIES.items():
+        m = monthly.get(ecb_code, {})
+        a = annual.get(ecb_code, {})
+        if not m and not a: continue
+        years = sorted(a.keys()) if a else []
+        annual_block = {}
+        if years:
+            annual_block = {
+                "labels": years,
+                "bev":    [a[y].get("bev",    0) for y in years],
+                "phev":   [a[y].get("phev",   0) for y in years],
+                "hybrid": [a[y].get("hybrid", 0) for y in years],
+                "petrol": [a[y].get("petrol", 0) for y in years],
+                "diesel": [a[y].get("diesel", 0) for y in years],
+                "other":  [a[y].get("other",  0) for y in years],
+            }
+        payload = {
+            "name": name, "ecb_code": ecb_code, "population_mio": pop,
+            "source_monthly": "ECB Data Portal / ACEA",
+            "source_annual":  "Eurostat road_eqr_carpda",
+            "last_updated":   NOW.isoformat(),
+            "monthly": m, "annual": annual_block,
+        }
+        fname = name.lower().replace(" ", "_") + ".json"
+        path  = DATA_DIR / fname
+        old   = {}
+        if path.exists():
+            try:
+                old = json.loads(path.read_text("utf-8"))
+                # Defensive: ensure existing file always has monthly key
+                if "monthly" not in old:
+                    old["monthly"] = {"labels": [], "total": []}
+            except Exception:
+                pass
+        def no_ts(d):
+            d2 = dict(d); d2.pop("last_updated", None); return d2
+        path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), "utf-8")
+        if no_ts(payload) != no_ts(old):
+            changed.append(name)
+            print(f"[Write] {name} \u2713 updated")
+        else:
+            print(f"[Write] {name} (no change)")
+    return changed
+
+# ── Telegram ──────────────────────────────────────────────────────────────────
+def send_telegram(changed, n_countries, latest_month):
+    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT: return
+    date_str = NOW.strftime("%d.%m.%Y %H:%M UTC")
     if changed:
-        data["last_updated"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-        with open(filename, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-        print(f" ✓ {display_name} aktualisiert")
+        lines = "\n".join(f"  \u2022 {c}" for c in changed[:25])
+        body  = (f"\U0001F697 *Car Registrations \u2014 Updated*\n"
+                 f"\U0001F4C5 {date_str}\n"
+                 f"\U0001F30D {n_countries} countries\n"
+                 f"\U0001F4C8 Monthly data up to: {latest_month}\n\n"
+                 f"*Changed ({len(changed)}):*\n{lines}")
     else:
-        print(f"   Keine neuen Daten für {display_name}")
+        body  = (f"\U0001F697 *Car Registrations \u2014 No Changes*\n"
+                 f"\U0001F4C5 {date_str}\n"
+                 f"\U0001F30D {n_countries} countries \u2014 all up to date.")
+    body += ("\n\n\U0001F5FA\uFE0F [Open Map](https://altair02.github.io/EV-adoption-worldmap/)\n"
+             "\U0001F4C1 [GitHub](https://github.com/Altair02/EV-adoption-worldmap)")
+    data = json.dumps({
+        "chat_id": TELEGRAM_CHAT, "text": body,
+        "parse_mode": "Markdown", "disable_web_page_preview": False,
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
+        data=data, headers={"Content-Type": "application/json"}
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            msg_id = json.loads(r.read()).get("result", {}).get("message_id", "?")
+        print(f"[Telegram] Sent \u2713 (id={msg_id})")
+    except Exception as e:
+        print(f"[Telegram] Error: {e}")
 
-def run_update():
-    print(f"\n=== Update gestartet um {datetime.now():%Y-%m-%d %H:%M:%S} ===")
-    for code in COUNTRIES:
-        update_single_country(code)
-    print("=== Update abgeschlossen ===\n")
+# ── Main ──────────────────────────────────────────────────────────────────────
+def main():
+    print("=" * 60)
+    print(f"  Car Registration Updater v9  \u2014  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
+    print("=" * 60)
+    monthly = fetch_ecb_monthly()
+    annual  = fetch_eurostat_annual()
+    if not monthly and not annual:
+        print("\u26A0\uFE0F  No data from either source")
+        send_telegram([], 0, "n/a")
+        sys.exit(1)
+    changed = write_files(monthly, annual)
+    latest = max(
+        (v["labels"][-1] for v in monthly.values() if v.get("labels")),
+        default="n/a"
+    )
+    send_telegram(changed, len(COUNTRIES), latest)
+    print(f"\n\u2713 Done \u2014 {len(changed)} countries updated, latest monthly: {latest}")
 
-# ==================== HAUPTSTART (für GitHub Actions) ====================
 if __name__ == "__main__":
-    print("=== Car Registration Updater v65 (GitHub Actions) gestartet ===")
-    
-    os.makedirs(DATA_DIR, exist_ok=True)
-    
-    # Nur einmal ausführen - kein Scheduler
-    run_update()
-    
-    print("=== Skript erfolgreich beendet ===")
+    main()
