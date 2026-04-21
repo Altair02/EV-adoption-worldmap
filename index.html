@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -39,9 +40,13 @@
   .main-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
   .map-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; position: relative; }
   .map-panel svg { width: 100%; height: auto; display: block; }
-  .country-path { stroke: rgba(0,229,255,0.12); stroke-width: 0.4px; transition: all 0.15s; cursor: pointer; }
+  .country-path { stroke: rgba(0,229,255,0.12); stroke-width: 0.4px; transition: fill 0.15s, filter 0.15s; cursor: pointer; }
   .country-path:hover { stroke: var(--accent); stroke-width: 1px; filter: brightness(1.4); }
   .country-path.selected { stroke: var(--accent2); stroke-width: 1.5px; }
+  .map-zoom-btns { position: absolute; bottom: 14px; right: 14px; display: flex; flex-direction: column; gap: 5px; z-index: 10; }
+  .map-zoom-btns button { width: 30px; height: 30px; background: rgba(15,20,32,0.92); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s, border-color 0.15s; line-height: 1; padding: 0; }
+  .map-zoom-btns button:hover { background: var(--border); border-color: var(--accent); color: var(--accent); }
+  .map-zoom-reset { font-size: 0.55rem !important; letter-spacing: 0.04em; text-transform: uppercase; }
   .country-path.search-dim { opacity: 0.18; transition: opacity 0.2s; }
   .country-path.search-highlighted { stroke: #fff; stroke-width: 2px; filter: brightness(1.8) drop-shadow(0 0 6px rgba(0,229,255,0.9)); opacity: 1; transition: all 0.2s; }
   .sidebar { display: flex; flex-direction: column; gap: 16px; }
@@ -94,7 +99,7 @@
   /* 2-button powertrain toggle */
   .pt-toggle { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; width: fit-content; margin-bottom: 12px; }
   .pt-btn { padding: 6px 18px; font-size: 0.7rem; cursor: pointer; border: none; background: transparent; color: var(--muted); font-family: 'DM Mono', monospace; transition: all .15s; white-space: nowrap; }
-  .pt-btn:first-child { border-right: 1px solid var(--border); }
+  .pt-btn:not(:last-child) { border-right: 1px solid var(--border); }
   .pt-btn.active { background: rgba(0,229,255,0.12); color: var(--accent); }
   .pt-btn:hover:not(.active) { background: rgba(255,255,255,0.04); color: var(--text); }
   .summary-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 14px; }
@@ -144,27 +149,32 @@
       <div id="modal-loading"><div class="modal-spinner"></div>Loading&hellip;</div>
       <div id="modal-content" style="display:none">
 
-        <!-- Monthly / Yearly total -->
-        <div class="modal-section-title" id="sec-monthly-title">&#x1F4C5; Monthly total registrations</div>
-        <div class="chart-wrap" id="wrap-monthly"><canvas id="chart-monthly"></canvas></div>
+```
+    <!-- Monthly / Yearly total -->
+    <div class="modal-section-title" id="sec-monthly-title">&#x1F4C5; Monthly total registrations</div>
+    <div class="chart-wrap" id="wrap-monthly"><canvas id="chart-monthly"></canvas></div>
 
-        <hr class="section-divider">
+    <hr class="section-divider">
 
-        <!-- Annual powertrain — 2-button toggle -->
-        <div class="modal-section-title">&#x26A1; Annual breakdown by powertrain &middot; Eurostat</div>
-        <div class="pt-toggle">
-          <button class="pt-btn active" id="pt-absolute" onclick="switchPowertrain('absolute',this)">Powertrain absolute</button>
-          <button class="pt-btn" id="pt-share" onclick="switchPowertrain('share',this)">Market share %</button>
-        </div>
-        <div class="chart-wrap" id="wrap-annual"><canvas id="chart-annual"></canvas></div>
-        <div class="summary-grid" id="summary-grid"></div>
-
-      </div>
-      <div id="modal-nodata" style="display:none" class="no-data-msg">
-        &#x1F4ED; No data available for this country yet.<br>
-        <span style="font-size:0.68rem">ECB/ACEA covers ~30 EU/EEA countries</span>
-      </div>
+    <!-- Annual powertrain — 3-button toggle -->
+    <div class="modal-section-title">&#x26A1; Annual breakdown by powertrain</div>
+    <div class="pt-toggle">
+      <button class="pt-btn active" id="pt-absolute" onclick="switchPowertrain('absolute',this)">Powertrain absolute</button>
+      <button class="pt-btn" id="pt-share" onclick="switchPowertrain('share',this)">Market share %</button>
+      <button class="pt-btn" id="pt-stacked" onclick="switchPowertrain('stacked',this)">Stacked</button>
     </div>
+    <div class="chart-wrap" id="wrap-annual"><canvas id="chart-annual"></canvas></div>
+    <div class="chart-wrap" id="wrap-stacked" style="display:none"><canvas id="chart-stacked"></canvas></div>
+    <div class="summary-grid" id="summary-grid"></div>
+
+  </div>
+  <div id="modal-nodata" style="display:none" class="no-data-msg">
+    &#x1F4ED; No data available for this country yet.<br>
+    <span style="font-size:0.68rem">ECB/ACEA covers ~30 EU/EEA countries</span>
+  </div>
+</div>
+```
+
   </div>
 </div>
 
@@ -196,6 +206,11 @@
     <div class="map-panel">
       <div id="map-loading"><div class="spinner"></div><p>Loading map&hellip;</p></div>
       <svg id="map-svg" viewBox="0 0 960 500"></svg>
+      <div class="map-zoom-btns">
+        <button onclick="mapZoom(1.5)" title="Zoom in">+</button>
+        <button onclick="mapZoom(1/1.5)" title="Zoom out">&minus;</button>
+        <button class="map-zoom-reset" onclick="mapReset()" title="Reset view">⌂</button>
+      </div>
     </div>
     <div class="sidebar">
       <div class="panel">
@@ -252,7 +267,40 @@ const DATA = {
     "India":[4400000,1428,"OICA"],"Japan":[4100000,124,"OICA"],
     "Brazil":[2600000,216,"OICA"],"South Korea":[1700000,52,"OICA"],
     "Canada":[1950000,38,"OICA"],"Russia":[1050000,144,"AEB"],
-    "Turkey":[1300000,85,"OSD"],"Australia":[1180000,26,"VFACTS"]
+    "Turkey":[1300000,85,"OSD"],"Australia":[1180000,26,"VFACTS"],
+    "Iceland":[3700,0.37,"Samgöngustofa"],
+    "New Zealand":[28000,5.1,"MIA NZ"],
+    "Taiwan":[110000,23.6,"MOTC"],
+    "Vietnam":[94000,99.5,"VAMA"],
+    "Philippines":[99000,116.7,"CAMPI"],
+    "Chile":[84000,19.5,"ANAC"],
+    "Colombia":[79000,52.2,"ANDEMOS"],
+    "Peru":[53000,33.5,"AAP"],
+    "UAE":[91000,10,"OICA"],
+    "United Arab Emirates":[91000,10,"OICA"],
+    "Morocco":[51000,37.5,"AIVAM"],
+    "Egypt":[64000,105,"OICA"],
+    "Tunisia":[28000,12,"CCVT"],
+    "Kenya":[4300,55,"KNBS"],
+    "Nigeria":[3600,223,"OICA"],
+    "Pakistan":[56000,240,"PAMA"],
+    "Venezuela":[5100,28.5,"CAV"],
+    "Bangladesh":[2000,172,"BRTA"],
+    "Saudi Arabia":[170000,36.4,"OICA/SAAMA"],
+    "Bulgaria":[12500,6.5,"ACEA"],
+    "Croatia":[17700,3.9,"ACEA"],
+    "Cyprus":[3700,1.2,"ACEA"],
+    "Estonia":[3300,1.4,"ACEA"],
+    "Greece":[36500,10.4,"ACEA"],
+    "Hungary":[32700,9.7,"ACEA"],
+    "Ireland":[31600,5.2,"SIMI"],
+    "Latvia":[5700,1.8,"ACEA"],
+    "Lithuania":[10600,2.8,"ACEA"],
+    "Luxembourg":[12000,0.68,"ACEA"],
+    "Malta":[1600,0.53,"ACEA"],
+    "Romania":[39600,19.0,"ACEA"],
+    "Slovakia":[23600,5.5,"ACEA"],
+    "Slovenia":[14600,2.1,"ACEA"]
   },
   2025: {
     "Germany":[2858000,84,"KBA"],"France":[1632000,68,"ACEA"],
@@ -267,7 +315,40 @@ const DATA = {
     "India":[4400000,1428,"OICA"],"Japan":[4100000,124,"OICA"],
     "Brazil":[2600000,216,"OICA"],"South Korea":[1700000,52,"OICA"],
     "Canada":[1950000,38,"OICA"],"Russia":[1050000,144,"AEB"],
-    "Turkey":[1300000,85,"OSD"],"Australia":[1180000,26,"VFACTS"]
+    "Turkey":[1300000,85,"OSD"],"Australia":[1180000,26,"VFACTS"],
+    "Iceland":[14547,0.37,"Samgöngustofa"],
+    "New Zealand":[110000,5.1,"MIA NZ"],
+    "Taiwan":[430000,23.6,"MOTC"],
+    "Vietnam":[370000,99.5,"VAMA"],
+    "Philippines":[390000,116.7,"CAMPI"],
+    "Chile":[330000,19.5,"ANAC"],
+    "Colombia":[310000,52.2,"ANDEMOS"],
+    "Peru":[210000,33.5,"AAP"],
+    "UAE":[360000,10,"OICA"],
+    "United Arab Emirates":[360000,10,"OICA"],
+    "Morocco":[200000,37.5,"AIVAM"],
+    "Egypt":[250000,105,"OICA"],
+    "Tunisia":[110000,12,"CCVT"],
+    "Kenya":[17000,55,"KNBS"],
+    "Nigeria":[14000,223,"OICA"],
+    "Pakistan":[220000,240,"PAMA"],
+    "Venezuela":[20000,28.5,"CAV"],
+    "Bangladesh":[8000,172,"BRTA"],
+    "Saudi Arabia":[670000,36.4,"OICA/SAAMA"],
+    "Bulgaria":[49419,6.5,"ACEA"],
+    "Croatia":[69841,3.9,"ACEA"],
+    "Cyprus":[14634,1.2,"ACEA"],
+    "Estonia":[13055,1.4,"ACEA"],
+    "Greece":[144199,10.4,"ACEA"],
+    "Hungary":[129440,9.7,"ACEA"],
+    "Ireland":[124954,5.2,"SIMI"],
+    "Latvia":[22506,1.8,"ACEA"],
+    "Lithuania":[41974,2.8,"ACEA"],
+    "Luxembourg":[47158,0.68,"ACEA"],
+    "Malta":[6468,0.53,"ACEA"],
+    "Romania":[156803,19.0,"ACEA"],
+    "Slovakia":[93103,5.5,"ACEA"],
+    "Slovenia":[57556,2.1,"ACEA"]
   },
   2024: {
     "China":[22000000,1412,"OICA/CAAM"],"United States":[15940000,334,"OICA/Wards"],
@@ -286,7 +367,30 @@ const DATA = {
     "Sweden":[270000,10,"BIL Sweden"],"Switzerland":[240000,9,"auto-schweiz"],
     "Austria":[254000,9,"ACEA"],"Norway":[129000,5,"OFV"],
     "Denmark":[173000,6,"ACEA"],"Finland":[74000,6,"ACEA"],
-    "Portugal":[210000,10,"ACEA"],"Czech Republic":[232000,11,"ACEA"]
+    "Portugal":[210000,10,"ACEA"],"Czech Republic":[232000,11,"ACEA"],
+    "Iceland":[10233,0.37,"Samgöngustofa"],"New Zealand":[107000,5.1,"MIA NZ"],
+    "Taiwan":[440000,23.6,"MOTC"],"Vietnam":[350000,99.5,"VAMA"],
+    "Philippines":[380000,116.7,"CAMPI"],"Chile":[320000,19.5,"ANAC"],
+    "Colombia":[300000,52.2,"ANDEMOS"],"Peru":[200000,33.5,"AAP"],
+    "UAE":[350000,10,"OICA"],"United Arab Emirates":[350000,10,"OICA"],
+    "Morocco":[185000,37.5,"AIVAM"],"Egypt":[200000,105,"OICA"],
+    "Tunisia":[105000,12,"CCVT"],"Kenya":[16000,55,"KNBS"],
+    "Nigeria":[13000,223,"OICA"],"Pakistan":[170000,240,"PAMA"],
+    "Venezuela":[18000,28.5,"CAV"],"Bangladesh":[7500,172,"BRTA"],
+    "Bulgaria":[42941,6.5,"ACEA"],
+    "Croatia":[65020,3.9,"ACEA"],
+    "Cyprus":[15057,1.2,"ACEA"],
+    "Estonia":[25386,1.4,"ACEA"],
+    "Greece":[137075,10.4,"ACEA"],
+    "Hungary":[121611,9.7,"ACEA"],
+    "Ireland":[121196,5.1,"SIMI"],
+    "Latvia":[17329,1.8,"ACEA"],
+    "Lithuania":[30122,2.8,"ACEA"],
+    "Luxembourg":[46659,0.67,"ACEA"],
+    "Malta":[7663,0.53,"ACEA"],
+    "Romania":[151105,19.0,"ACEA"],
+    "Slovakia":[93409,5.5,"ACEA"],
+    "Slovenia":[53018,2.1,"ACEA"]
   },
   2023: {
     "China":[21400000,1412,"OICA/CAAM"],"United States":[15600000,334,"OICA/Wards"],
@@ -304,7 +408,40 @@ const DATA = {
     "Sweden":[290000,10,"BIL Sweden"],"Switzerland":[252000,9,"auto-schweiz"],
     "Austria":[239000,9,"ACEA"],"Norway":[127000,5,"OFV"],
     "Denmark":[173000,6,"ACEA"],"Finland":[88000,6,"ACEA"],
-    "Portugal":[200000,10,"ACEA"],"Czech Republic":[221000,11,"ACEA"]
+    "Portugal":[200000,10,"ACEA"],"Czech Republic":[221000,11,"ACEA"],
+    "Iceland":[17543,0.37,"Samgöngustofa"],
+    "New Zealand":[115000,5.1,"MIA NZ"],
+    "Taiwan":[430000,23.6,"MOTC"],
+    "Vietnam":[363000,99.5,"VAMA"],
+    "Philippines":[370000,116.7,"CAMPI"],
+    "Chile":[348000,19.5,"ANAC"],
+    "Colombia":[289000,52.2,"ANDEMOS"],
+    "Peru":[195000,33.5,"AAP"],
+    "UAE":[330000,10,"OICA"],
+    "United Arab Emirates":[330000,10,"OICA"],
+    "Morocco":[173000,37.5,"AIVAM"],
+    "Egypt":[128000,105,"OICA"],
+    "Tunisia":[100000,12,"CCVT"],
+    "Kenya":[15000,55,"KNBS"],
+    "Nigeria":[12000,223,"OICA"],
+    "Pakistan":[133000,240,"PAMA"],
+    "Venezuela":[15000,28.5,"CAV"],
+    "Bangladesh":[7000,172,"BRTA"],
+    "Saudi Arabia":[646000,36.4,"OICA/SAAMA"],
+    "Bulgaria":[37724,6.5,"ACEA"],
+    "Croatia":[57694,3.9,"ACEA"],
+    "Cyprus":[14740,1.2,"ACEA"],
+    "Estonia":[22820,1.4,"ACEA"],
+    "Greece":[134484,10.5,"ACEA"],
+    "Hungary":[107720,9.7,"ACEA"],
+    "Ireland":[122400,5.1,"SIMI"],
+    "Latvia":[18928,1.9,"ACEA"],
+    "Lithuania":[27666,2.8,"ACEA"],
+    "Luxembourg":[49105,0.66,"ACEA"],
+    "Malta":[7436,0.52,"ACEA"],
+    "Romania":[143080,19.0,"ACEA"],
+    "Slovakia":[88003,5.5,"ACEA"],
+    "Slovenia":[48924,2.1,"ACEA"]
   },
   2022: {
     "China":[19600000,1412,"OICA/CAAM"],"United States":[13760000,334,"OICA/Wards"],
@@ -322,7 +459,40 @@ const DATA = {
     "Norway":[140000,5,"OFV"],"Switzerland":[260000,9,"auto-schweiz"],
     "Austria":[240000,9,"ACEA"],"Denmark":[170000,6,"ACEA"],
     "Finland":[95000,6,"ACEA"],"Portugal":[190000,10,"ACEA"],
-    "Czech Republic":[210000,11,"ACEA"]
+    "Czech Republic":[210000,11,"ACEA"],
+    "Iceland":[17543,0.37,"Samgöngustofa"],
+    "New Zealand":[107000,5.1,"MIA NZ"],
+    "Taiwan":[430000,23.6,"MOTC"],
+    "Vietnam":[398000,99.5,"VAMA"],
+    "Philippines":[355000,116.7,"CAMPI"],
+    "Chile":[313000,19.5,"ANAC"],
+    "Colombia":[273000,52.2,"ANDEMOS"],
+    "Peru":[186000,33.5,"AAP"],
+    "UAE":[310000,10,"OICA"],
+    "United Arab Emirates":[310000,10,"OICA"],
+    "Morocco":[167000,37.5,"AIVAM"],
+    "Egypt":[245000,105,"OICA"],
+    "Tunisia":[95000,12,"CCVT"],
+    "Kenya":[14000,55,"KNBS"],
+    "Nigeria":[12000,223,"OICA"],
+    "Pakistan":[285000,240,"PAMA"],
+    "Venezuela":[12000,28.5,"CAV"],
+    "Bangladesh":[6500,172,"BRTA"],
+    "Saudi Arabia":[610000,36.4,"OICA/SAAMA"],
+    "Bulgaria":[42000,7.0,"ACEA"],
+    "Croatia":[68000,3.9,"ACEA"],
+    "Cyprus":[14740,1.2,"ACEA"],
+    "Estonia":[28000,1.4,"ACEA"],
+    "Greece":[115000,10.6,"ACEA"],
+    "Hungary":[115000,9.7,"ACEA"],
+    "Ireland":[110000,5.1,"SIMI"],
+    "Latvia":[24000,1.9,"ACEA"],
+    "Lithuania":[52000,2.8,"ACEA"],
+    "Luxembourg":[47000,0.65,"ACEA"],
+    "Malta":[22000,0.51,"ACEA"],
+    "Romania":[137000,19.0,"ACEA"],
+    "Slovakia":[110000,5.5,"ACEA"],
+    "Slovenia":[48000,2.1,"ACEA"]
   },
   2021: {
     "China":[21480000,1412,"OICA/CAAM"],"United States":[15400000,334,"OICA/Wards"],
@@ -338,7 +508,40 @@ const DATA = {
     "Austria":[248000,9,"ACEA"],"Norway":[176000,5,"OFV"],
     "Denmark":[213000,6,"ACEA"],"Poland":[500000,38,"ACEA"],
     "Portugal":[196000,10,"ACEA"],"Finland":[120000,6,"ACEA"],
-    "Czech Republic":[213000,11,"ACEA"]
+    "Czech Republic":[213000,11,"ACEA"],
+    "Iceland":[14500,0.37,"Samgöngustofa"],
+    "New Zealand":[120000,5.1,"MIA NZ"],
+    "Taiwan":[388000,23.6,"MOTC"],
+    "Vietnam":[283000,99.5,"VAMA"],
+    "Philippines":[282000,116.7,"CAMPI"],
+    "Chile":[289000,19.5,"ANAC"],
+    "Colombia":[204000,52.2,"ANDEMOS"],
+    "Peru":[153000,33.5,"AAP"],
+    "UAE":[260000,10,"OICA"],
+    "United Arab Emirates":[260000,10,"OICA"],
+    "Morocco":[144000,37.5,"AIVAM"],
+    "Egypt":[230000,105,"OICA"],
+    "Tunisia":[85000,12,"CCVT"],
+    "Kenya":[11000,55,"KNBS"],
+    "Nigeria":[10000,223,"OICA"],
+    "Pakistan":[218000,240,"PAMA"],
+    "Venezuela":[10000,28.5,"CAV"],
+    "Bangladesh":[5500,172,"BRTA"],
+    "Saudi Arabia":[580000,36.4,"OICA/SAAMA"],
+    "Bulgaria":[38000,7.0,"ACEA"],
+    "Croatia":[72000,3.9,"ACEA"],
+    "Cyprus":[11000,1.2,"ACEA"],
+    "Estonia":[27000,1.4,"ACEA"],
+    "Greece":[105000,10.7,"ACEA"],
+    "Hungary":[105000,9.7,"ACEA"],
+    "Ireland":[100000,5.1,"SIMI"],
+    "Latvia":[20000,1.9,"ACEA"],
+    "Lithuania":[46000,2.8,"ACEA"],
+    "Luxembourg":[48000,0.65,"ACEA"],
+    "Malta":[19000,0.51,"ACEA"],
+    "Romania":[145000,19.0,"ACEA"],
+    "Slovakia":[105000,5.5,"ACEA"],
+    "Slovenia":[53000,2.1,"ACEA"]
   },
   2020: {
     "China":[19994000,1412,"OICA/CAAM"],"United States":[14500000,334,"OICA/Wards"],
@@ -354,7 +557,40 @@ const DATA = {
     "Austria":[247000,9,"ACEA"],"Norway":[141000,5,"OFV"],
     "Denmark":[217000,6,"ACEA"],"Poland":[427000,38,"ACEA"],
     "Portugal":[161000,10,"ACEA"],"Finland":[107000,6,"ACEA"],
-    "Czech Republic":[193000,11,"ACEA"]
+    "Czech Republic":[193000,11,"ACEA"],
+    "Iceland":[9100,0.37,"Samgöngustofa"],
+    "New Zealand":[112000,5.1,"MIA NZ"],
+    "Taiwan":[415000,23.6,"MOTC"],
+    "Vietnam":[297000,99.5,"VAMA"],
+    "Philippines":[182000,116.7,"CAMPI"],
+    "Chile":[213000,19.5,"ANAC"],
+    "Colombia":[142000,52.2,"ANDEMOS"],
+    "Peru":[87000,33.5,"AAP"],
+    "UAE":[215000,10,"OICA"],
+    "United Arab Emirates":[215000,10,"OICA"],
+    "Morocco":[101000,37.5,"AIVAM"],
+    "Egypt":[195000,105,"OICA"],
+    "Tunisia":[66000,12,"CCVT"],
+    "Kenya":[9000,55,"KNBS"],
+    "Nigeria":[8000,223,"OICA"],
+    "Pakistan":[141000,240,"PAMA"],
+    "Venezuela":[8000,28.5,"CAV"],
+    "Bangladesh":[4000,172,"BRTA"],
+    "Saudi Arabia":[455000,36.4,"OICA/SAAMA"],
+    "Bulgaria":[32000,7.0,"ACEA"],
+    "Croatia":[65000,4.0,"ACEA"],
+    "Cyprus":[10000,1.2,"ACEA"],
+    "Estonia":[24000,1.4,"ACEA"],
+    "Greece":[90000,10.7,"ACEA"],
+    "Hungary":[90000,9.8,"ACEA"],
+    "Ireland":[95000,5.0,"SIMI"],
+    "Latvia":[16000,1.9,"ACEA"],
+    "Lithuania":[36000,2.8,"ACEA"],
+    "Luxembourg":[49000,0.6,"ACEA"],
+    "Malta":[17000,0.5,"ACEA"],
+    "Romania":[130000,19.0,"ACEA"],
+    "Slovakia":[95000,5.5,"ACEA"],
+    "Slovenia":[49000,2.1,"ACEA"]
   },
   2019: {
     "China":[21440000,1412,"OICA/CAAM"],"United States":[17100000,334,"OICA/Wards"],
@@ -370,7 +606,40 @@ const DATA = {
     "Austria":[331000,9,"ACEA"],"Norway":[142000,5,"OFV"],
     "Denmark":[222000,6,"ACEA"],"Poland":[517000,38,"ACEA"],
     "Portugal":[226000,10,"ACEA"],"Finland":[120000,6,"ACEA"],
-    "Czech Republic":[239000,11,"ACEA"]
+    "Czech Republic":[239000,11,"ACEA"],
+    "Iceland":[11820,0.37,"Samgöngustofa"],
+    "New Zealand":[155000,5.1,"MIA NZ"],
+    "Taiwan":[438000,23.6,"MOTC"],
+    "Vietnam":[322000,99.5,"VAMA"],
+    "Philippines":[367000,116.7,"CAMPI"],
+    "Chile":[368000,19.5,"ANAC"],
+    "Colombia":[235000,52.2,"ANDEMOS"],
+    "Peru":[185000,33.5,"AAP"],
+    "UAE":[290000,10,"OICA"],
+    "United Arab Emirates":[290000,10,"OICA"],
+    "Morocco":[160000,37.5,"AIVAM"],
+    "Egypt":[250000,105,"OICA"],
+    "Tunisia":[93000,12,"CCVT"],
+    "Kenya":[14000,55,"KNBS"],
+    "Nigeria":[14000,223,"OICA"],
+    "Pakistan":[192000,240,"PAMA"],
+    "Venezuela":[30000,28.5,"CAV"],
+    "Bangladesh":[8000,172,"BRTA"],
+    "Saudi Arabia":[615000,36.4,"OICA/SAAMA"],
+    "Bulgaria":[38000,7.0,"ACEA"],
+    "Croatia":[81000,4.0,"ACEA"],
+    "Cyprus":[13000,1.2,"ACEA"],
+    "Estonia":[32000,1.4,"ACEA"],
+    "Greece":[110000,10.7,"ACEA"],
+    "Hungary":[110000,9.8,"ACEA"],
+    "Ireland":[122000,5.0,"SIMI"],
+    "Latvia":[24000,1.9,"ACEA"],
+    "Lithuania":[48000,2.8,"ACEA"],
+    "Luxembourg":[62000,0.6,"ACEA"],
+    "Malta":[23000,0.49,"ACEA"],
+    "Romania":[160000,19.2,"ACEA"],
+    "Slovakia":[110000,5.5,"ACEA"],
+    "Slovenia":[65000,2.1,"ACEA"]
   },
   2018: {
     "China":[23560000,1412,"OICA/CAAM"],"United States":[17700000,334,"OICA/Wards"],
@@ -386,7 +655,40 @@ const DATA = {
     "Austria":[338000,9,"ACEA"],"Norway":[147000,5,"OFV"],
     "Denmark":[230000,6,"ACEA"],"Poland":[478000,38,"ACEA"],
     "Portugal":[203000,10,"ACEA"],"Finland":[120000,6,"ACEA"],
-    "Czech Republic":[253000,11,"ACEA"]
+    "Czech Republic":[253000,11,"ACEA"],
+    "Iceland":[17978,0.37,"Samgöngustofa"],
+    "New Zealand":[154000,5.1,"MIA NZ"],
+    "Taiwan":[450000,23.6,"MOTC"],
+    "Vietnam":[289000,99.5,"VAMA"],
+    "Philippines":[456000,116.7,"CAMPI"],
+    "Chile":[403000,19.5,"ANAC"],
+    "Colombia":[245000,52.2,"ANDEMOS"],
+    "Peru":[186000,33.5,"AAP"],
+    "UAE":[255000,10,"OICA"],
+    "United Arab Emirates":[255000,10,"OICA"],
+    "Morocco":[163000,37.5,"AIVAM"],
+    "Egypt":[230000,105,"OICA"],
+    "Tunisia":[102000,12,"CCVT"],
+    "Kenya":[15000,55,"KNBS"],
+    "Nigeria":[14000,223,"OICA"],
+    "Pakistan":[285000,240,"PAMA"],
+    "Venezuela":[15000,28.5,"CAV"],
+    "Bangladesh":[7500,172,"BRTA"],
+    "Saudi Arabia":[578000,36.4,"OICA/SAAMA"],
+    "Bulgaria":[35000,7.0,"ACEA"],
+    "Croatia":[76000,4.0,"ACEA"],
+    "Cyprus":[12000,1.2,"ACEA"],
+    "Estonia":[30000,1.4,"ACEA"],
+    "Greece":[105000,10.7,"ACEA"],
+    "Hungary":[105000,9.8,"ACEA"],
+    "Ireland":[120000,5.0,"SIMI"],
+    "Latvia":[23000,1.9,"ACEA"],
+    "Lithuania":[44000,2.8,"ACEA"],
+    "Luxembourg":[64000,0.6,"ACEA"],
+    "Malta":[22000,0.48,"ACEA"],
+    "Romania":[155000,19.4,"ACEA"],
+    "Slovakia":[105000,5.5,"ACEA"],
+    "Slovenia":[62000,2.1,"ACEA"]
   },
   2017: {
     "China":[24720000,1412,"OICA/CAAM"],"United States":[17200000,334,"OICA/Wards"],
@@ -402,7 +704,40 @@ const DATA = {
     "Austria":[362000,9,"ACEA"],"Norway":[150000,5,"OFV"],
     "Denmark":[221000,6,"ACEA"],"Poland":[486000,38,"ACEA"],
     "Portugal":[195000,10,"ACEA"],"Finland":[118000,6,"ACEA"],
-    "Czech Republic":[255000,11,"ACEA"]
+    "Czech Republic":[255000,11,"ACEA"],
+    "Iceland":[21213,0.37,"Samgöngustofa"],
+    "New Zealand":[154000,5.1,"MIA NZ"],
+    "Taiwan":[432000,23.6,"MOTC"],
+    "Vietnam":[272000,99.5,"VAMA"],
+    "Philippines":[414000,116.7,"CAMPI"],
+    "Chile":[372000,19.5,"ANAC"],
+    "Colombia":[215000,52.2,"ANDEMOS"],
+    "Peru":[165000,33.5,"AAP"],
+    "UAE":[250000,10,"OICA"],
+    "United Arab Emirates":[250000,10,"OICA"],
+    "Morocco":[161000,37.5,"AIVAM"],
+    "Egypt":[210000,105,"OICA"],
+    "Tunisia":[102000,12,"CCVT"],
+    "Kenya":[15000,55,"KNBS"],
+    "Nigeria":[12000,223,"OICA"],
+    "Pakistan":[248000,240,"PAMA"],
+    "Venezuela":[18000,28.5,"CAV"],
+    "Bangladesh":[7000,172,"BRTA"],
+    "Saudi Arabia":[572000,36.4,"OICA/SAAMA"],
+    "Bulgaria":[32000,7.0,"ACEA"],
+    "Croatia":[70000,4.1,"ACEA"],
+    "Cyprus":[11000,1.2,"ACEA"],
+    "Estonia":[28000,1.4,"ACEA"],
+    "Greece":[95000,10.8,"ACEA"],
+    "Hungary":[95000,9.8,"ACEA"],
+    "Ireland":[164000,4.9,"SIMI"],
+    "Latvia":[21000,2.0,"ACEA"],
+    "Lithuania":[40000,2.9,"ACEA"],
+    "Luxembourg":[60000,0.6,"ACEA"],
+    "Malta":[21000,0.47,"ACEA"],
+    "Romania":[140000,19.6,"ACEA"],
+    "Slovakia":[98000,5.4,"ACEA"],
+    "Slovenia":[58000,2.1,"ACEA"]
   },
   2016: {
     "China":[24380000,1412,"OICA/CAAM"],"United States":[17900000,334,"OICA/Wards"],
@@ -418,7 +753,40 @@ const DATA = {
     "Austria":[357000,9,"ACEA"],"Norway":[150000,5,"OFV"],
     "Denmark":[213000,6,"ACEA"],"Poland":[479000,38,"ACEA"],
     "Portugal":[187000,10,"ACEA"],"Finland":[122000,6,"ACEA"],
-    "Czech Republic":[247000,11,"ACEA"]
+    "Czech Republic":[247000,11,"ACEA"],
+    "Iceland":[18509,0.37,"Samgöngustofa"],
+    "New Zealand":[148000,5.1,"MIA NZ"],
+    "Taiwan":[415000,23.6,"MOTC"],
+    "Vietnam":[304000,99.5,"VAMA"],
+    "Philippines":[359000,116.7,"CAMPI"],
+    "Chile":[330000,19.5,"ANAC"],
+    "Colombia":[219000,52.2,"ANDEMOS"],
+    "Peru":[160000,33.5,"AAP"],
+    "UAE":[260000,10,"OICA"],
+    "United Arab Emirates":[260000,10,"OICA"],
+    "Morocco":[148000,37.5,"AIVAM"],
+    "Egypt":[200000,105,"OICA"],
+    "Tunisia":[100000,12,"CCVT"],
+    "Kenya":[15000,55,"KNBS"],
+    "Nigeria":[12000,223,"OICA"],
+    "Pakistan":[220000,240,"PAMA"],
+    "Venezuela":[35000,28.5,"CAV"],
+    "Bangladesh":[6500,172,"BRTA"],
+    "Saudi Arabia":[610000,36.4,"OICA/SAAMA"],
+    "Bulgaria":[28000,7.0,"ACEA"],
+    "Croatia":[63000,4.1,"ACEA"],
+    "Cyprus":[10000,1.2,"ACEA"],
+    "Estonia":[27000,1.4,"ACEA"],
+    "Greece":[85000,10.8,"ACEA"],
+    "Hungary":[85000,9.8,"ACEA"],
+    "Ireland":[148000,4.8,"SIMI"],
+    "Latvia":[21000,2.0,"ACEA"],
+    "Lithuania":[38000,2.9,"ACEA"],
+    "Luxembourg":[56000,0.6,"ACEA"],
+    "Malta":[19000,0.46,"ACEA"],
+    "Romania":[126000,19.8,"ACEA"],
+    "Slovakia":[92000,5.4,"ACEA"],
+    "Slovenia":[52000,2.1,"ACEA"]
   },
   2015: {
     "China":[21100000,1374,"OICA/CAAM"],"United States":[17470000,321,"OICA/Wards"],
@@ -434,7 +802,40 @@ const DATA = {
     "Austria":[356000,9,"ACEA"],"Norway":[153000,5,"OFV"],
     "Denmark":[225000,6,"ACEA"],"Poland":[362000,38,"ACEA"],
     "Portugal":[162000,10,"ACEA"],"Finland":[105000,6,"ACEA"],
-    "Czech Republic":[255000,11,"ACEA"]
+    "Czech Republic":[255000,11,"ACEA"],
+    "Iceland":[14029,0.37,"Samgöngustofa"],
+    "New Zealand":[125000,5.1,"MIA NZ"],
+    "Taiwan":[420000,23.6,"MOTC"],
+    "Vietnam":[244000,99.5,"VAMA"],
+    "Philippines":[288000,116.7,"CAMPI"],
+    "Chile":[338000,19.5,"ANAC"],
+    "Colombia":[239000,52.2,"ANDEMOS"],
+    "Peru":[180000,33.5,"AAP"],
+    "UAE":[280000,10,"OICA"],
+    "United Arab Emirates":[280000,10,"OICA"],
+    "Morocco":[132000,37.5,"AIVAM"],
+    "Egypt":[250000,105,"OICA"],
+    "Tunisia":[95000,12,"CCVT"],
+    "Kenya":[14000,55,"KNBS"],
+    "Nigeria":[16000,223,"OICA"],
+    "Pakistan":[198000,240,"PAMA"],
+    "Venezuela":[80000,28.5,"CAV"],
+    "Bangladesh":[6000,172,"BRTA"],
+    "Saudi Arabia":[686000,36.4,"OICA/SAAMA"],
+    "Bulgaria":[25000,7.0,"ACEA"],
+    "Croatia":[58000,4.1,"ACEA"],
+    "Cyprus":[9000,1.2,"ACEA"],
+    "Estonia":[25000,1.4,"ACEA"],
+    "Greece":[78000,10.9,"ACEA"],
+    "Hungary":[78000,9.8,"ACEA"],
+    "Ireland":[117000,4.7,"SIMI"],
+    "Latvia":[18000,2.0,"ACEA"],
+    "Lithuania":[32000,3.0,"ACEA"],
+    "Luxembourg":[52000,0.6,"ACEA"],
+    "Malta":[17000,0.45,"ACEA"],
+    "Romania":[110000,20.0,"ACEA"],
+    "Slovakia":[85000,5.4,"ACEA"],
+    "Slovenia":[48000,2.1,"ACEA"]
   }
 };
 
@@ -711,6 +1112,25 @@ let currentYear=2024,selectedCountry=null,colorScale;
 const svg=d3.select("#map-svg");
 const proj=d3.geoNaturalEarth1().scale(153).translate([480,270]);
 const pathGen=d3.geoPath().projection(proj);
+let gMap=null;  // main group that gets transformed by zoom
+const zoomBehavior=d3.zoom()
+  .scaleExtent([1,12])
+  .translateExtent([[-200,-100],[1160,600]])
+  .on("zoom",function(event){
+    if(gMap) gMap.attr("transform",event.transform);
+    // Scale stroke width inversely so borders don't get huge
+    const k=event.transform.k;
+    svg.selectAll(".country-path").style("stroke-width",(0.4/k)+"px");
+    svg.selectAll(".country-path.selected").style("stroke-width",(1.5/k)+"px");
+    svg.selectAll(".country-path:hover").style("stroke-width",(1/k)+"px");
+  });
+svg.call(zoomBehavior).on("dblclick.zoom",null);
+window.mapZoom=function(factor){
+  svg.transition().duration(350).call(zoomBehavior.scaleBy,factor);
+};
+window.mapReset=function(){
+  svg.transition().duration(500).call(zoomBehavior.transform,d3.zoomIdentity);
+};
 
 function buildScale(){
   return d3.scaleLinear()
@@ -721,7 +1141,8 @@ function buildScale(){
 function renderMap(year){
   colorScale=buildScale();
   const ev=EV_SHARE[year]||{};
-  svg.selectAll(".country-path").attr("fill",d=>{
+  if(!gMap)return;
+  gMap.selectAll(".country-path").attr("fill",d=>{
     const k=normName(d.properties.name);
     const s=ev[k];
     return s!=null?colorScale(s):"#1a2030";
@@ -794,7 +1215,7 @@ function showDetail(rawName,year){
 window.selectByName=function(name){
   selectedCountry=name;
   showDetail(name,currentYear);
-  svg.selectAll(".country-path").classed("selected",d=>normName(d.properties.name)===name);
+  (gMap||svg).selectAll(".country-path").classed("selected",d=>normName(d.properties.name)===name);
 };
 
 const tooltip=document.getElementById("tooltip");
@@ -812,7 +1233,7 @@ function showTip(e,rawName,year){
 }
 
 // ── Chart modal ───────────────────────────────────────────────────────────────
-let chartM=null,chartA=null,modalData=null,ptMode="absolute";
+let chartM=null,chartA=null,chartS=null,modalData=null,ptMode="absolute";
 
 const COLORS={
   bev:{line:"#00e5ff",fill:"rgba(0,229,255,0.12)"},phev:{line:"#4ade80",fill:"rgba(74,222,128,0.10)"},
@@ -853,7 +1274,7 @@ window.openModal=async function(cn){
       const d=new Date(modalData.last_updated);
       document.getElementById("modal-subtitle").textContent="Updated: "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
     }
-    document.getElementById("modal-source").textContent="Monthly: "+(modalData.source_monthly||"ECB/ACEA")+"  \u00b7  Annual: Eurostat";
+    document.getElementById("modal-source").textContent="Monthly: "+(modalData.source_monthly||"ACEA/ECB")+"  \u00b7  Annual: "+(modalData.source_annual||"Eurostat / ACEA");
     const hm=!!(modalData.monthly&&modalData.monthly.labels&&modalData.monthly.labels.length);
     const im=hm&&String(modalData.monthly.labels[0]).includes("-");
     document.getElementById("sec-monthly-title").innerHTML=(im?"&#x1F4C5; Monthly":"&#x1F4C5; Yearly")+" total registrations";
@@ -862,9 +1283,22 @@ window.openModal=async function(cn){
     document.getElementById("pt-share").classList.remove("active");
     resetW("wrap-monthly","chart-monthly");
     resetW("wrap-annual","chart-annual");
+    resetW("wrap-stacked","chart-stacked");
+    if(chartS){chartS.destroy();chartS=null;}
+    document.getElementById("wrap-annual").style.display="block";
+    document.getElementById("wrap-stacked").style.display="none";
+    document.getElementById("pt-stacked").classList.remove("active");
     renderMonthly(modalData);
     renderAnnual(modalData,"absolute");
     renderSummary(modalData);
+    // Update annual section title with YTD badge if 2026 data exists
+    const ytdI=getYTD2026(modalData);
+    const annTitle=document.querySelector(".modal-section-title:last-of-type");
+    if(annTitle){
+      annTitle.innerHTML=ytdI
+        ? \`&#x26A1; Annual breakdown by powertrain <span style="background:rgba(0,229,255,0.15);color:var(--accent);border:1px solid rgba(0,229,255,0.3);border-radius:4px;padding:1px 6px;font-size:0.6rem;margin-left:6px;vertical-align:middle">2026 YTD Jan–\${ytdI.lastMonth}</span>\`
+        : "&#x26A1; Annual breakdown by powertrain";
+    }
     ld.style.display="none";ct.style.display="block";
   }catch(e){console.error(e);ld.style.display="none";nd.style.display="block";}
 };
@@ -872,6 +1306,7 @@ window.closeModal=function(){
   document.getElementById("modal-overlay").classList.remove("open");
   if(chartM){chartM.destroy();chartM=null;}
   if(chartA){chartA.destroy();chartA=null;}
+  if(chartS){chartS.destroy();chartS=null;}
 };
 document.getElementById("modal-overlay").addEventListener("click",function(e){if(e.target===this)closeModal();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
@@ -880,9 +1315,30 @@ window.switchPowertrain=function(mode,btn){
   ptMode=mode;
   document.getElementById("pt-absolute").classList.toggle("active",mode==="absolute");
   document.getElementById("pt-share").classList.toggle("active",mode==="share");
-  if(chartA){chartA.destroy();chartA=null;}
-  resetW("wrap-annual","chart-annual");
-  renderAnnual(modalData,mode);
+  document.getElementById("pt-stacked").classList.toggle("active",mode==="stacked");
+  const isStacked=(mode==="stacked");
+  document.getElementById("wrap-annual").style.display=isStacked?"none":"block";
+  document.getElementById("wrap-stacked").style.display=isStacked?"block":"none";
+  if(isStacked){
+    if(chartA){chartA.destroy();chartA=null;}
+    if(chartS){chartS.destroy();chartS=null;}
+    resetW("wrap-stacked","chart-stacked");
+    renderStacked(modalData,"stacked-absolute");
+  }else{
+    if(chartS){chartS.destroy();chartS=null;}
+    resetW("wrap-stacked","chart-stacked");
+    if(chartA){chartA.destroy();chartA=null;}
+    resetW("wrap-annual","chart-annual");
+    renderAnnual(modalData,mode);
+  }
+  // Keep YTD badge updated on toggle
+  const ytdI2=getYTD2026(modalData);
+  const annTitle2=document.querySelector(".modal-section-title:last-of-type");
+  if(annTitle2){
+    annTitle2.innerHTML=ytdI2
+      ? \`&#x26A1; Annual breakdown by powertrain <span style="background:rgba(0,229,255,0.15);color:var(--accent);border:1px solid rgba(0,229,255,0.3);border-radius:4px;padding:1px 6px;font-size:0.6rem;margin-left:6px;vertical-align:middle">2026 YTD Jan–\${ytdI2.lastMonth}</span>\`
+      : "&#x26A1; Annual breakdown by powertrain";
+  }
 };
 
 function renderMonthly(data){
@@ -899,6 +1355,34 @@ function renderMonthly(data){
     scales:{...CB.scales,y:{...CB.scales.y,title:{display:true,text:"Registrations",color:"#64748b",font:{family:"DM Mono",size:9}}}}}});
 }
 
+function getYTD2026(data){
+  // Returns {ytd:{bev,phev,hybrid,petrol,diesel,other,total}, lastMonth:"Mar"} or null
+  const m=data.monthly,a=data.annual;
+  if(!m||!m.labels) return null;
+  const entries26=m.labels.map((l,i)=>({l,v:m.total[i]})).filter(x=>String(x.l).startsWith("2026-"));
+  if(!entries26.length) return null;
+  const ytdTotal=entries26.reduce((s,x)=>s+x.v,0);
+  if(!ytdTotal) return null;
+  // Use last available annual year's powertrain shares to estimate 2026 breakdown
+  const keys=["bev","phev","hybrid","petrol","diesel","other"];
+  const lastAnnualIdx=(a&&a.labels)?a.labels.length-1:-1;
+  const annualTot=lastAnnualIdx>=0?keys.reduce((s,k)=>s+((a[k]&&a[k][lastAnnualIdx])||0),0):0;
+  const shares={};
+  keys.forEach(k=>{shares[k]=annualTot>0&&lastAnnualIdx>=0?((a[k]&&a[k][lastAnnualIdx])||0)/annualTot:0;});
+  const ytd={};
+  let sumParts=0;
+  keys.forEach((k,i)=>{
+    if(i<keys.length-1){ytd[k]=Math.round(ytdTotal*shares[k]);sumParts+=ytd[k];}
+    else{ytd[k]=Math.max(0,ytdTotal-sumParts);}
+  });
+  ytd.total=ytdTotal;
+  // Last month label e.g. "Mar"
+  const lastLabel=entries26[entries26.length-1].l;
+  const mm=parseInt(String(lastLabel).split("-")[1])-1;
+  const MNAMES=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return{ytd,lastMonth:MNAMES[mm]||"?",nMonths:entries26.length};
+}
+
 function renderAnnual(data,mode){
   const a=data.annual,w=document.getElementById("wrap-annual");
   if(!a||!a.labels||!a.labels.length){
@@ -906,31 +1390,181 @@ function renderAnnual(data,mode){
     return;
   }
   const keys=["bev","phev","hybrid","petrol","diesel","other"];
+  // Build augmented labels/data with 2026 YTD if available
+  const ytdInfo=getYTD2026(data);
+  const augLabels=[...a.labels];
+  const augData={};
+  keys.forEach(k=>{augData[k]=[...(a[k]||[])];});
+  let ytdLabel=null;
+  if(ytdInfo){
+    ytdLabel="2026 YTD";
+    augLabels.push(ytdLabel);
+    keys.forEach(k=>{augData[k].push(ytdInfo.ytd[k]||0);});
+  }
   let ds;
   if(mode==="share"){
-    const tot=a.labels.map((_,i)=>keys.reduce((s,k)=>s+(a[k]?a[k][i]:0),0));
-    ds=keys.map(k=>({label:LABELS[k],data:(a[k]||[]).map((v,i)=>tot[i]?+((v/tot[i])*100).toFixed(1):0),
+    const tot=augLabels.map((_,i)=>keys.reduce((s,k)=>s+(augData[k]?augData[k][i]:0),0));
+    ds=keys.map(k=>({label:LABELS[k],data:(augData[k]||[]).map((v,i)=>tot[i]?+((v/tot[i])*100).toFixed(1):0),
       borderColor:COLORS[k].line,backgroundColor:COLORS[k].fill,borderWidth:2,tension:0.3,fill:false,pointRadius:4,pointHoverRadius:7}));
   }else{
-    ds=keys.map(k=>({label:LABELS[k],data:a[k]||[],
+    ds=keys.map(k=>({label:LABELS[k],data:augData[k]||[],
       borderColor:COLORS[k].line,backgroundColor:COLORS[k].fill,borderWidth:2,tension:0.3,fill:false,pointRadius:4,pointHoverRadius:7}));
   }
+  // Last point (YTD) gets dashed line style
+  if(ytdInfo){
+    ds=ds.map(d=>({...d,
+      segment:{borderDash:ctx=>ctx.p0DataIndex===augLabels.length-2?[6,3]:[]},
+      pointStyle:augLabels.map((_,i)=>i===augLabels.length-1?"triangle":"circle"),
+      pointRadius:augLabels.map((_,i)=>i===augLabels.length-1?5:4),
+      pointHoverRadius:augLabels.map((_,i)=>i===augLabels.length-1?8:7)
+    }));
+  }
   const ctx=document.getElementById("chart-annual").getContext("2d");
-  chartA=new Chart(ctx,{type:"line",data:{labels:a.labels,datasets:ds},options:{...CB,
-    plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,callbacks:{label:c=>" "+c.dataset.label+": "+(mode==="share"?c.parsed.y.toFixed(1)+"%":c.parsed.y.toLocaleString("en"))}}},
+  chartA=new Chart(ctx,{type:"line",data:{labels:augLabels,datasets:ds},options:{...CB,
+    plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,callbacks:{
+      title:items=>{
+        const lbl=items[0].label;
+        if(lbl==="2026 YTD"&&ytdInfo) return "2026 YTD (Jan–"+ytdInfo.lastMonth+") — estimate based on "+a.labels[a.labels.length-1]+" shares";
+        return lbl;
+      },
+      label:c=>" "+c.dataset.label+": "+(mode==="share"?c.parsed.y.toFixed(1)+"%":c.parsed.y.toLocaleString("en"))
+    }}},
     scales:{...CB.scales,y:{...CB.scales.y,ticks:{...CB.scales.y.ticks,callback:v=>mode==="share"?v+"%":v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v},
       title:{display:true,text:mode==="share"?"Market share (%)":"Annual registrations",color:"#64748b",font:{family:"DM Mono",size:9}}}}}});
+}
+
+function renderStacked(data,mode){
+  const a=data.annual,w=document.getElementById("wrap-stacked");
+  if(!a||!a.labels||!a.labels.length){
+    w.innerHTML='<div style="height:300px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem">No annual data available</div>';
+    return;
+  }
+  const keys=["bev","phev","hybrid","petrol","diesel","other"];
+  const ytdInfo=getYTD2026(data);
+
+  // Build augmented data with 2026 YTD
+  const augLabels=[...a.labels];
+  const augData={};
+  keys.forEach(k=>{augData[k]=[...(a[k]||[])];});
+  if(ytdInfo){
+    augLabels.push("2026*");
+    keys.forEach(k=>{augData[k].push(ytdInfo.ytd[k]||0);});
+  }
+
+  const isShare=(mode==="stacked-share");
+  let datasets;
+  if(isShare){
+    const tots=augLabels.map((_,i)=>keys.reduce((s,k)=>s+(augData[k][i]||0),0));
+    datasets=keys.map(k=>({
+      label:LABELS[k],
+      data:augData[k].map((v,i)=>tots[i]?+((v/tots[i])*100).toFixed(2):0),
+      backgroundColor:COLORS[k].line.replace(")",",0.82)").replace("rgb","rgba").replace("#",""),
+      borderColor:"rgba(0,0,0,0.15)",
+      borderWidth:0.5,
+      stack:"s"
+    }));
+    // Fix backgroundColor for hex colors
+    datasets=keys.map(k=>({
+      label:LABELS[k],
+      data:augData[k].map((v,i)=>tots[i]?+((v/tots[i])*100).toFixed(2):0),
+      backgroundColor:COLORS[k].fill.replace("0.08","0.82").replace("0.10","0.82").replace("0.12","0.82"),
+      borderColor:COLORS[k].line,
+      borderWidth:0.8,
+      stack:"s"
+    }));
+  }else{
+    datasets=keys.map(k=>({
+      label:LABELS[k],
+      data:augData[k],
+      backgroundColor:COLORS[k].fill.replace("0.08","0.82").replace("0.10","0.82").replace("0.12","0.82"),
+      borderColor:COLORS[k].line,
+      borderWidth:0.8,
+      stack:"s"
+    }));
+  }
+
+  const ctx=document.getElementById("chart-stacked").getContext("2d");
+  chartS=new Chart(ctx,{
+    type:"bar",
+    data:{labels:augLabels,datasets:datasets},
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      interaction:{mode:"index",intersect:false},
+      plugins:{
+        legend:{position:"top",labels:{color:"#94a3b8",font:{family:"DM Mono",size:11},boxWidth:14,padding:14}},
+        tooltip:{
+          backgroundColor:"rgba(10,14,23,0.95)",
+          borderColor:"rgba(0,229,255,0.3)",
+          borderWidth:1,
+          titleColor:"#fff",
+          bodyColor:"#94a3b8",
+          callbacks:{
+            title:items=>{
+              const lbl=items[0].label;
+              if(lbl==="2026*"&&ytdInfo){
+                return "2026 YTD (Jan\u2013"+ytdInfo.lastMonth+") \u2014 last "+ytdInfo.nMonths+" month"+(ytdInfo.nMonths>1?"s":"")+", powertrain est.";
+              }
+              return lbl;
+            },
+            label:c=>" "+c.dataset.label+": "+(isShare?c.parsed.y.toFixed(1)+"%":Math.round(c.parsed.y).toLocaleString("en"))
+          }
+        }
+      },
+      scales:{
+        x:{
+          stacked:true,
+          grid:{color:"rgba(255,255,255,0.04)"},
+          ticks:{color:"#64748b",font:{family:"DM Mono",size:9}}
+        },
+        y:{
+          stacked:true,
+          grid:{color:"rgba(255,255,255,0.04)"},
+          ticks:{
+            color:"#64748b",
+            font:{family:"DM Mono",size:9},
+            callback:v=>isShare?v+"%":v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v
+          },
+          title:{display:true,text:isShare?"Market share (%)":"Annual registrations",color:"#64748b",font:{family:"DM Mono",size:9}}
+        }
+      }
+    }
+  });
+
+  // Add asterisk footnote
+  if(ytdInfo){
+    const existing=w.querySelector(".ytd-footnote");
+    if(!existing){
+      const note=document.createElement("div");
+      note.className="ytd-footnote";
+      note.style.cssText="font-size:0.58rem;color:var(--muted);margin-top:6px;letter-spacing:0.03em;text-align:right;padding-right:4px";
+      note.innerHTML="* 2026 YTD Jan\u2013"+ytdInfo.lastMonth+" ("+ytdInfo.nMonths+" month"+(ytdInfo.nMonths>1?"s":"")+") \u2014 powertrain breakdown estimated from "+a.labels[a.labels.length-1]+" shares";
+      w.appendChild(note);
+    }
+  }
 }
 
 function renderSummary(data){
   const a=data.annual,g=document.getElementById("summary-grid");
   if(!a||!a.labels||!a.labels.length){g.innerHTML="";return;}
   const keys=["bev","phev","hybrid","petrol","diesel","other"];
-  const last=a.labels.length-1,ly=a.labels[last];
-  const tot=keys.reduce((s,k)=>s+((a[k]&&a[k][last])||0),0);
-  g.innerHTML=keys.map(k=>{const v=(a[k]&&a[k][last])||0;const p=tot?((v/tot)*100).toFixed(1):0;
+  // Prefer 2026 YTD if available, else last annual year
+  const ytdInfo=getYTD2026(data);
+  let ly,vals,isYTD=false;
+  if(ytdInfo){
+    isYTD=true;
+    ly="2026 YTD (Jan–"+ytdInfo.lastMonth+")";
+    vals={};keys.forEach(k=>{vals[k]=ytdInfo.ytd[k]||0;});
+  }else{
+    const last=a.labels.length-1;
+    ly=a.labels[last];
+    vals={};keys.forEach(k=>{vals[k]=(a[k]&&a[k][last])||0;});
+  }
+  const tot=keys.reduce((s,k)=>s+(vals[k]||0),0);
+  const ytdNote=isYTD?`<div style="grid-column:1/-1;font-size:0.55rem;color:var(--muted);text-align:center;margin-top:4px;letter-spacing:0.04em">&#9651; YTD estimate — powertrain shares based on ${a.labels[a.labels.length-1]} data</div>`:"";
+  g.innerHTML=keys.map(k=>{const v=vals[k]||0;const p=tot?((v/tot)*100).toFixed(1):0;
     return`<div class="summary-card"><div class="sc-val" style="color:${COLORS[k].line}">${fmt(v)}</div><div class="sc-label">${LABELS[k]}</div><div class="sc-pct">${p}% (${ly})</div></div>`;
-  }).join("");
+  }).join("")+ytdNote;
 }
 
 // ── Top list toggle ───────────────────────────────────────────────────────────
@@ -950,8 +1584,8 @@ window.switchTopList=function(mode,btn){
 (function(){
   const inp=document.getElementById("country-search"),res=document.getElementById("search-results");
   function all(){return Array.from(new Set([...Object.keys(DATA[currentYear]),...Object.keys(FILE_MAP)])).sort();}
-  function hl(set){svg.selectAll(".country-path").classed("search-highlighted",d=>set&&set.has(normName(d.properties.name))).classed("search-dim",d=>set&&set.size>0&&!set.has(normName(d.properties.name)));}
-  function clr(){svg.selectAll(".country-path").classed("search-highlighted",false).classed("search-dim",false);}
+  function hl(set){(gMap||svg).selectAll(".country-path").classed("search-highlighted",d=>set&&set.has(normName(d.properties.name))).classed("search-dim",d=>set&&set.size>0&&!set.has(normName(d.properties.name)));}
+  function clr(){(gMap||svg).selectAll(".country-path").classed("search-highlighted",false).classed("search-dim",false);}
   inp.addEventListener("input",function(){
     const q=this.value.trim().toLowerCase();res.innerHTML="";
     if(!q){clr();return;}
@@ -983,9 +1617,10 @@ async function init(){
     const countries=topojson.feature(world,world.objects.countries);
     const NN={4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",40:"Austria",50:"Bangladesh",56:"Belgium",68:"Bolivia",76:"Brazil",100:"Bulgaria",120:"Cameroon",124:"Canada",144:"Sri Lanka",152:"Chile",156:"China",158:"Taiwan",170:"Colombia",203:"Czech Republic",208:"Denmark",218:"Ecuador",818:"Egypt",231:"Ethiopia",246:"Finland",250:"France",276:"Germany",288:"Ghana",300:"Greece",320:"Guatemala",340:"Honduras",348:"Hungary",352:"Iceland",356:"India",360:"Indonesia",364:"Iran",368:"Iraq",372:"Ireland",376:"Israel",380:"Italy",392:"Japan",398:"Kazakhstan",404:"Kenya",408:"North Korea",410:"South Korea",414:"Kuwait",422:"Lebanon",434:"Libya",442:"Luxembourg",484:"Mexico",504:"Morocco",528:"Netherlands",554:"New Zealand",566:"Nigeria",578:"Norway",586:"Pakistan",604:"Peru",608:"Philippines",616:"Poland",620:"Portugal",634:"Qatar",642:"Romania",643:"Russia",682:"Saudi Arabia",703:"Slovakia",710:"South Africa",724:"Spain",752:"Sweden",756:"Switzerland",764:"Thailand",788:"Tunisia",792:"Turkey",804:"Ukraine",784:"UAE",826:"United Kingdom",840:"United States",858:"Uruguay",862:"Venezuela",704:"Vietnam",887:"Yemen",894:"Zambia",458:"Malaysia",233:"Estonia",428:"Latvia",440:"Lithuania"};
     countries.features.forEach(f=>{f.properties.name=NN[parseInt(f.id)]||f.properties.name||String(f.id);});
-    svg.append("path").datum({type:"Sphere"}).attr("d",pathGen).attr("fill","#0d1520");
-    svg.append("path").datum(d3.geoGraticule()()).attr("d",pathGen).attr("fill","none").attr("stroke","rgba(0,229,255,0.04)").attr("stroke-width","0.3");
-    svg.selectAll(".country-path").data(countries.features).join("path")
+    gMap=svg.append("g").attr("id","gMap");
+    gMap.append("path").datum({type:"Sphere"}).attr("d",pathGen).attr("fill","#0d1520");
+    gMap.append("path").datum(d3.geoGraticule()()).attr("d",pathGen).attr("fill","none").attr("stroke","rgba(0,229,255,0.04)").attr("stroke-width","0.3");
+    gMap.selectAll(".country-path").data(countries.features).join("path")
       .attr("class","country-path").attr("d",pathGen)
       .on("mousemove",(event,d)=>showTip(event,d.properties.name,currentYear))
       .on("mouseleave",()=>tooltip.style.display="none")
@@ -1002,5 +1637,6 @@ document.getElementById("year-select").addEventListener("change",function(){
 });
 init();
 </script>
+
 </body>
 </html>
