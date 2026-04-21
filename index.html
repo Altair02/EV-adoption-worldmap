@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -149,32 +148,29 @@
       <div id="modal-loading"><div class="modal-spinner"></div>Loading&hellip;</div>
       <div id="modal-content" style="display:none">
 
-```
-    <!-- Monthly / Yearly total -->
-    <div class="modal-section-title" id="sec-monthly-title">&#x1F4C5; Monthly total registrations</div>
-    <div class="chart-wrap" id="wrap-monthly"><canvas id="chart-monthly"></canvas></div>
+        <!-- Monthly / Yearly total -->
+        <div class="modal-section-title" id="sec-monthly-title">&#x1F4C5; Monthly total registrations</div>
+        <div class="chart-wrap" id="wrap-monthly"><canvas id="chart-monthly"></canvas></div>
 
-    <hr class="section-divider">
+        <hr class="section-divider">
 
-    <!-- Annual powertrain — 3-button toggle -->
-    <div class="modal-section-title">&#x26A1; Annual breakdown by powertrain</div>
-    <div class="pt-toggle">
-      <button class="pt-btn active" id="pt-absolute" onclick="switchPowertrain('absolute',this)">Powertrain absolute</button>
-      <button class="pt-btn" id="pt-share" onclick="switchPowertrain('share',this)">Market share %</button>
-      <button class="pt-btn" id="pt-stacked" onclick="switchPowertrain('stacked',this)">Stacked</button>
+        <!-- Annual powertrain — 3-button toggle -->
+        <div class="modal-section-title">&#x26A1; Annual breakdown by powertrain</div>
+        <div class="pt-toggle">
+          <button class="pt-btn active" id="pt-absolute" onclick="switchPowertrain('absolute',this)">Powertrain absolute</button>
+          <button class="pt-btn" id="pt-share" onclick="switchPowertrain('share',this)">Market share %</button>
+          <button class="pt-btn" id="pt-stacked" onclick="switchPowertrain('stacked',this)">Stacked</button>
+        </div>
+        <div class="chart-wrap" id="wrap-annual"><canvas id="chart-annual"></canvas></div>
+        <div class="chart-wrap" id="wrap-stacked" style="display:none"><canvas id="chart-stacked"></canvas></div>
+        <div class="summary-grid" id="summary-grid"></div>
+
+      </div>
+      <div id="modal-nodata" style="display:none" class="no-data-msg">
+        &#x1F4ED; No data available for this country yet.<br>
+        <span style="font-size:0.68rem">ECB/ACEA covers ~30 EU/EEA countries</span>
+      </div>
     </div>
-    <div class="chart-wrap" id="wrap-annual"><canvas id="chart-annual"></canvas></div>
-    <div class="chart-wrap" id="wrap-stacked" style="display:none"><canvas id="chart-stacked"></canvas></div>
-    <div class="summary-grid" id="summary-grid"></div>
-
-  </div>
-  <div id="modal-nodata" style="display:none" class="no-data-msg">
-    &#x1F4ED; No data available for this country yet.<br>
-    <span style="font-size:0.68rem">ECB/ACEA covers ~30 EU/EEA countries</span>
-  </div>
-</div>
-```
-
   </div>
 </div>
 
@@ -1296,7 +1292,7 @@ window.openModal=async function(cn){
     const annTitle=document.querySelector(".modal-section-title:last-of-type");
     if(annTitle){
       annTitle.innerHTML=ytdI
-        ? \`&#x26A1; Annual breakdown by powertrain <span style="background:rgba(0,229,255,0.15);color:var(--accent);border:1px solid rgba(0,229,255,0.3);border-radius:4px;padding:1px 6px;font-size:0.6rem;margin-left:6px;vertical-align:middle">2026 YTD Jan–\${ytdI.lastMonth}</span>\`
+        ? `&#x26A1; Annual breakdown by powertrain <span style="background:rgba(0,229,255,0.15);color:var(--accent);border:1px solid rgba(0,229,255,0.3);border-radius:4px;padding:1px 6px;font-size:0.6rem;margin-left:6px;vertical-align:middle">2026 YTD Jan–${ytdI.lastMonth}</span>`
         : "&#x26A1; Annual breakdown by powertrain";
     }
     ld.style.display="none";ct.style.display="block";
@@ -1336,7 +1332,7 @@ window.switchPowertrain=function(mode,btn){
   const annTitle2=document.querySelector(".modal-section-title:last-of-type");
   if(annTitle2){
     annTitle2.innerHTML=ytdI2
-      ? \`&#x26A1; Annual breakdown by powertrain <span style="background:rgba(0,229,255,0.15);color:var(--accent);border:1px solid rgba(0,229,255,0.3);border-radius:4px;padding:1px 6px;font-size:0.6rem;margin-left:6px;vertical-align:middle">2026 YTD Jan–\${ytdI2.lastMonth}</span>\`
+      ? `&#x26A1; Annual breakdown by powertrain <span style="background:rgba(0,229,255,0.15);color:var(--accent);border:1px solid rgba(0,229,255,0.3);border-radius:4px;padding:1px 6px;font-size:0.6rem;margin-left:6px;vertical-align:middle">2026 YTD Jan–${ytdI2.lastMonth}</span>`
       : "&#x26A1; Annual breakdown by powertrain";
   }
 };
@@ -1637,6 +1633,5 @@ document.getElementById("year-select").addEventListener("change",function(){
 });
 init();
 </script>
-
 </body>
 </html>
