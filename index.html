@@ -1352,13 +1352,11 @@ function renderMonthly(data){
 }
 
 function getYTD2026(data){
-  // Returns {ytd:{bev,phev,hybrid,petrol,diesel,other,total}, lastMonth:"Mar", nMonths:3, isActual:true/false}
   const m = data.monthly;
   if(!m || !m.labels || !m.total) return null;
 
   const keys = ["bev","phev","hybrid","petrol","diesel","other"];
 
-  // Alle 2026-Monate finden
   const ytdMonths = m.labels
     .map((l, i) => ({l, idx: i}))
     .filter(x => String(x.l).startsWith("2026-"));
@@ -1368,7 +1366,7 @@ function getYTD2026(data){
   const ytdTotal = ytdMonths.reduce((s, x) => s + (m.total[x.idx] || 0), 0);
   if(!ytdTotal) return null;
 
-  // === ECHTE monatliche Powertrain-Daten summieren (falls vorhanden) ===
+  // === ECHTE Powertrain-Daten aus den Monaten nutzen (falls vorhanden) ===
   let isActual = true;
   const ytd = { total: ytdTotal };
 
@@ -1382,7 +1380,7 @@ function getYTD2026(data){
     ytd[k] = Math.round(sum);
   });
 
-  // Fallback nur wenn wirklich keine Powertrain-Daten vorhanden (aktueller Stand)
+  // Fallback nur wenn Powertrain-Daten fehlen (aktueller Stand deiner JSONs)
   if(!isActual) {
     const a = data.annual;
     const lastAnnualIdx = (a && a.labels) ? a.labels.length-1 : -1;
@@ -1406,7 +1404,6 @@ function getYTD2026(data){
     });
   }
 
-  // Letzter Monat für Beschriftung
   const lastLabel = ytdMonths[ytdMonths.length-1].l;
   const mm = parseInt(String(lastLabel).split("-")[1]) - 1;
   const MNAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -1460,7 +1457,7 @@ function renderAnnual(data,mode){
         const lbl=items[0].label;
         if(lbl==="2026 YTD"&&ytdInfo){
           const status = ytdInfo.isActual 
-            ? `actual monthly data (Jan–${ytdInfo.lastMonth})`
+            ? `✅ actual monthly data (Jan–${ytdInfo.lastMonth})`
             : `estimated from 2025 shares`;
           return `2026 YTD — ${status}`;
         }
@@ -1471,56 +1468,6 @@ function renderAnnual(data,mode){
     scales:{...CB.scales,y:{...CB.scales.y,ticks:{...CB.scales.y.ticks,callback:v=>mode==="share"?v+"%":v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v},
       title:{display:true,text:mode==="share"?"Market share (%)":"Annual registrations",color:"#64748b",font:{family:"DM Mono",size:9}}}}}});
 }
-
-function renderStacked(data,mode){
-  const a=data.annual,w=document.getElementById("wrap-stacked");
-  if(!a||!a.labels||!a.labels.length){
-    w.innerHTML='<div style="height:300px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem">No annual data available</div>';
-    return;
-  }
-  const keys=["bev","phev","hybrid","petrol","diesel","other"];
-  const ytdInfo=getYTD2026(data);
-
-  // Build augmented data with 2026 YTD
-  const augLabels=[...a.labels];
-  const augData={};
-  keys.forEach(k=>{augData[k]=[...(a[k]||[])];});
-  if(ytdInfo){
-    augLabels.push("2026*");
-    keys.forEach(k=>{augData[k].push(ytdInfo.ytd[k]||0);});
-  }
-
-  const isShare=(mode==="stacked-share");
-  let datasets;
-  if(isShare){
-    const tots=augLabels.map((_,i)=>keys.reduce((s,k)=>s+(augData[k][i]||0),0));
-    datasets=keys.map(k=>({
-      label:LABELS[k],
-      data:augData[k].map((v,i)=>tots[i]?+((v/tots[i])*100).toFixed(2):0),
-      backgroundColor:COLORS[k].line.replace(")",",0.82)").replace("rgb","rgba").replace("#",""),
-      borderColor:"rgba(0,0,0,0.15)",
-      borderWidth:0.5,
-      stack:"s"
-    }));
-    // Fix backgroundColor for hex colors
-    datasets=keys.map(k=>({
-      label:LABELS[k],
-      data:augData[k].map((v,i)=>tots[i]?+((v/tots[i])*100).toFixed(2):0),
-      backgroundColor:COLORS[k].fill.replace("0.08","0.82").replace("0.10","0.82").replace("0.12","0.82"),
-      borderColor:COLORS[k].line,
-      borderWidth:0.8,
-      stack:"s"
-    }));
-  }else{
-    datasets=keys.map(k=>({
-      label:LABELS[k],
-      data:augData[k],
-      backgroundColor:COLORS[k].fill.replace("0.08","0.82").replace("0.10","0.82").replace("0.12","0.82"),
-      borderColor:COLORS[k].line,
-      borderWidth:0.8,
-      stack:"s"
-    }));
-  }
 
   const ctx=document.getElementById("chart-stacked").getContext("2d");
   chartS=new Chart(ctx,{
