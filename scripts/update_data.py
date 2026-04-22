@@ -1,6 +1,12 @@
 """
-scripts/update_data.py  —  v11 (Telegram nur bei Änderungen + Chart-Bild)
+scripts/update_data.py  —  v12
 =======================================================================
+NEUE LOGIK:
+- "Annual breakdown by powertrain" enthält NUR volle vergangene Jahre
+  (bis current_year - 1).
+- Das laufende Jahr (z. B. 2026) hat KEINE festen Market-Share-% mehr.
+- Stattdessen neue Sektion "ytd" mit kumulierten Monatsdaten
+  (Jan–März → später Jan–April usw.).
 """
 
 import csv, io, json, os, sys, time, urllib.error, urllib.request
@@ -113,7 +119,7 @@ SEASON_DEFAULT = {
     "05": 0.090, "06": 0.095, "07": 0.075, "08": 0.065,
     "09": 0.100, "10": 0.090, "11": 0.080, "12": 0.070,
 }
-# Country-specific seasonal patterns (deviating from EU average)
+# Country-specific seasonal patterns
 SEASON_OVERRIDE = {
     "NO": {"01":0.065,"02":0.060,"03":0.130,"04":0.075,"05":0.095,"06":0.090,
            "07":0.060,"08":0.055,"09":0.110,"10":0.095,"11":0.085,"12":0.080},
@@ -132,7 +138,7 @@ PARTIAL_2026_MONTHS = ["01", "02", "03"]
 def http_get(url, timeout=30):
     req = urllib.request.Request(
         url,
-        headers={"User-Agent": "EV-Map-Bot/11.0 (github.com/Altair02/EV-adoption-worldmap)"}
+        headers={"User-Agent": "EV-Map-Bot/12.0 (github.com/Altair02/EV-adoption-worldmap)"}
     )
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read()
@@ -169,17 +175,9 @@ def ecb_fetch(dataset, key_tmpl, geo, start):
         return {}
 
 def fetch_ecb_monthly():
-    STS_KEYS = [
-        "M.XX.N.CREG.PC0000.3.ABS",
-        "M.XX.W.CREG.PC0000.3.ABS",
-    ]
-    CAR_KEYS = [
-        "M.XX.N.CREG.PC0000.3.ABS",
-        "M.XX.N.CREG.PC0000..ABS",
-        "M.XX..CREG.PC0000.3.ABS",
-        "M.XX.N.NEWCARS.N",
-        "M.XX.N.NEWCARS.NSA",
-    ]
+    STS_KEYS = ["M.XX.N.CREG.PC0000.3.ABS", "M.XX.W.CREG.PC0000.3.ABS"]
+    CAR_KEYS = ["M.XX.N.CREG.PC0000.3.ABS", "M.XX.N.CREG.PC0000..ABS",
+                "M.XX..CREG.PC0000.3.ABS", "M.XX.N.NEWCARS.N", "M.XX.N.NEWCARS.NSA"]
 
     print("[ECB] Finding working STS key...")
     sts_key = None
@@ -187,19 +185,16 @@ def fetch_ecb_monthly():
         d = ecb_fetch("STS", k, "DE", "2020-01")
         if d:
             sts_key = k
-            print(f"[ECB] STS key: {k} -> {len(d)} months, latest={max(d.keys())}")
+            print(f"[ECB] STS key: {k} -> {len(d)} months")
             break
-        print(f"[ECB]   STS {k} -> no data")
-
     print("[ECB] Finding working CAR key (2023+)...")
     car_key = None
     for k in CAR_KEYS:
         d = ecb_fetch("CAR", k, "DE", "2023-01")
         if d:
             car_key = k
-            print(f"[ECB] CAR key: {k} -> {len(d)} months, latest={max(d.keys())}")
+            print(f"[ECB] CAR key: {k} -> {len(d)} months")
             break
-        print(f"[ECB]   CAR {k} -> no data")
 
     if not sts_key and not car_key:
         print("[ECB] No working key -- monthly from ACEA estimates only")
@@ -216,16 +211,14 @@ def fetch_ecb_monthly():
         if merged:
             months = sorted(merged.keys())
             results[geo] = {"labels": months, "total": [merged[m] for m in months]}
-            print(f"[ECB]   {geo}: {len(months)} months ({months[0]}->{months[-1]})")
+            print(f"[ECB]   {geo}: {len(months)} months")
         time.sleep(0.2)
-
-    print(f"[ECB] Done -- {len(results)} countries with real monthly data")
+    print(f"[ECB] Done -- {len(results)} countries")
     return results
 
 def build_acea_monthly(geo, existing_labels_set):
     season = SEASON_OVERRIDE.get(geo, SEASON_DEFAULT)
     result = {}
-
     for year in [2023, 2024, 2025]:
         annual = ACEA_TOTALS.get(geo, {}).get(year)
         if not annual:
@@ -234,7 +227,6 @@ def build_acea_monthly(geo, existing_labels_set):
             period = f"{year}-{mm}"
             if period not in existing_labels_set:
                 result[period] = round(annual * season[mm])
-
     annual_2026_est = ACEA_TOTALS.get(geo, {}).get(2025)
     if annual_2026_est:
         annual_2026_est = round(annual_2026_est * 1.02)
@@ -242,7 +234,6 @@ def build_acea_monthly(geo, existing_labels_set):
             period = f"2026-{mm}"
             if period not in existing_labels_set:
                 result[period] = round(annual_2026_est * season[mm])
-
     return result
 
 def fetch_eurostat_annual():
@@ -360,20 +351,22 @@ def inject_acea_2025(annual_data, eurostat_latest_year):
 
     return annual_data
 
-def write_files(ecb_monthly, annual):
+def write_files(ecb_monthly, annual, current_year):
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     changed = []
 
     for ecb_code, (name, estat_code, pop) in COUNTRIES.items():
         a = annual.get(ecb_code, {})
 
+        # NUR volle vergangene Jahre für "Annual breakdown by powertrain"
+        years = sorted([y for y in a.keys() if int(y) < current_year]) if a else []
+
         existing_ecb = ecb_monthly.get(ecb_code, {})
         existing_labels = set(existing_ecb.get("labels", []))
         acea_ext = build_acea_monthly(ecb_code, existing_labels)
 
         merged_m = {}
-        for lbl, val in zip(existing_ecb.get("labels", []),
-                            existing_ecb.get("total",  [])):
+        for lbl, val in zip(existing_ecb.get("labels", []), existing_ecb.get("total", [])):
             merged_m[lbl] = val
         merged_m.update(acea_ext)
 
@@ -383,37 +376,39 @@ def write_files(ecb_monthly, annual):
             "total":  [merged_m[m] for m in all_months],
         }
 
-        years = sorted(a.keys()) if a else []
-        annual_block = {}
-        if years:
-            annual_block = {
-                "labels": years,
-                "bev":    [a[y].get("bev",    0) for y in years],
-                "phev":   [a[y].get("phev",   0) for y in years],
-                "hybrid": [a[y].get("hybrid", 0) for y in years],
-                "petrol": [a[y].get("petrol", 0) for y in years],
-                "diesel": [a[y].get("diesel", 0) for y in years],
-                "other":  [a[y].get("other",  0) for y in years],
-            }
+        annual_block = {
+            "labels": years,
+            "bev":    [a[y].get("bev",    0) for y in years],
+            "phev":   [a[y].get("phev",   0) for y in years],
+            "hybrid": [a[y].get("hybrid", 0) for y in years],
+            "petrol": [a[y].get("petrol", 0) for y in years],
+            "diesel": [a[y].get("diesel", 0) for y in years],
+            "other":  [a[y].get("other",  0) for y in years],
+        }
 
-        ecb_count  = len(existing_ecb.get("labels", []))
-        acea_count = len(acea_ext)
-        if ecb_count > 0:
-            src_monthly = (f"ECB STS ({ecb_count} months 2015-2022) + "
-                           f"ACEA estimates ({acea_count} months 2023-2026)")
-        else:
-            src_monthly = (f"ACEA full-year totals, seasonal distribution "
-                           f"({acea_count} months 2023-2026)")
+        # NEU: YTD für das laufende Jahr (Jan–März, später Jan–April usw.)
+        ytd_months = [m for m in all_months if m.startswith(f"{current_year}-")]
+        ytd = {}
+        if ytd_months:
+            ytd_total = sum(merged_m[m] for m in ytd_months)
+            ytd = {
+                "year": current_year,
+                "months": len(ytd_months),
+                "total": ytd_total,
+                "labels": ytd_months,
+                "monthly_totals": [merged_m[m] for m in ytd_months]
+            }
 
         payload = {
             "name":           name,
             "ecb_code":       ecb_code,
             "population_mio": pop,
-            "source_monthly": src_monthly,
+            "source_monthly": "ECB STS + ACEA seasonal estimates",
             "source_annual":  "Eurostat road_eqr_carpda + ACEA 2025",
             "last_updated":   NOW.isoformat(),
             "monthly":        monthly_block,
             "annual":         annual_block,
+            "ytd":            ytd,          # ← NEU
         }
 
         fname = name.lower().replace(" ", "_") + ".json"
@@ -438,15 +433,14 @@ def write_files(ecb_monthly, annual):
             latest = all_months[-1] if all_months else "n/a"
             annual_yrs = ",".join(years[-3:]) if years else "none"
             print(f"[Write] {name} OK  ({len(all_months)} months -> {latest}, "
-                  f"annual: {annual_yrs})")
+                  f"annual: {annual_yrs}, YTD {current_year}: {len(ytd_months)} months)")
         else:
             print(f"[Write] {name} (no change)")
 
     return changed
 
-# ── NEUE Telegram-Funktionen (nur bei Änderungen + Bild) ─────────────────────
+# ── Telegram-Funktionen (unverändert) ─────────────────────────────────────
 def generate_chart_image(changed, latest_month):
-    """Erstellt einen schönen horizontalen Bar-Chart der Top-10 BEV-Anteile"""
     bev_list = sorted(ACEA_BEV_2025.items(), key=lambda x: x[1], reverse=True)[:10]
     countries = [COUNTRIES[code][0] for code, _ in bev_list]
     values = [pct for _, pct in bev_list]
@@ -471,7 +465,6 @@ def generate_chart_image(changed, latest_month):
     return path
 
 def send_telegram_photo(img_path):
-    """Bild per Telegram sendPhoto hochladen"""
     if not TELEGRAM_TOKEN or not TELEGRAM_CHAT:
         return
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
@@ -488,12 +481,11 @@ def send_telegram_photo(img_path):
 def send_telegram(changed, n_countries, latest_month):
     if not TELEGRAM_TOKEN or not TELEGRAM_CHAT:
         return
-    if not changed:                     # ← Nur bei echten Änderungen senden
+    if not changed:
         print("[Telegram] No changes → nothing sent")
         return
 
     date_str = NOW.strftime("%d.%m.%Y %H:%M UTC")
-
     lines = "\n".join(f"  - {c}" for c in changed[:25])
     body = (f"🚗 Car Registrations - Updated\n"
             f"{date_str}\n"
@@ -520,7 +512,6 @@ def send_telegram(changed, n_countries, latest_month):
     except Exception as e:
         print(f"[Telegram] Message error: {e}")
 
-    # Chart-Bild generieren und senden
     img_path = generate_chart_image(changed, latest_month)
     if img_path and os.path.exists(img_path):
         send_telegram_photo(img_path)
@@ -532,8 +523,10 @@ def send_telegram(changed, n_countries, latest_month):
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     print("=" * 65)
-    print(f"  Car Registration Updater v11  --  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
+    print(f"  Car Registration Updater v12  --  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
     print("=" * 65)
+
+    current_year = NOW.year
 
     ecb_monthly = fetch_ecb_monthly()
 
@@ -550,7 +543,7 @@ def main():
         send_telegram([], 0, "n/a")
         sys.exit(1)
 
-    changed = write_files(ecb_monthly, annual)
+    changed = write_files(ecb_monthly, annual, current_year)
 
     latest = "2026-03 (ACEA est.)"
     for v in ecb_monthly.values():
