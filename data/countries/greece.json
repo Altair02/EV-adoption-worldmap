@@ -2,9 +2,9 @@
   "name": "Greece",
   "ecb_code": "EL",
   "population_mio": 10.4,
-  "source_monthly": "ACEA full-year totals, seasonal distribution (39 months 2023-2026)",
+  "source_monthly": "ECB STS + ACEA seasonal estimates",
   "source_annual": "Eurostat road_eqr_carpda + ACEA 2025",
-  "last_updated": "2026-04-22T18:57:43.980548+00:00",
+  "last_updated": "2026-04-22T19:15:39.691489+00:00",
   "monthly": {
     "labels": [
       "2023-01",
@@ -180,6 +180,21 @@
       3777,
       3435,
       1730
+    ]
+  },
+  "ytd": {
+    "year": 2026,
+    "months": 3,
+    "total": 37506,
+    "labels": [
+      "2026-01",
+      "2026-02",
+      "2026-03"
+    ],
+    "monthly_totals": [
+      10296,
+      9560,
+      17650
     ]
   }
 }

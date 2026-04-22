@@ -2,9 +2,9 @@
   "name": "Lithuania",
   "ecb_code": "LT",
   "population_mio": 2.8,
-  "source_monthly": "ECB STS (96 months 2015-2022) + ACEA estimates (39 months 2023-2026)",
+  "source_monthly": "ECB STS + ACEA seasonal estimates",
   "source_annual": "Eurostat road_eqr_carpda + ACEA 2025",
-  "last_updated": "2026-04-22T18:57:43.980548+00:00",
+  "last_updated": "2026-04-22T19:15:39.691489+00:00",
   "monthly": {
     "labels": [
       "2015-01",
@@ -372,6 +372,21 @@
       5,
       576,
       504
+    ]
+  },
+  "ytd": {
+    "year": 2026,
+    "months": 3,
+    "total": 10918,
+    "labels": [
+      "2026-01",
+      "2026-02",
+      "2026-03"
+    ],
+    "monthly_totals": [
+      2997,
+      2783,
+      5138
     ]
   }
 }
