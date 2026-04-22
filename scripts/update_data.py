@@ -1,26 +1,16 @@
 """
-scripts/update_data.py  —  v10
-================================
-Data sources:
-  ECB STS    -> monthly totals 2015-2022 (confirmed working)
-  ECB CAR    -> monthly totals 2023+ (tried, usually fails -> ACEA fallback)
-  Eurostat   -> annual powertrain breakdown 2015-2024 (+ 2025 if published)
-  ACEA/IEA   -> hardcoded 2023/2024/2025 annual totals + monthly estimates 2023-2026
-
-Monthly coverage strategy:
-  - 2015-2022: ECB STS real data
-  - 2023-2026-03: ACEA annual totals distributed by seasonal pattern (estimated)
-    Weights: Jan 7%, Feb 6.5%, Mar 12%, Apr 8%, May 9%, Jun 9.5%,
-             Jul 7.5%, Aug 6.5%, Sep 10%, Oct 9%, Nov 8%, Dec 7%
-
-Annual coverage strategy:
-  - 2015-2024: Eurostat road_eqr_carpda real powertrain breakdown
-  - 2025: Eurostat if available, else ACEA verified values
+scripts/update_data.py  —  v11 (Telegram nur bei Änderungen + Chart-Bild)
+=======================================================================
 """
 
 import csv, io, json, os, sys, time, urllib.error, urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
+
+# NEU für Chart + Telegram-Bild
+import matplotlib.pyplot as plt
+import tempfile
+import requests
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT  = os.environ.get("TELEGRAM_CHAT_ID", "")
@@ -137,13 +127,12 @@ SEASON_OVERRIDE = {
            "07":0.076,"08":0.064,"09":0.099,"10":0.091,"11":0.081,"12":0.069},
 }
 
-# 2026 partial months to estimate (Q1)
 PARTIAL_2026_MONTHS = ["01", "02", "03"]
 
 def http_get(url, timeout=30):
     req = urllib.request.Request(
         url,
-        headers={"User-Agent": "EV-Map-Bot/10.0 (github.com/Altair02/EV-adoption-worldmap)"}
+        headers={"User-Agent": "EV-Map-Bot/11.0 (github.com/Altair02/EV-adoption-worldmap)"}
     )
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read()
@@ -179,7 +168,6 @@ def ecb_fetch(dataset, key_tmpl, geo, start):
     except Exception:
         return {}
 
-# ── Step 1: ECB monthly (real data 2015-2022) ─────────────────────────────────
 def fetch_ecb_monthly():
     STS_KEYS = [
         "M.XX.N.CREG.PC0000.3.ABS",
@@ -234,12 +222,7 @@ def fetch_ecb_monthly():
     print(f"[ECB] Done -- {len(results)} countries with real monthly data")
     return results
 
-# ── Step 2: Build ACEA-based monthly estimates for 2023-2026 ─────────────────
 def build_acea_monthly(geo, existing_labels_set):
-    """
-    Fill in months not covered by ECB using ACEA annual totals + seasonal weights.
-    Returns dict {period: count}.
-    """
     season = SEASON_OVERRIDE.get(geo, SEASON_DEFAULT)
     result = {}
 
@@ -252,7 +235,6 @@ def build_acea_monthly(geo, existing_labels_set):
             if period not in existing_labels_set:
                 result[period] = round(annual * season[mm])
 
-    # 2026 Q1 estimate based on 2025 annual * 1.02 trend
     annual_2026_est = ACEA_TOTALS.get(geo, {}).get(2025)
     if annual_2026_est:
         annual_2026_est = round(annual_2026_est * 1.02)
@@ -263,7 +245,6 @@ def build_acea_monthly(geo, existing_labels_set):
 
     return result
 
-# ── Step 3: Eurostat annual powertrain data ───────────────────────────────────
 def fetch_eurostat_annual():
     url = ("https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/"
            "road_eqr_carpda?format=JSON&lang=EN&unit=NR")
@@ -337,7 +318,6 @@ def fetch_eurostat_annual():
     print(f"[Eurostat] Done -- {len(result)} countries, {years[0]}-{latest_year}")
     return result, latest_year
 
-# ── Step 4: Inject ACEA 2025 where Eurostat doesn't have it ──────────────────
 def inject_acea_2025(annual_data, eurostat_latest_year):
     if eurostat_latest_year >= "2025":
         print("[Annual] Eurostat has 2025 -- no injection needed")
@@ -380,7 +360,6 @@ def inject_acea_2025(annual_data, eurostat_latest_year):
 
     return annual_data
 
-# ── Step 5: Write JSON files ──────────────────────────────────────────────────
 def write_files(ecb_monthly, annual):
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     changed = []
@@ -388,7 +367,6 @@ def write_files(ecb_monthly, annual):
     for ecb_code, (name, estat_code, pop) in COUNTRIES.items():
         a = annual.get(ecb_code, {})
 
-        # Merge ECB real data + ACEA estimates for 2023-2026
         existing_ecb = ecb_monthly.get(ecb_code, {})
         existing_labels = set(existing_ecb.get("labels", []))
         acea_ext = build_acea_monthly(ecb_code, existing_labels)
@@ -405,7 +383,6 @@ def write_files(ecb_monthly, annual):
             "total":  [merged_m[m] for m in all_months],
         }
 
-        # Annual block
         years = sorted(a.keys()) if a else []
         annual_block = {}
         if years:
@@ -467,29 +444,71 @@ def write_files(ecb_monthly, annual):
 
     return changed
 
-# ── Telegram ──────────────────────────────────────────────────────────────────
+# ── NEUE Telegram-Funktionen (nur bei Änderungen + Bild) ─────────────────────
+def generate_chart_image(changed, latest_month):
+    """Erstellt einen schönen horizontalen Bar-Chart der Top-10 BEV-Anteile"""
+    bev_list = sorted(ACEA_BEV_2025.items(), key=lambda x: x[1], reverse=True)[:10]
+    countries = [COUNTRIES[code][0] for code, _ in bev_list]
+    values = [pct for _, pct in bev_list]
+
+    fig, ax = plt.subplots(figsize=(11, 6))
+    bars = ax.barh(countries, values, color="#00cc66")
+    ax.set_xlabel("BEV-Anteil 2025 (%)")
+    ax.set_title(f"🚗 EV-Adoption Worldmap Update\n{latest_month} • {len(changed)} Länder geändert")
+    ax.invert_yaxis()
+    ax.grid(axis="x", alpha=0.3)
+
+    for bar in bars:
+        width = bar.get_width()
+        ax.text(width + 1, bar.get_y() + bar.get_height()/2,
+                f"{width:.1f}%", va="center", fontsize=11, fontweight="bold")
+
+    fd, path = tempfile.mkstemp(suffix=".png")
+    plt.tight_layout()
+    plt.savefig(path, dpi=220, bbox_inches="tight")
+    plt.close()
+    os.close(fd)
+    return path
+
+def send_telegram_photo(img_path):
+    """Bild per Telegram sendPhoto hochladen"""
+    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT:
+        return
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
+    with open(img_path, "rb") as f:
+        files = {"photo": f}
+        data = {"chat_id": TELEGRAM_CHAT, "caption": f"📊 EV-Adoption Top 10\n{datetime.now(timezone.utc).strftime('%d.%m.%Y')}"}
+        try:
+            r = requests.post(url, data=data, files=files, timeout=20)
+            r.raise_for_status()
+            print("[Telegram] Chart image sent successfully")
+        except Exception as e:
+            print(f"[Telegram] Image error: {e}")
+
 def send_telegram(changed, n_countries, latest_month):
     if not TELEGRAM_TOKEN or not TELEGRAM_CHAT:
         return
+    if not changed:                     # ← Nur bei echten Änderungen senden
+        print("[Telegram] No changes → nothing sent")
+        return
+
     date_str = NOW.strftime("%d.%m.%Y %H:%M UTC")
-    if changed:
-        lines = "\n".join(f"  - {c}" for c in changed[:25])
-        body  = (f"Car Registrations - Updated\n"
-                 f"{date_str}\n"
-                 f"{n_countries} countries\n"
-                 f"Monthly data up to: {latest_month}\n\n"
-                 f"Changed ({len(changed)}):\n{lines}")
-    else:
-        body  = (f"Car Registrations - No Changes\n"
-                 f"{date_str}\n"
-                 f"{n_countries} countries -- all up to date.")
-    body += ("\n\nhttps://altair02.github.io/EV-adoption-worldmap/")
+
+    lines = "\n".join(f"  - {c}" for c in changed[:25])
+    body = (f"🚗 Car Registrations - Updated\n"
+            f"{date_str}\n"
+            f"{n_countries} countries\n"
+            f"Monthly data up to: {latest_month}\n\n"
+            f"Changed ({len(changed)}):\n{lines}\n\n"
+            f"https://altair02.github.io/EV-adoption-worldmap/")
+
     data = json.dumps({
-        "chat_id":    TELEGRAM_CHAT,
-        "text":       body,
+        "chat_id": TELEGRAM_CHAT,
+        "text": body,
         "parse_mode": "Markdown",
         "disable_web_page_preview": False,
     }).encode("utf-8")
+
     req = urllib.request.Request(
         f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
         data=data, headers={"Content-Type": "application/json"}
@@ -497,14 +516,23 @@ def send_telegram(changed, n_countries, latest_month):
     try:
         with urllib.request.urlopen(req, timeout=10) as r:
             msg_id = json.loads(r.read()).get("result", {}).get("message_id", "?")
-        print(f"[Telegram] Sent OK (id={msg_id})")
+        print(f"[Telegram] Message sent (id={msg_id})")
     except Exception as e:
-        print(f"[Telegram] Error: {e}")
+        print(f"[Telegram] Message error: {e}")
+
+    # Chart-Bild generieren und senden
+    img_path = generate_chart_image(changed, latest_month)
+    if img_path and os.path.exists(img_path):
+        send_telegram_photo(img_path)
+        try:
+            os.unlink(img_path)
+        except:
+            pass
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     print("=" * 65)
-    print(f"  Car Registration Updater v10  --  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
+    print(f"  Car Registration Updater v11  --  {NOW.strftime('%d.%m.%Y %H:%M UTC')}")
     print("=" * 65)
 
     ecb_monthly = fetch_ecb_monthly()
