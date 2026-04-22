@@ -10,13 +10,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0e17;
+    --bg:      #0a0e17;
     --surface: #111827;
-    --border: #1e2d45;
-    --accent: #00e5ff;
+    --border:  #1e2d45;
+    --accent:  #00e5ff;
     --accent2: #ff6b35;
-    --text: #e2e8f0;
-    --muted: #64748b;
+    --text:    #e2e8f0;
+    --muted:   #64748b;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; min-height: 100vh; }
@@ -62,7 +62,7 @@
   .stat-value { color: var(--text); }
   .stat-value.hl { color: var(--accent); }
   .top-list { display: flex; flex-direction: column; gap: 8px; }
-  .top-item { display: flex; align-items: center; justify-content: space-between; background: rgba(15,20,32,0.6); padding: 8px 12px; border-radius: 6px; font-size: 0.75rem; }
+  .top-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; background: rgba(255,255,255,0.02); border: 1px solid transparent; cursor: pointer; transition: all 0.15s; font-size: 0.72rem; }
   .top-item:hover { border-color: var(--border); background: rgba(0,229,255,0.05); }
   .top-rank { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.65rem; color: var(--muted); width: 18px; text-align: center; }
   .top-bar-wrap { flex: 1; }
@@ -76,6 +76,7 @@
   #tooltip strong { font-family: 'Syne', sans-serif; font-size: 0.85rem; display: block; margin-bottom: 4px; color: #fff; }
   .tt-row { display: flex; justify-content: space-between; gap: 16px; color: var(--muted); margin-top: 3px; }
   .tt-val { color: var(--accent); }
+  /* Modal */
   #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(6px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
   #modal-overlay.open { display: flex; }
   #modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 860px; max-height: 92vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 80px rgba(0,229,255,0.1); animation: modalIn .2s ease; }
@@ -90,9 +91,11 @@
   #modal-loading { text-align: center; padding: 60px 0; color: var(--muted); font-size: 0.8rem; }
   .modal-spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 12px; }
   @keyframes spin { to{transform:rotate(360deg);} }
+  /* Modal sections */
   .modal-section-title { font-family: 'Syne', sans-serif; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
   .chart-wrap { position: relative; height: 280px; }
   .section-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  /* 2-button powertrain toggle */
   .pt-toggle { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; width: fit-content; margin-bottom: 12px; }
   .pt-btn { padding: 6px 18px; font-size: 0.7rem; cursor: pointer; border: none; background: transparent; color: var(--muted); font-family: 'DM Mono', monospace; transition: all .15s; white-space: nowrap; }
   .pt-btn:not(:last-child) { border-right: 1px solid var(--border); }
@@ -107,6 +110,7 @@
   #map-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--surface); flex-direction: column; gap: 12px; z-index: 10; }
   .spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
   #map-loading p { font-size: 0.72rem; color: var(--muted); }
+  /* Search */
   .search-wrap { position: relative; }
   .search-input { width: 100%; padding: 8px 12px 8px 32px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.72rem; outline: none; transition: border-color .15s; }
   .search-input::placeholder { color: var(--muted); }
@@ -138,15 +142,20 @@
         <div id="modal-subtitle">New car registrations</div>
         <div id="modal-source"></div>
       </div>
-      <button id="modal-close" onclick="closeModal()">✕</button>
+      <button id="modal-close" onclick="closeModal()">&#x2715;</button>
     </div>
     <div id="modal-body">
-      <div id="modal-loading"><div class="modal-spinner"></div>Loading…</div>
+      <div id="modal-loading"><div class="modal-spinner"></div>Loading&hellip;</div>
       <div id="modal-content" style="display:none">
-        <div class="modal-section-title" id="sec-monthly-title">📅 Monthly total registrations</div>
+
+        <!-- Monthly / Yearly total -->
+        <div class="modal-section-title" id="sec-monthly-title">&#x1F4C5; Monthly total registrations</div>
         <div class="chart-wrap" id="wrap-monthly"><canvas id="chart-monthly"></canvas></div>
+
         <hr class="section-divider">
-        <div class="modal-section-title">⚡ Annual breakdown by powertrain</div>
+
+        <!-- Annual powertrain — 3-button toggle -->
+        <div class="modal-section-title">&#x26A1; Annual breakdown by powertrain</div>
         <div class="pt-toggle">
           <button class="pt-btn active" id="pt-absolute" onclick="switchPowertrain('absolute',this)">Powertrain absolute</button>
           <button class="pt-btn" id="pt-share" onclick="switchPowertrain('share',this)">Market share %</button>
@@ -155,9 +164,10 @@
         <div class="chart-wrap" id="wrap-annual"><canvas id="chart-annual"></canvas></div>
         <div class="chart-wrap" id="wrap-stacked" style="display:none"><canvas id="chart-stacked"></canvas></div>
         <div class="summary-grid" id="summary-grid"></div>
+
       </div>
       <div id="modal-nodata" style="display:none" class="no-data-msg">
-        📭 No data available for this country yet.<br>
+        &#x1F4ED; No data available for this country yet.<br>
         <span style="font-size:0.68rem">ECB/ACEA covers ~30 EU/EEA countries</span>
       </div>
     </div>
@@ -168,10 +178,10 @@
   <header>
     <div class="title-block">
       <h1>Global Car<br>Registrations</h1>
-      <div class="subtitle">BEV market share · Colour = % electric · Click for monthly & powertrain detail</div>
+      <div class="subtitle">BEV market share &middot; Colour = % electric &middot; Click for monthly &amp; powertrain detail</div>
     </div>
     <div class="meta-block">
-      <div class="update-badge"><span class="dot"></span><span id="last-update">Loading…</span></div>
+      <div class="update-badge"><span class="dot"></span><span id="last-update">Loading&hellip;</span></div>
       <select class="year-select" id="year-select">
         <option value="2026">2026 (Q1)</option>
         <option value="2025">2025</option>
@@ -188,47 +198,42 @@
       </select>
     </div>
   </header>
-
   <div class="main-grid">
     <div class="map-panel">
-      <div id="map-loading"><div class="spinner"></div><p>Loading map…</p></div>
+      <div id="map-loading"><div class="spinner"></div><p>Loading map&hellip;</p></div>
       <svg id="map-svg" viewBox="0 0 960 500"></svg>
       <div class="map-zoom-btns">
         <button onclick="mapZoom(1.5)" title="Zoom in">+</button>
-        <button onclick="mapZoom(1/1.5)" title="Zoom out">−</button>
+        <button onclick="mapZoom(1/1.5)" title="Zoom out">&minus;</button>
         <button class="map-zoom-reset" onclick="mapReset()" title="Reset view">⌂</button>
       </div>
     </div>
-
     <div class="sidebar">
       <div class="panel">
         <div class="panel-title">Search Country</div>
         <div class="search-wrap">
-          <span class="search-icon">🔍</span>
-          <input class="search-input" id="country-search" type="text" placeholder="e.g. Norway, Malta, Estonia…" autocomplete="off">
+          <span class="search-icon">&#x1F50D;</span>
+          <input class="search-input" id="country-search" type="text" placeholder="e.g. Norway, Malta, Estonia&hellip;" autocomplete="off">
         </div>
         <div class="search-results" id="search-results"></div>
       </div>
-
       <div class="panel">
-        <div class="panel-title">BEV Market Share · % of new registrations</div>
+        <div class="panel-title">BEV Market Share &middot; % of new registrations</div>
         <div class="legend-bar"></div>
         <div class="legend-labels"><span>0%</span><span id="legend-mid">20%</span><span id="legend-max">50%+</span></div>
         <div class="sources-note">
-          BEV share: <a href="https://www.acea.auto/stats/" target="_blank">ACEA</a> · 
+          BEV share: <a href="https://www.acea.auto/stats/" target="_blank">ACEA</a> &middot;
           <a href="https://www.iea.org/data-and-statistics/" target="_blank">IEA</a><br>
-          Grey = no data · Click any country for monthly & powertrain chart
+          Grey = no data &middot; Click any country for monthly &amp; powertrain chart
         </div>
       </div>
-
       <div class="panel">
         <div class="panel-title">Country Details</div>
-        <div id="detail-content" style="color:var(--muted);font-size:.72rem">← Click a country for details</div>
+        <div id="detail-content" style="color:var(--muted);font-size:.72rem">&larr; Click a country for details</div>
       </div>
-
       <div class="panel">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">
-          <div class="panel-title" style="margin:0;padding:0;border:none" id="top-panel-title">Top 10 · BEV Share % <span id="top-year"></span></div>
+          <div class="panel-title" style="margin:0;padding:0;border:none" id="top-panel-title">Top 10 &middot; BEV Share % <span id="top-year"></span></div>
           <div class="pt-toggle" style="margin:0">
             <button class="pt-btn active" id="top-btn-share" onclick="switchTopList('share',this)">Share %</button>
             <button class="pt-btn" id="top-btn-volume" onclick="switchTopList('volume',this)">Volume</button>
@@ -240,193 +245,6 @@
     </div>
   </div>
 </div>
-
-<script>
-// ==================== KONSTANTEN ====================
-const LABELS = { bev: "BEV", phev: "PHEV", hybrid: "Hybrid", petrol: "Petrol", diesel: "Diesel", other: "Other" };
-const COLORS = {
-  bev:    { line: "#00e5a0", fill: "rgba(0,229,160,0.7)" },
-  phev:   { line: "#ff6b35", fill: "rgba(255,107,53,0.7)" },
-  hybrid: { line: "#00b8ff", fill: "rgba(0,184,255,0.7)" },
-  petrol: { line: "#f4c430", fill: "rgba(244,196,48,0.7)" },
-  diesel: { line: "#64748b", fill: "rgba(100,116,139,0.7)" },
-  other:  { line: "#a78bfa", fill: "rgba(167,139,250,0.7)" }
-};
-const CB = {
-  responsive: true, maintainAspectRatio: false,
-  interaction: { mode: "index", intersect: false },
-  plugins: {
-    legend: { position: "top", labels: { color: "#94a3b8", font: { family: "DM Mono", size: 11 }, boxWidth: 14, padding: 14 } },
-    tooltip: { backgroundColor: "rgba(10,14,23,0.95)", borderColor: "rgba(0,229,255,0.3)", borderWidth: 1, titleColor: "#fff", bodyColor: "#94a3b8" }
-  },
-  scales: {
-    x: { grid: { color: "rgba(255,255,255,0.04)" }, ticks: { color: "#64748b", font: { family: "DM Mono", size: 9 }, maxTicksLimit: 20 } },
-    y: { grid: { color: "rgba(255,255,255,0.04)" }, ticks: { color: "#64748b", font: { family: "DM Mono", size: 9 } } }
-  }
-};
-
-// ==================== NEUE YTD-LOGIK (v12) ====================
-function getYTD2026(data) {
-  if (!data.ytd || !data.ytd.total || data.ytd.total === 0) return null;
-
-  const ytdInfo = data.ytd;
-  const keys = ["bev", "phev", "hybrid", "petrol", "diesel", "other"];
-  const a = data.annual;
-
-  const lastIdx = a && a.labels ? a.labels.length - 1 : -1;
-  const annualTot = lastIdx >= 0 ? keys.reduce((s, k) => s + ((a[k] && a[k][lastIdx]) || 0), 0) : 0;
-
-  const shares = {};
-  keys.forEach(k => {
-    shares[k] = annualTot > 0 && lastIdx >= 0 ? ((a[k] && a[k][lastIdx]) || 0) / annualTot : 0.2;
-  });
-
-  const ytdBreakdown = {};
-  let sumParts = 0;
-  keys.forEach((k, i) => {
-    if (i < keys.length - 1) {
-      ytdBreakdown[k] = Math.round(ytdInfo.total * shares[k]);
-      sumParts += ytdBreakdown[k];
-    } else {
-      ytdBreakdown[k] = Math.max(0, ytdInfo.total - sumParts);
-    }
-  });
-  ytdBreakdown.total = ytdInfo.total;
-
-  const lastLabel = ytdInfo.labels[ytdInfo.labels.length - 1];
-  const mm = parseInt(lastLabel.split("-")[1]) - 1;
-  const MNAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-
-  return {
-    ytd: ytdBreakdown,
-    lastMonth: MNAMES[mm] || "?",
-    nMonths: ytdInfo.months
-  };
-}
-
-// ── Annual Line Chart ─────────────────────────────────────────────────────
-function renderAnnual(data, mode) {
-  const a = data.annual;
-  const w = document.getElementById("wrap-annual");
-  if (!a || !a.labels || !a.labels.length) {
-    w.innerHTML = '<div style="height:280px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem">No annual data available</div>';
-    return;
-  }
-
-  const keys = ["bev", "phev", "hybrid", "petrol", "diesel", "other"];
-  const ytdInfo = getYTD2026(data);
-
-  const augLabels = [...a.labels];
-  const augData = {};
-  keys.forEach(k => { augData[k] = [...(a[k] || [])]; });
-
-  let ytdLabel = null;
-  if (ytdInfo) {
-    ytdLabel = "2026 YTD";
-    augLabels.push(ytdLabel);
-    keys.forEach(k => { augData[k].push(ytdInfo.ytd[k] || 0); });
-  }
-
-  let ds;
-  if (mode === "share") {
-    const tot = augLabels.map((_, i) => keys.reduce((s, k) => s + (augData[k] ? augData[k][i] : 0), 0));
-    ds = keys.map(k => ({
-      label: LABELS[k],
-      data: (augData[k] || []).map((v, i) => tot[i] ? +((v / tot[i]) * 100).toFixed(1) : 0),
-      borderColor: COLORS[k].line,
-      backgroundColor: COLORS[k].fill,
-      borderWidth: 2,
-      tension: 0.3,
-      fill: false,
-      pointRadius: 4,
-      pointHoverRadius: 7
-    }));
-  } else {
-    ds = keys.map(k => ({
-      label: LABELS[k],
-      data: augData[k] || [],
-      borderColor: COLORS[k].line,
-      backgroundColor: COLORS[k].fill,
-      borderWidth: 2,
-      tension: 0.3,
-      fill: false,
-      pointRadius: 4,
-      pointHoverRadius: 7
-    }));
-  }
-
-  if (ytdInfo) {
-    ds = ds.map(d => ({
-      ...d,
-      segment: { borderDash: ctx => ctx.p0DataIndex === augLabels.length - 2 ? [6, 3] : [] },
-      pointStyle: augLabels.map((_, i) => i === augLabels.length - 1 ? "triangle" : "circle"),
-      pointRadius: augLabels.map((_, i) => i === augLabels.length - 1 ? 5 : 4),
-      pointHoverRadius: augLabels.map((_, i) => i === augLabels.length - 1 ? 8 : 7)
-    }));
-  }
-
-  const ctx = document.getElementById("chart-annual").getContext("2d");
-  if (window.chartA) window.chartA.destroy();
-  window.chartA = new Chart(ctx, {
-    type: "line",
-    data: { labels: augLabels, datasets: ds },
-    options: CB
-  });
-}
-
-// ── Stacked Bar Chart ─────────────────────────────────────────────────────
-function renderStacked(data, mode) {
-  const a = data.annual;
-  const w = document.getElementById("wrap-stacked");
-  if (!a || !a.labels || !a.labels.length) {
-    w.innerHTML = '<div style="height:300px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem">No annual data available</div>';
-    return;
-  }
-
-  const keys = ["bev", "phev", "hybrid", "petrol", "diesel", "other"];
-  const ytdInfo = getYTD2026(data);
-
-  const augLabels = [...a.labels];
-  const augData = {};
-  keys.forEach(k => { augData[k] = [...(a[k] || [])]; });
-
-  if (ytdInfo) {
-    augLabels.push("2026*");
-    keys.forEach(k => { augData[k].push(ytdInfo.ytd[k] || 0); });
-  }
-
-  const isShare = (mode === "stacked-share");
-  let datasets;
-
-  if (isShare) {
-    const tots = augLabels.map((_, i) => keys.reduce((s, k) => s + (augData[k][i] || 0), 0));
-    datasets = keys.map(k => ({
-      label: LABELS[k],
-      data: augData[k].map((v, i) => tots[i] ? +((v / tots[i]) * 100).toFixed(2) : 0),
-      backgroundColor: COLORS[k].fill,
-      borderColor: COLORS[k].line,
-      borderWidth: 0.8,
-      stack: "s"
-    }));
-  } else {
-    datasets = keys.map(k => ({
-      label: LABELS[k],
-      data: augData[k],
-      backgroundColor: COLORS[k].fill,
-      borderColor: COLORS[k].line,
-      borderWidth: 0.8,
-      stack: "s"
-    }));
-  }
-
-  const ctx = document.getElementById("chart-stacked").getContext("2d");
-  if (window.chartStacked) window.chartStacked.destroy();
-  window.chartStacked = new Chart(ctx, {
-    type: "bar",
-    data: { labels: augLabels, datasets: datasets },
-    options: CB
-  });
-}
 
 <script>
 const DATA = {
