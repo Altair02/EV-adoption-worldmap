@@ -1352,7 +1352,7 @@ function renderMonthly(data){
 }
 
 function getYTD2026(data){
-  // Returns {ytd:{bev,phev,hybrid,petrol,diesel,other,total}, lastMonth:"Mar", nMonths:3, isActual:true}
+  // Returns {ytd:{bev,phev,hybrid,petrol,diesel,other,total}, lastMonth:"Mar", nMonths:3, isActual:true/false}
   const m = data.monthly;
   if(!m || !m.labels || !m.total) return null;
 
@@ -1368,7 +1368,7 @@ function getYTD2026(data){
   const ytdTotal = ytdMonths.reduce((s, x) => s + (m.total[x.idx] || 0), 0);
   if(!ytdTotal) return null;
 
-  // === ECHTE monatliche Powertrain-Daten summieren ===
+  // === ECHTE monatliche Powertrain-Daten summieren (falls vorhanden) ===
   let isActual = true;
   const ytd = { total: ytdTotal };
 
@@ -1382,7 +1382,7 @@ function getYTD2026(data){
     ytd[k] = Math.round(sum);
   });
 
-  // Fallback nur falls wirklich keine Powertrain-Daten in den Monats-JSONs vorhanden
+  // Fallback nur wenn wirklich keine Powertrain-Daten vorhanden (aktueller Stand)
   if(!isActual) {
     const a = data.annual;
     const lastAnnualIdx = (a && a.labels) ? a.labels.length-1 : -1;
@@ -1406,7 +1406,7 @@ function getYTD2026(data){
     });
   }
 
-  // Letzter Monat für die Beschriftung
+  // Letzter Monat für Beschriftung
   const lastLabel = ytdMonths[ytdMonths.length-1].l;
   const mm = parseInt(String(lastLabel).split("-")[1]) - 1;
   const MNAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -1426,7 +1426,6 @@ function renderAnnual(data,mode){
     return;
   }
   const keys=["bev","phev","hybrid","petrol","diesel","other"];
-  // Build augmented labels/data with 2026 YTD if available
   const ytdInfo=getYTD2026(data);
   const augLabels=[...a.labels];
   const augData={};
@@ -1446,7 +1445,6 @@ function renderAnnual(data,mode){
     ds=keys.map(k=>({label:LABELS[k],data:augData[k]||[],
       borderColor:COLORS[k].line,backgroundColor:COLORS[k].fill,borderWidth:2,tension:0.3,fill:false,pointRadius:4,pointHoverRadius:7}));
   }
-  // Last point (YTD) gets dashed line style
   if(ytdInfo){
     ds=ds.map(d=>({...d,
       segment:{borderDash:ctx=>ctx.p0DataIndex===augLabels.length-2?[6,3]:[]},
@@ -1463,7 +1461,7 @@ function renderAnnual(data,mode){
         if(lbl==="2026 YTD"&&ytdInfo){
           const status = ytdInfo.isActual 
             ? `actual monthly data (Jan–${ytdInfo.lastMonth})`
-            : "estimated from previous year shares";
+            : `estimated from 2025 shares`;
           return `2026 YTD — ${status}`;
         }
         return lbl;
