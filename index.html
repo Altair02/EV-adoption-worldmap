@@ -1352,31 +1352,71 @@ function renderMonthly(data){
 }
 
 function getYTD2026(data){
-  // Returns {ytd:{bev,phev,hybrid,petrol,diesel,other,total}, lastMonth:"Mar"} or null
-  const m=data.monthly,a=data.annual;
-  if(!m||!m.labels) return null;
-  const entries26=m.labels.map((l,i)=>({l,v:m.total[i]})).filter(x=>String(x.l).startsWith("2026-"));
-  if(!entries26.length) return null;
-  const ytdTotal=entries26.reduce((s,x)=>s+x.v,0);
+  // Returns {ytd:{bev,phev,hybrid,petrol,diesel,other,total}, lastMonth:"Mar", nMonths:3, isActual:true}
+  const m = data.monthly;
+  if(!m || !m.labels || !m.total) return null;
+
+  const keys = ["bev","phev","hybrid","petrol","diesel","other"];
+
+  // Alle 2026-Monate finden
+  const ytdMonths = m.labels
+    .map((l, i) => ({l, idx: i}))
+    .filter(x => String(x.l).startsWith("2026-"));
+
+  if(!ytdMonths.length) return null;
+
+  const ytdTotal = ytdMonths.reduce((s, x) => s + (m.total[x.idx] || 0), 0);
   if(!ytdTotal) return null;
-  // Use last available annual year's powertrain shares to estimate 2026 breakdown
-  const keys=["bev","phev","hybrid","petrol","diesel","other"];
-  const lastAnnualIdx=(a&&a.labels)?a.labels.length-1:-1;
-  const annualTot=lastAnnualIdx>=0?keys.reduce((s,k)=>s+((a[k]&&a[k][lastAnnualIdx])||0),0):0;
-  const shares={};
-  keys.forEach(k=>{shares[k]=annualTot>0&&lastAnnualIdx>=0?((a[k]&&a[k][lastAnnualIdx])||0)/annualTot:0;});
-  const ytd={};
-  let sumParts=0;
-  keys.forEach((k,i)=>{
-    if(i<keys.length-1){ytd[k]=Math.round(ytdTotal*shares[k]);sumParts+=ytd[k];}
-    else{ytd[k]=Math.max(0,ytdTotal-sumParts);}
+
+  // === ECHTE monatliche Powertrain-Daten summieren ===
+  let isActual = true;
+  const ytd = { total: ytdTotal };
+
+  keys.forEach(k => {
+    let sum = 0;
+    ytdMonths.forEach(({idx}) => {
+      const val = m[k] ? m[k][idx] : undefined;
+      if(val === undefined || val === null) isActual = false;
+      sum += (val || 0);
+    });
+    ytd[k] = Math.round(sum);
   });
-  ytd.total=ytdTotal;
-  // Last month label e.g. "Mar"
-  const lastLabel=entries26[entries26.length-1].l;
-  const mm=parseInt(String(lastLabel).split("-")[1])-1;
-  const MNAMES=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  return{ytd,lastMonth:MNAMES[mm]||"?",nMonths:entries26.length};
+
+  // Fallback nur falls wirklich keine Powertrain-Daten in den Monats-JSONs vorhanden
+  if(!isActual) {
+    const a = data.annual;
+    const lastAnnualIdx = (a && a.labels) ? a.labels.length-1 : -1;
+    const annualTot = lastAnnualIdx >= 0 
+      ? keys.reduce((s,k) => s + ((a[k] && a[k][lastAnnualIdx]) || 0), 0) 
+      : 0;
+    const shares = {};
+    keys.forEach(k => {
+      shares[k] = annualTot > 0 && lastAnnualIdx >= 0 
+        ? ((a[k] && a[k][lastAnnualIdx]) || 0) / annualTot 
+        : 0;
+    });
+    let sumParts = 0;
+    keys.forEach((k,i) => {
+      if(i < keys.length-1){
+        ytd[k] = Math.round(ytdTotal * shares[k]);
+        sumParts += ytd[k];
+      } else {
+        ytd[k] = Math.max(0, ytdTotal - sumParts);
+      }
+    });
+  }
+
+  // Letzter Monat für die Beschriftung
+  const lastLabel = ytdMonths[ytdMonths.length-1].l;
+  const mm = parseInt(String(lastLabel).split("-")[1]) - 1;
+  const MNAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  return {
+    ytd,
+    lastMonth: MNAMES[mm] || "?",
+    nMonths: ytdMonths.length,
+    isActual: isActual
+  };
 }
 
 function renderAnnual(data,mode){
@@ -1420,7 +1460,12 @@ function renderAnnual(data,mode){
     plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,callbacks:{
       title:items=>{
         const lbl=items[0].label;
-        if(lbl==="2026 YTD"&&ytdInfo) return "2026 YTD (Jan–"+ytdInfo.lastMonth+") — based on YTD data";
+        if(lbl==="2026 YTD"&&ytdInfo){
+          const status = ytdInfo.isActual 
+            ? `actual monthly data (Jan–${ytdInfo.lastMonth})`
+            : "estimated from previous year shares";
+          return `2026 YTD — ${status}`;
+        }
         return lbl;
       },
       label:c=>" "+c.dataset.label+": "+(mode==="share"?c.parsed.y.toFixed(1)+"%":c.parsed.y.toLocaleString("en"))
