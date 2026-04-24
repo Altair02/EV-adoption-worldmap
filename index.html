@@ -1365,12 +1365,11 @@ function getYTD2026(data,countryName){
   const ytdTotal=entries26.reduce((s,x)=>s+x.v,0);
   if(!ytdTotal) return null;
   const keys=["bev","phev","hybrid","petrol","diesel","other"];
-  // Get 2025 shares for non-BEV powertrain estimation
   const lastAnnualIdx=(a&&a.labels)?a.labels.length-1:-1;
   const annualTot=lastAnnualIdx>=0?keys.reduce((s,k)=>s+((a[k]&&a[k][lastAnnualIdx])||0),0):0;
   const shares2025={};
   keys.forEach(k=>{shares2025[k]=annualTot>0&&lastAnnualIdx>=0?((a[k]&&a[k][lastAnnualIdx])||0)/annualTot:0;});
-  // Try to use EV_SHARE[2026][country] for a more accurate BEV% if available
+  // Use EV_SHARE[2026][country] for BEV% if available, otherwise last annual
   const ev2026=(typeof EV_SHARE!=="undefined"&&EV_SHARE[2026])||{};
   const cn=countryName||(data.name||"");
   const bev2026Pct=ev2026[cn]!=null?ev2026[cn]/100:null;
@@ -1383,7 +1382,7 @@ function getYTD2026(data,countryName){
   // Compute YTD powertrain values
   const ytd={};
   ytd.bev=Math.round(ytdTotal*bevShare);
-  // Distribute remaining by 2025 non-BEV shares
+  // Distribute remaining proportionally by last annual shares
   const nonBevKeys=["phev","hybrid","petrol","diesel","other"];
   const nonBev2025Tot=nonBevKeys.reduce((s,k)=>s+shares2025[k],0);
   const remaining=ytdTotal-ytd.bev;
@@ -1403,7 +1402,7 @@ function getYTD2026(data,countryName){
   const lastLabel=entries26[entries26.length-1].l;
   const mm=parseInt(String(lastLabel).split("-")[1])-1;
   const MNAMES=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  return{ytd,lastMonth:MNAMES[mm]||"?",nMonths:entries26.length,usedEV2026,
+  return{ytd,lastMonth:MNAMES[mm]||"?",nMonths:entries26.length,
          bevPct:+(bevShare*100).toFixed(1)};
 }
 
@@ -1448,7 +1447,7 @@ function renderAnnual(data,mode){
     plugins:{...CB.plugins,tooltip:{...CB.plugins.tooltip,callbacks:{
       title:items=>{
         const lbl=items[0].label;
-        if(lbl==="2026 YTD"&&ytdInfo) return "2026 YTD (Jan–"+ytdInfo.lastMonth+")"+(ytdInfo.usedEV2026?" — BEV% from 2026 EV data":" — est. from 2025 shares");
+        if(lbl==="2026 YTD"&&ytdInfo) return "2026 YTD (Jan–"+ytdInfo.lastMonth+")";
         return lbl;
       },
       label:c=>" "+c.dataset.label+": "+(mode==="share"?c.parsed.y.toFixed(1)+"%":c.parsed.y.toLocaleString("en"))
@@ -1554,18 +1553,6 @@ function renderStacked(data,mode){
       }
     }
   });
-
-  // Add asterisk footnote
-  if(ytdInfo){
-    const existing=w.querySelector(".ytd-footnote");
-    if(!existing){
-      const note=document.createElement("div");
-      note.className="ytd-footnote";
-      note.style.cssText="font-size:0.58rem;color:var(--muted);margin-top:6px;letter-spacing:0.03em;text-align:right;padding-right:4px";
-      note.innerHTML="* 2026 YTD Jan\u2013"+ytdInfo.lastMonth+" ("+ytdInfo.nMonths+" month"+(ytdInfo.nMonths>1?"s":"")+") \u2014 powertrain breakdown estimated from "+a.labels[a.labels.length-1]+" shares";
-      w.appendChild(note);
-    }
-  }
 }
 
 function renderSummary(data){
@@ -1585,7 +1572,7 @@ function renderSummary(data){
     vals={};keys.forEach(k=>{vals[k]=(a[k]&&a[k][last])||0;});
   }
   const tot=keys.reduce((s,k)=>s+(vals[k]||0),0);
-  const ytdNote=isYTD?`<div style="grid-column:1/-1;font-size:0.55rem;color:var(--muted);text-align:center;margin-top:4px;letter-spacing:0.04em">&#9651; YTD estimate — powertrain shares based on ${a.labels[a.labels.length-1]} data</div>`:"";
+  const ytdNote="";
   g.innerHTML=keys.map(k=>{const v=vals[k]||0;const p=tot?((v/tot)*100).toFixed(1):0;
     return`<div class="summary-card"><div class="sc-val" style="color:${COLORS[k].line}">${fmt(v)}</div><div class="sc-label">${LABELS[k]}</div><div class="sc-pct">${p}% (${ly})</div></div>`;
   }).join("")+ytdNote;
