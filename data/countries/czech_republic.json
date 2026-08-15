@@ -4,7 +4,7 @@
   "population_mio": 10.9,
   "source_monthly": "ECB STS + ACEA seasonal estimates",
   "source_annual": "Eurostat road_eqr_carpda + ACEA 2025",
-  "last_updated": "2026-08-15T16:10:53.732943+00:00",
+  "last_updated": "2026-08-15T17:11:13.073153+00:00",
   "monthly": {
     "labels": [
       "2015-01",
